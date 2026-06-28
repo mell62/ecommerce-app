@@ -16,6 +16,23 @@ export default function CartContents() {
     saveCart(updated);
   }
 
+  function updateQuantity(id, change) {
+    const updated = cart
+      .map((item) => {
+        if (item.id === id) {
+          return {
+            ...item,
+            quantity: item.quantity + change,
+          };
+        }
+
+        return item;
+      })
+      .filter((item) => item.quantity > 0);
+
+    saveCart(updated);
+  }
+
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -41,7 +58,23 @@ export default function CartContents() {
           <div className="flex-1">
             <h2 className="font-bold">{item.name}</h2>
 
-            <p>Quantity: {item.quantity}</p>
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                onClick={() => updateQuantity(item.id, -1)}
+                className="px-2 border rounded"
+              >
+                -
+              </button>
+
+              <span>{item.quantity}</span>
+
+              <button
+                onClick={() => updateQuantity(item.id, 1)}
+                className="px-2 border rounded"
+              >
+                +
+              </button>
+            </div>
 
             <p>${item.price}</p>
             <button

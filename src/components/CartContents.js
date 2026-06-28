@@ -5,6 +5,17 @@ import { useEffect, useState } from "react";
 export default function CartContents() {
   const [cart, setCart] = useState([]);
 
+  function saveCart(updatedCart) {
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  }
+
+  function removeItem(id) {
+    const updated = cart.filter((item) => item.id !== id);
+
+    saveCart(updated);
+  }
+
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -33,6 +44,12 @@ export default function CartContents() {
             <p>Quantity: {item.quantity}</p>
 
             <p>${item.price}</p>
+            <button
+              onClick={() => removeItem(item.id)}
+              className="mt-2 bg-red-500 text-white px-3 py-1 rounded"
+            >
+              Remove
+            </button>
           </div>
         </div>
       ))}

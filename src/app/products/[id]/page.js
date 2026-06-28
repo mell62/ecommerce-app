@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
+import AddToCartButton from "@/components/AddToCartButton";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -27,25 +28,15 @@ export default async function ProductPage({ params }) {
         />
 
         <div>
-          <h1 className="text-3xl font-bold">
-            {product.name}
-          </h1>
+          <h1 className="text-3xl font-bold">{product.name}</h1>
 
-          <p className="mt-4 text-gray-600">
-            {product.description}
-          </p>
+          <p className="mt-4 text-gray-600">{product.description}</p>
 
-          <p className="mt-6 text-2xl font-bold">
-            ${product.price}
-          </p>
+          <p className="mt-6 text-2xl font-bold">${product.price}</p>
 
-          <p className="mt-2">
-            Stock: {product.stockCount}
-          </p>
+          <p className="mt-2">Stock: {product.stockCount}</p>
 
-          <button className="mt-6 bg-black text-white px-6 py-3 rounded">
-            Add to Cart
-          </button>
+          <AddToCartButton product={product} />
         </div>
       </div>
     </div>

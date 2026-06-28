@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+import Link from "next/link";
 
 async function getProducts() {
   const res = await fetch(
@@ -26,9 +27,10 @@ export default async function ProductsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {products.map((product) => (
-          <div
+          <Link
             key={product.id}
-            className="border rounded-lg p-4 shadow"
+            href={`/products/${product.id}`}
+            className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
           >
             <img
               src={product.imageUrl}
@@ -36,22 +38,14 @@ export default async function ProductsPage() {
               className="w-full h-48 object-cover rounded"
             />
 
-            <h2 className="text-xl font-semibold mt-4">
-              {product.name}
-            </h2>
+            <h2 className="text-xl font-semibold mt-4">{product.name}</h2>
 
-            <p className="text-gray-600">
-              {product.description}
-            </p>
+            <p className="text-gray-600">{product.description}</p>
 
-            <p className="font-bold mt-2">
-              ${product.price}
-            </p>
+            <p className="font-bold mt-2">${product.price}</p>
 
-            <p className="text-sm text-gray-500">
-              Stock: {product.stockCount}
-            </p>
-          </div>
+            <p className="text-sm text-gray-500">Stock: {product.stockCount}</p>
+          </Link>
         ))}
       </div>
     </div>

@@ -27,6 +27,12 @@ export default function CheckoutPage() {
 
     const data = await response.json();
 
+    localStorage.removeItem("cart");
+
+    alert("Order placed successfully!");
+
+    window.location.href = "/";
+
     console.log(data);
   }
 

@@ -11,6 +11,18 @@ export async function POST(request) {
         status: "PENDING",
         totalPrice: body.totalPrice,
         userId: body.userId,
+
+        items: {
+          create: body.items.map((item) => ({
+            productId: item.id,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+        },
+      },
+
+      include: {
+        items: true,
       },
     });
 

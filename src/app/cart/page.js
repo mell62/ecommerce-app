@@ -1,4 +1,5 @@
 import CartContents from "@/components/CartContents";
+import Link from "next/link";
 
 export default function CartPage() {
   return (
@@ -6,6 +7,9 @@ export default function CartPage() {
       <h1 className="text-3xl font-bold mb-6">Shopping Cart</h1>
 
       <CartContents />
+      <Link href="/checkout" className="...">
+        Checkout
+      </Link>
     </div>
   );
 }

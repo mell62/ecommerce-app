@@ -13,6 +13,23 @@ export default function CheckoutPage() {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+  async function placeOrder() {
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId: "guest-user",
+        totalPrice: total,
+      }),
+    });
+
+    const data = await response.json();
+
+    console.log(data);
+  }
+
   return (
     <main className="max-w-4xl mx-auto p-8">
       <h1 className="text-3xl font-bold mb-6">Checkout</h1>
@@ -30,6 +47,12 @@ export default function CheckoutPage() {
       </div>
 
       <div className="text-xl font-bold">Total: ${total.toFixed(2)}</div>
+      <button
+        onClick={placeOrder}
+        className="mt-6 px-4 py-2 bg-black text-white"
+      >
+        Place Order
+      </button>
     </main>
   );
 }

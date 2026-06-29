@@ -36,6 +36,7 @@ export default function RootLayout({ children }) {
               <Link href="/cart">
                 Cart <CartCounter />
               </Link>
+              <Link href="/orders">Orders</Link>
             </div>
           </div>
         </nav>

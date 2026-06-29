@@ -22,18 +22,19 @@ export default function CheckoutPage() {
       body: JSON.stringify({
         userId: "guest-user",
         totalPrice: total,
+        items: cart,
       }),
     });
 
     const data = await response.json();
+
+    console.log(data);
 
     localStorage.removeItem("cart");
 
     alert("Order placed successfully!");
 
     window.location.href = "/";
-
-    console.log(data);
   }
 
   return (

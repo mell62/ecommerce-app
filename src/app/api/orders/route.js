@@ -4,6 +4,8 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
+    console.log(body);
+
     const order = await prisma.order.create({
       data: {
         status: "PENDING",

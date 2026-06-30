@@ -1,15 +1,18 @@
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 
-async function getProducts() {
-  const res = await fetch(
-    `${
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-    }/api/products`,
-    {
-      cache: "no-store",
-    }
+async function getProducts(category) {
+  const url = new URL(
+    `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products`
   );
+
+  if (category) {
+    url.searchParams.set("category", category);
+  }
+
+  const res = await fetch(url, {
+    cache: "no-store",
+  });
 
   if (!res.ok) {
     throw new Error("Failed to fetch products");
@@ -18,12 +21,17 @@ async function getProducts() {
   return res.json();
 }
 
-export default async function ProductsPage() {
-  const products = await getProducts();
+export default async function ProductsPage({ searchParams }) {
+  const params = await searchParams;
+  const category = params.category;
+
+  const products = await getProducts(category);
 
   return (
     <div className="max-w-6xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-6">Products</h1>
+      <h1 className="text-3xl font-bold mb-6">
+        {category ? `${category} Products` : "Products"}
+      </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {products.map((product) => (

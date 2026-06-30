@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState([]);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("cart")) || [];
@@ -24,6 +25,8 @@ export default function CheckoutPage() {
   }
 
   async function placeOrder() {
+    setIsPlacingOrder(true);
+
     const response = await fetch("/api/orders", {
       method: "POST",
       headers: {
@@ -66,9 +69,10 @@ export default function CheckoutPage() {
       <div className="text-xl font-bold">Total: ${total.toFixed(2)}</div>
       <button
         onClick={placeOrder}
-        className="mt-6 px-4 py-2 bg-black text-white"
+        disabled={isPlacingOrder}
+        className="mt-6 px-4 py-2 bg-black text-white disabled:opacity-50"
       >
-        Place Order
+        {isPlacingOrder ? "Placing Order..." : "Place Order"}
       </button>
     </main>
   );

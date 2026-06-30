@@ -4,6 +4,17 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
+    if (!body.userId || !body.totalPrice || !Array.isArray(body.items)) {
+      return Response.json({ error: "Invalid order data" }, { status: 400 });
+    }
+
+    if (body.items.length === 0) {
+      return Response.json(
+        { error: "Order must contain at least one item" },
+        { status: 400 }
+      );
+    }
+
     console.log(body);
 
     const order = await prisma.order.create({

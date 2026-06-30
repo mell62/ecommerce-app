@@ -13,6 +13,16 @@ export default function CheckoutPage() {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+  if (cart.length === 0) {
+    return (
+      <main className="max-w-4xl mx-auto p-8">
+        <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+
+        <p>Your cart is empty.</p>
+      </main>
+    );
+  }
+
   async function placeOrder() {
     const response = await fetch("/api/orders", {
       method: "POST",

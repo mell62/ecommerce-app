@@ -100,6 +100,12 @@ export default function CartContents() {
       ))}
 
       <div className="text-xl font-bold">Total: ${total.toFixed(2)}</div>
+      <Link
+        href="/checkout"
+        className="inline-block bg-black text-white px-4 py-2 rounded"
+      >
+        Checkout
+      </Link>
     </div>
   );
 }

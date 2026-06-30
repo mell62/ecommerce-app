@@ -25,29 +25,40 @@ export default function CheckoutPage() {
   }
 
   async function placeOrder() {
-    setIsPlacingOrder(true);
+    try {
+      setIsPlacingOrder(true);
 
-    const response = await fetch("/api/orders", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId: "guest-user",
-        totalPrice: total,
-        items: cart,
-      }),
-    });
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: "guest-user",
+          totalPrice: total,
+          items: cart,
+        }),
+      });
 
-    const data = await response.json();
+      if (!response.ok) {
+        throw new Error("Failed to place order");
+      }
 
-    console.log(data);
+      const data = await response.json();
 
-    localStorage.removeItem("cart");
+      console.log(data);
 
-    alert("Order placed successfully!");
+      localStorage.removeItem("cart");
 
-    window.location.href = "/";
+      alert("Order placed successfully!");
+
+      window.location.href = "/";
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsPlacingOrder(false);
+    }
   }
 
   return (

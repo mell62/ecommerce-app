@@ -1,13 +1,17 @@
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 
-async function getProducts(category) {
+async function getProducts(category, search) {
   const url = new URL(
     `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products`
   );
 
   if (category) {
     url.searchParams.set("category", category);
+  }
+
+  if (search) {
+    url.searchParams.set("search", search);
   }
 
   const res = await fetch(url, {
@@ -24,8 +28,9 @@ async function getProducts(category) {
 export default async function ProductsPage({ searchParams }) {
   const params = await searchParams;
   const category = params.category;
+  const search = params.search;
 
-  const products = await getProducts(category);
+  const products = await getProducts(category, search);
 
   return (
     <div className="max-w-6xl mx-auto p-8">

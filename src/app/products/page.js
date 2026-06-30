@@ -61,6 +61,22 @@ export default async function ProductsPage({ searchParams }) {
         </Link>
       </div>
 
+      <form action="/products" className="mb-6 flex gap-2">
+        {category && <input type="hidden" name="category" value={category} />}
+
+        <input
+          type="text"
+          name="search"
+          placeholder="Search products..."
+          defaultValue={search || ""}
+          className="border rounded px-4 py-2 flex-1"
+        />
+
+        <button type="submit" className="bg-black text-white px-4 py-2 rounded">
+          Search
+        </button>
+      </form>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {products.map((product) => (
           <Link

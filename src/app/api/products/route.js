@@ -8,6 +8,9 @@ export async function GET(request) {
 
   const search = searchParams.get("search");
 
+  const minPrice = searchParams.get("minPrice");
+  const maxPrice = searchParams.get("maxPrice");
+
   const products = await prisma.product.findMany({
     where: {
       ...(category && {
@@ -30,7 +33,19 @@ export async function GET(request) {
           },
         ],
       }),
+
+      ...((minPrice || maxPrice) && {
+        price: {
+          ...(minPrice && {
+            gte: Number(minPrice),
+          }),
+          ...(maxPrice && {
+            lte: Number(maxPrice),
+          }),
+        },
+      }),
     },
+
     orderBy: {
       createdAt: "desc",
     },

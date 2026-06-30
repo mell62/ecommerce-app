@@ -33,6 +33,29 @@ export default async function ProductsPage({ searchParams }) {
         {category ? `${category} Products` : "Products"}
       </h1>
 
+      <div className="flex gap-3 mb-6">
+        <Link
+          href="/products"
+          className="border px-4 py-2 rounded hover:bg-gray-100"
+        >
+          All
+        </Link>
+
+        <Link
+          href="/products?category=Accessories"
+          className="border px-4 py-2 rounded hover:bg-gray-100"
+        >
+          Accessories
+        </Link>
+
+        <Link
+          href="/products?category=Monitors"
+          className="border px-4 py-2 rounded hover:bg-gray-100"
+        >
+          Monitors
+        </Link>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {products.map((product) => (
           <Link

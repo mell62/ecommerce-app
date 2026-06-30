@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useEffect, useState } from "react";
 
@@ -40,7 +41,18 @@ export default function CartContents() {
   }, []);
 
   if (cart.length === 0) {
-    return <p>Your cart is empty.</p>;
+    return (
+      <div className="space-y-4">
+        <p>Your cart is empty.</p>
+
+        <Link
+          href="/products"
+          className="inline-block bg-black text-white px-4 py-2 rounded"
+        >
+          Browse Products
+        </Link>
+      </div>
+    );
   }
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);

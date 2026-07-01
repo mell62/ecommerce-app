@@ -87,6 +87,31 @@ export default async function ProductsPage({ searchParams }) {
         </button>
       </form>
 
+      <form action="/products" className="mb-6 flex gap-2">
+        {category && <input type="hidden" name="category" value={category} />}
+        {search && <input type="hidden" name="search" value={search} />}
+
+        <input
+          type="number"
+          name="minPrice"
+          placeholder="Min price"
+          defaultValue={minPrice || ""}
+          className="border rounded px-4 py-2"
+        />
+
+        <input
+          type="number"
+          name="maxPrice"
+          placeholder="Max price"
+          defaultValue={maxPrice || ""}
+          className="border rounded px-4 py-2"
+        />
+
+        <button type="submit" className="bg-black text-white px-4 py-2 rounded">
+          Apply
+        </button>
+      </form>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {products.map((product) => (
           <Link

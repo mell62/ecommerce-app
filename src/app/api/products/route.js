@@ -11,6 +11,24 @@ export async function GET(request) {
   const minPrice = searchParams.get("minPrice");
   const maxPrice = searchParams.get("maxPrice");
 
+  const sort = searchParams.get("sort");
+
+  let orderBy = {
+    createdAt: "desc",
+  };
+
+  if (sort === "price-asc") {
+    orderBy = {
+      price: "asc",
+    };
+  }
+
+  if (sort === "price-desc") {
+    orderBy = {
+      price: "desc",
+    };
+  }
+
   const products = await prisma.product.findMany({
     where: {
       ...(category && {
@@ -45,10 +63,7 @@ export async function GET(request) {
         },
       }),
     },
-
-    orderBy: {
-      createdAt: "desc",
-    },
+    orderBy,
   });
 
   return NextResponse.json(products);

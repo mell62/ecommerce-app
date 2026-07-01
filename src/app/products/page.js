@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 import Link from "next/link";
+import SortDropdown from "@/components/SortDropdown";
 
 async function getProducts(category, search, minPrice, maxPrice, sort) {
   const url = new URL(
@@ -122,6 +123,8 @@ export default async function ProductsPage({ searchParams }) {
           Apply
         </button>
       </form>
+
+      <SortDropdown currentSort={sort} />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {products.map((product) => (

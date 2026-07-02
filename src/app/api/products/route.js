@@ -13,20 +13,35 @@ export async function GET(request) {
 
   const sort = searchParams.get("sort");
 
-  let orderBy = {
-    createdAt: "desc",
-  };
+  let orderBy = [
+    {
+      createdAt: "desc",
+    },
+    {
+      id: "desc",
+    },
+  ];
 
   if (sort === "price-asc") {
-    orderBy = {
-      price: "asc",
-    };
+    orderBy = [
+      {
+        price: "asc",
+      },
+      {
+        id: "desc",
+      },
+    ];
   }
 
   if (sort === "price-desc") {
-    orderBy = {
-      price: "desc",
-    };
+    orderBy = [
+      {
+        price: "desc",
+      },
+      {
+        id: "desc",
+      },
+    ];
   }
 
   const products = await prisma.product.findMany({

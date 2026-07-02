@@ -12,6 +12,13 @@ export default async function ProductPage({ params }) {
     where: {
       id,
     },
+    include: {
+      reviews: {
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+    },
   });
 
   if (!product) {
@@ -46,6 +53,26 @@ export default async function ProductPage({ params }) {
 
           <AddToCartButton product={product} />
         </div>
+      </div>
+      <div className="mt-10">
+        <h2 className="text-2xl font-bold mb-4">Reviews</h2>
+
+        {product.reviews.length === 0 ? (
+          <p className="text-gray-600">No reviews yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {product.reviews.map((review) => (
+              <div key={review.id} className="border rounded p-4">
+                <div className="flex justify-between">
+                  <p className="font-semibold">{review.name}</p>
+                  <p>{"⭐".repeat(review.rating)}</p>
+                </div>
+
+                <p className="mt-2 text-gray-700">{review.comment}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

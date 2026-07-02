@@ -25,7 +25,7 @@ async function main() {
       category: "Accessories",
       imageUrl: "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae",
       stockCount: 20,
-      isNew: true,
+      isNew: false,
       isBestSeller: true,
       isFeatured: false,
       reviews: {
@@ -52,7 +52,7 @@ async function main() {
       price: 59.99,
       category: "Accessories",
       imageUrl: "https://images.unsplash.com/photo-1527814050087-3793815479db",
-      stockCount: 8,
+      stockCount: 35,
       isNew: false,
       isBestSeller: false,
       isFeatured: true,
@@ -76,10 +76,10 @@ async function main() {
       price: 299.99,
       category: "Monitors",
       imageUrl: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf",
-      stockCount: 4,
-      isNew: false,
-      isBestSeller: true,
-      isFeatured: true,
+      stockCount: 12,
+      isNew: true,
+      isBestSeller: false,
+      isFeatured: false,
       reviews: {
         create: [
           {

@@ -32,6 +32,9 @@ model Product {
   imageUrl    String
   stockCount  Int
   createdAt   DateTime @default(now())
+  isFeatured  Boolean @default(false)
+  isNew        Boolean @default(false)
+  isBestSeller Boolean @default(false)
 
   orderItems OrderItem[]
   cartItems  CartItem[]

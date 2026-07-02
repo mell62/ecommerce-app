@@ -95,6 +95,37 @@ export default async function ProductsPage({ searchParams }) {
             href={`/products/${product.id}`}
             className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
           >
+            <div className="mb-2 flex gap-2">
+              {product.stockCount === 0 && (
+                <span className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
+                  Out of Stock
+                </span>
+              )}
+
+              {product.stockCount > 0 && product.stockCount <= 10 && (
+                <span className="rounded bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700">
+                  Low Stock
+                </span>
+              )}
+
+              {product.isNew && (
+                <span className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                  New Arrival
+                </span>
+              )}
+
+              {product.isBestSeller && (
+                <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
+                  Best Seller
+                </span>
+              )}
+
+              {product.isFeatured && (
+                <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                  Featured
+                </span>
+              )}
+            </div>
             <img
               src={product.imageUrl}
               alt={product.name}

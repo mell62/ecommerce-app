@@ -107,7 +107,15 @@ export default async function ProductsPage({ searchParams }) {
 
             <p className="font-bold mt-2">${product.price}</p>
 
-            <p className="text-sm text-gray-500">Stock: {product.stockCount}</p>
+            {product.stockCount === 0 ? (
+              <p className="text-sm text-red-600 font-medium">Out of stock</p>
+            ) : product.stockCount <= 10 ? (
+              <p className="text-sm text-orange-600 font-medium">
+                Only {product.stockCount} left
+              </p>
+            ) : (
+              <p className="text-sm text-green-600 font-medium">In stock</p>
+            )}
           </Link>
         ))}
       </div>

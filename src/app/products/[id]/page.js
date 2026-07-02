@@ -34,7 +34,15 @@ export default async function ProductPage({ params }) {
 
           <p className="mt-6 text-2xl font-bold">${product.price}</p>
 
-          <p className="mt-2">Stock: {product.stockCount}</p>
+          {product.stockCount === 0 ? (
+            <p className="mt-2 text-red-600 font-medium">Out of stock</p>
+          ) : product.stockCount <= 10 ? (
+            <p className="mt-2 text-orange-600 font-medium">
+              Only {product.stockCount} left
+            </p>
+          ) : (
+            <p className="mt-2 text-green-600 font-medium">In stock</p>
+          )}
 
           <AddToCartButton product={product} />
         </div>

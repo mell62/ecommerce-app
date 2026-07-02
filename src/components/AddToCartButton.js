@@ -1,6 +1,8 @@
 "use client";
 
 export default function AddToCartButton({ product }) {
+  const isOutOfStock = product.stockCount === 0;
+
   function handleClick() {
     const existing = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -23,9 +25,10 @@ export default function AddToCartButton({ product }) {
   return (
     <button
       onClick={handleClick}
-      className="mt-6 bg-black text-white px-6 py-3 rounded"
+      disabled={isOutOfStock}
+      className="mt-6 bg-black text-white px-6 py-3 rounded disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      Add to Cart
+      {isOutOfStock ? "Out of Stock" : "Add to Cart"}
     </button>
   );
 }

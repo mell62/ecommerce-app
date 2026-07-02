@@ -1,15 +1,24 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function SortDropdown({ currentSort }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  function handleChange(event) {
-    const params = new URLSearchParams(searchParams.toString());
+  const [sort, setSort] = useState(currentSort || "");
 
+  useEffect(() => {
+    setSort(searchParams.get("sort") || "");
+  }, [searchParams]);
+
+  function handleChange(event) {
     const selectedSort = event.target.value;
+
+    setSort(selectedSort);
+
+    const params = new URLSearchParams(searchParams.toString());
 
     if (selectedSort) {
       params.set("sort", selectedSort);
@@ -17,13 +26,15 @@ export default function SortDropdown({ currentSort }) {
       params.delete("sort");
     }
 
-    router.push(`/products?${params.toString()}`);
+    const queryString = params.toString();
+
+    router.push(queryString ? `/products?${queryString}` : "/products");
   }
 
   return (
     <select
       name="sort"
-      defaultValue={currentSort || ""}
+      value={sort}
       onChange={handleChange}
       className="border rounded px-4 py-2 mb-6"
     >

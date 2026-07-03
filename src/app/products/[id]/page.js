@@ -25,6 +25,14 @@ export default async function ProductPage({ params }) {
     return notFound();
   }
 
+  const reviewCount = product.reviews.length;
+
+  const averageRating =
+    reviewCount === 0
+      ? 0
+      : product.reviews.reduce((sum, review) => sum + review.rating, 0) /
+        reviewCount;
+
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="grid md:grid-cols-2 gap-8">
@@ -36,6 +44,16 @@ export default async function ProductPage({ params }) {
 
         <div>
           <h1 className="text-3xl font-bold">{product.name}</h1>
+
+          <div className="mt-4">
+            {reviewCount === 0 ? (
+              <p className="text-gray-600">No ratings yet</p>
+            ) : (
+              <p className="text-gray-700">
+                ⭐ {averageRating.toFixed(1)} / 5 ({reviewCount} reviews)
+              </p>
+            )}
+          </div>
 
           <p className="mt-4 text-gray-600">{product.description}</p>
 

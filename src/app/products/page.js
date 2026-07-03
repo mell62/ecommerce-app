@@ -89,66 +89,83 @@ export default async function ProductsPage({ searchParams }) {
       <SortDropdown currentSort={sort} />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {products.map((product) => (
-          <Link
-            key={product.id}
-            href={`/products/${product.id}`}
-            className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
-          >
-            <div className="mb-2 flex gap-2">
-              {product.stockCount === 0 && (
-                <span className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
-                  Out of Stock
-                </span>
+        {products.map((product) => {
+          const reviewCount = product.reviews.length;
+
+          const averageRating =
+            reviewCount === 0
+              ? 0
+              : product.reviews.reduce(
+                  (sum, review) => sum + review.rating,
+                  0
+                ) / reviewCount;
+          return (
+            <Link
+              key={product.id}
+              href={`/products/${product.id}`}
+              className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
+            >
+              <div className="mb-2 flex gap-2">
+                {product.stockCount === 0 && (
+                  <span className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
+                    Out of Stock
+                  </span>
+                )}
+
+                {product.stockCount > 0 && product.stockCount <= 10 && (
+                  <span className="rounded bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700">
+                    Low Stock
+                  </span>
+                )}
+
+                {product.isNew && (
+                  <span className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                    New Arrival
+                  </span>
+                )}
+
+                {product.isBestSeller && (
+                  <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
+                    Best Seller
+                  </span>
+                )}
+
+                {product.isFeatured && (
+                  <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                    Featured
+                  </span>
+                )}
+              </div>
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                className="w-full h-48 object-cover rounded"
+              />
+
+              <h2 className="text-xl font-semibold mt-4">{product.name}</h2>
+
+              <p className="text-gray-600">{product.description}</p>
+
+              <p className="font-bold mt-2">${product.price}</p>
+
+              {reviewCount > 0 && (
+                <p className="text-sm text-gray-700 mt-1">
+                  ⭐ {averageRating.toFixed(1)} / 5 ({reviewCount} reviews)
+                </p>
               )}
 
-              {product.stockCount > 0 && product.stockCount <= 10 && (
-                <span className="rounded bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700">
-                  Low Stock
-                </span>
+              {product.stockCount === 0 ? (
+                <p className="text-sm text-red-600 font-medium">Out of stock</p>
+              ) : product.stockCount <= 10 ? (
+                <p className="text-sm text-orange-600 font-medium">
+                  Only {product.stockCount} left
+                </p>
+              ) : (
+                <p className="text-sm text-green-600 font-medium">In stock</p>
               )}
-
-              {product.isNew && (
-                <span className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-                  New Arrival
-                </span>
-              )}
-
-              {product.isBestSeller && (
-                <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
-                  Best Seller
-                </span>
-              )}
-
-              {product.isFeatured && (
-                <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-                  Featured
-                </span>
-              )}
-            </div>
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-full h-48 object-cover rounded"
-            />
-
-            <h2 className="text-xl font-semibold mt-4">{product.name}</h2>
-
-            <p className="text-gray-600">{product.description}</p>
-
-            <p className="font-bold mt-2">${product.price}</p>
-
-            {product.stockCount === 0 ? (
-              <p className="text-sm text-red-600 font-medium">Out of stock</p>
-            ) : product.stockCount <= 10 ? (
-              <p className="text-sm text-orange-600 font-medium">
-                Only {product.stockCount} left
-              </p>
-            ) : (
-              <p className="text-sm text-green-600 font-medium">In stock</p>
-            )}
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

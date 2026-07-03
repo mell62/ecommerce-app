@@ -78,6 +78,9 @@ export async function GET(request) {
         },
       }),
     },
+    include: {
+      reviews: true,
+    },
     orderBy,
   });
 

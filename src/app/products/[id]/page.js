@@ -65,7 +65,8 @@ export default async function ProductPage({ params }) {
               <p className="text-gray-600">No ratings yet</p>
             ) : (
               <p className="text-gray-700">
-                ⭐ {averageRating.toFixed(1)} / 5 ({reviewCount} reviews)
+                ⭐ {averageRating.toFixed(1)} / 5 ({reviewCount}{" "}
+                {reviewCount === 1 ? "review" : "reviews"})
               </p>
             )}
           </div>

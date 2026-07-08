@@ -14,6 +14,11 @@ export default function ReviewForm({ productId }) {
   async function handleSubmit(event) {
     event.preventDefault();
 
+    if (!name.trim() || !comment.trim()) {
+      alert("Please enter your name and review comment.");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -24,9 +29,9 @@ export default function ReviewForm({ productId }) {
         },
         body: JSON.stringify({
           productId,
-          name,
+          name: name.trim(),
           rating: Number(rating),
-          comment,
+          comment: comment.trim(),
         }),
       });
 

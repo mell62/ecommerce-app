@@ -10,11 +10,15 @@ export default function ProductFilters() {
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
+  const [minRating, setMinRating] = useState(
+    searchParams.get("minRating") || ""
+  );
 
   useEffect(() => {
     setSearch(searchParams.get("search") || "");
     setMinPrice(searchParams.get("minPrice") || "");
     setMaxPrice(searchParams.get("maxPrice") || "");
+    setMinRating(searchParams.get("minRating") || "");
   }, [searchParams]);
 
   function applyFilters(event) {
@@ -40,6 +44,12 @@ export default function ProductFilters() {
       params.delete("maxPrice");
     }
 
+    if (minRating) {
+      params.set("minRating", minRating);
+    } else {
+      params.delete("minRating");
+    }
+
     const queryString = params.toString();
 
     router.push(queryString ? `/products?${queryString}` : "/products");
@@ -51,12 +61,14 @@ export default function ProductFilters() {
     params.delete("search");
     params.delete("minPrice");
     params.delete("maxPrice");
+    params.delete("minRating");
 
     const queryString = params.toString();
 
     setSearch("");
     setMinPrice("");
     setMaxPrice("");
+    setMinRating("");
 
     router.push(queryString ? `/products?${queryString}` : "/products");
   }
@@ -93,6 +105,17 @@ export default function ProductFilters() {
           onChange={(event) => setMaxPrice(event.target.value)}
           className="border rounded px-4 py-2"
         />
+
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={minRating === "4"}
+            onChange={(event) => {
+              setMinRating(event.target.checked ? "4" : "");
+            }}
+          />
+          <span>4 stars & above</span>
+        </label>
 
         <button type="submit" className="bg-black text-white px-4 py-2 rounded">
           Apply

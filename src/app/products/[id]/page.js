@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import AddToCartButton from "@/components/AddToCartButton";
 import Link from "next/link";
 import ReviewForm from "@/components/ReviewForm";
+import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -48,11 +49,12 @@ export default async function ProductPage({ params }) {
       : product.reviews.reduce((sum, review) => sum + review.rating, 0) /
         reviewCount;
 
-  const hasDiscount = product.discountPercent > 0;
+  const productHasDiscount = hasDiscount(product.discountPercent);
 
-  const discountedPrice = hasDiscount
-    ? product.price - (product.price * product.discountPercent) / 100
-    : product.price;
+  const discountedPrice = getDiscountedPrice(
+    product.price,
+    product.discountPercent
+  );
 
   return (
     <div className="max-w-4xl mx-auto p-8">
@@ -85,7 +87,7 @@ export default async function ProductPage({ params }) {
 
           <p className="mt-4 text-gray-600">{product.description}</p>
 
-          {hasDiscount ? (
+          {product.discountPercent ? (
             <div className="mt-6">
               <p className="text-2xl font-bold">
                 ${discountedPrice.toFixed(2)}

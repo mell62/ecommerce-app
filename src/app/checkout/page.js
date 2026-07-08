@@ -40,11 +40,11 @@ export default function CheckoutPage() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to place order");
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to place order");
+      }
 
       console.log(data);
 
@@ -55,7 +55,7 @@ export default function CheckoutPage() {
       window.location.href = "/";
     } catch (error) {
       console.error(error);
-      alert("Something went wrong. Please try again.");
+      alert(error.message);
     } finally {
       setIsPlacingOrder(false);
     }

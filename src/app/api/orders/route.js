@@ -15,6 +15,30 @@ export async function POST(request) {
       );
     }
 
+    for (const item of body.items) {
+      const product = await prisma.product.findUnique({
+        where: {
+          id: item.id,
+        },
+      });
+
+      if (!product) {
+        return Response.json(
+          { error: `Product not found: ${item.id}` },
+          { status: 404 }
+        );
+      }
+
+      if (product.stockCount < item.quantity) {
+        return Response.json(
+          {
+            error: `${product.name} does not have enough stock available.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     console.log(body);
 
     const order = await prisma.order.create({

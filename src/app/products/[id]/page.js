@@ -48,6 +48,12 @@ export default async function ProductPage({ params }) {
       : product.reviews.reduce((sum, review) => sum + review.rating, 0) /
         reviewCount;
 
+  const hasDiscount = product.discountPercent > 0;
+
+  const discountedPrice = hasDiscount
+    ? product.price - (product.price * product.discountPercent) / 100
+    : product.price;
+
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="grid md:grid-cols-2 gap-8">
@@ -73,7 +79,25 @@ export default async function ProductPage({ params }) {
 
           <p className="mt-4 text-gray-600">{product.description}</p>
 
-          <p className="mt-6 text-2xl font-bold">${product.price}</p>
+          {hasDiscount ? (
+            <div className="mt-6">
+              <p className="text-2xl font-bold">
+                ${discountedPrice.toFixed(2)}
+              </p>
+
+              <p className="text-gray-500 line-through">
+                ${product.price.toFixed(2)}
+              </p>
+
+              <p className="text-sm text-green-700">
+                {product.discountPercent}% off
+              </p>
+            </div>
+          ) : (
+            <p className="mt-6 text-2xl font-bold">
+              ${product.price.toFixed(2)}
+            </p>
+          )}
 
           {product.stockCount === 0 ? (
             <p className="mt-2 text-red-600 font-medium">Out of stock</p>

@@ -1,18 +1,10 @@
 "use client";
+import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 
 export default function AddToCartButton({ product }) {
   const isOutOfStock = product.stockCount === 0;
 
-  const hasDiscount = product.discountPercent > 0;
-
-  const finalPrice = hasDiscount
-    ? Number(
-        (
-          product.price -
-          (product.price * product.discountPercent) / 100
-        ).toFixed(2)
-      )
-    : product.price;
+  const finalPrice = getDiscountedPrice(product.price, product.discountPercent);
 
   function handleClick() {
     const existing = JSON.parse(localStorage.getItem("cart")) || [];

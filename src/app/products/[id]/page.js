@@ -152,6 +152,13 @@ export default async function ProductPage({ params }) {
                 href={`/products/${relatedProduct.id}`}
                 className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
               >
+                {relatedProduct.discountPercent > 0 && (
+                  <div className="mb-2">
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                      {relatedProduct.discountPercent}% OFF
+                    </span>
+                  </div>
+                )}
                 <img
                   src={relatedProduct.imageUrl}
                   alt={relatedProduct.name}
@@ -160,7 +167,33 @@ export default async function ProductPage({ params }) {
 
                 <h3 className="font-semibold mt-4">{relatedProduct.name}</h3>
 
-                <p className="font-bold mt-2">${relatedProduct.price}</p>
+                {relatedProduct.discountPercent > 0 ? (
+                  <div className="mt-2">
+                    <p className="font-bold">
+                      $
+                      {Number(
+                        (
+                          relatedProduct.price -
+                          (relatedProduct.price *
+                            relatedProduct.discountPercent) /
+                            100
+                        ).toFixed(2)
+                      ).toFixed(2)}
+                    </p>
+
+                    <p className="text-sm text-gray-500 line-through">
+                      ${relatedProduct.price.toFixed(2)}
+                    </p>
+
+                    <p className="text-sm text-green-700">
+                      {relatedProduct.discountPercent}% off
+                    </p>
+                  </div>
+                ) : (
+                  <p className="font-bold mt-2">
+                    ${relatedProduct.price.toFixed(2)}
+                  </p>
+                )}
               </Link>
             ))}
           </div>

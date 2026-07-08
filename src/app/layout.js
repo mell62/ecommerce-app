@@ -37,6 +37,7 @@ export default function RootLayout({ children }) {
                 Cart <CartCounter />
               </Link>
               <Link href="/orders">Orders</Link>
+              <Link href="/wishlist">Wishlist</Link>
             </div>
           </div>
         </nav>

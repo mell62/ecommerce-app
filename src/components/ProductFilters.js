@@ -62,6 +62,7 @@ export default function ProductFilters() {
     params.delete("minPrice");
     params.delete("maxPrice");
     params.delete("minRating");
+    params.delete("deals");
 
     const queryString = params.toString();
 

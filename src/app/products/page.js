@@ -3,7 +3,14 @@ import Link from "next/link";
 import SortDropdown from "@/components/SortDropdown";
 import ProductFilters from "@/components/ProductFilters";
 
-async function getProducts(category, search, minPrice, maxPrice, sort) {
+async function getProducts(
+  category,
+  search,
+  minPrice,
+  maxPrice,
+  sort,
+  minRating
+) {
   const url = new URL(
     `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products`
   );
@@ -28,6 +35,10 @@ async function getProducts(category, search, minPrice, maxPrice, sort) {
     url.searchParams.set("sort", sort);
   }
 
+  if (minRating) {
+    url.searchParams.set("minRating", minRating);
+  }
+
   const res = await fetch(url, {
     cache: "no-store",
   });
@@ -46,13 +57,15 @@ export default async function ProductsPage({ searchParams }) {
   const minPrice = params.minPrice;
   const maxPrice = params.maxPrice;
   const sort = params.sort;
+  const minRating = params.minRating;
 
   const products = await getProducts(
     category,
     search,
     minPrice,
     maxPrice,
-    sort
+    sort,
+    minRating
   );
 
   return (

@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import SortDropdown from "@/components/SortDropdown";
 import ProductFilters from "@/components/ProductFilters";
+import WishlistButton from "@/components/WishlistButton";
 
 async function getProducts(
   category,
@@ -176,6 +177,7 @@ export default async function ProductsPage({ searchParams }) {
               ) : (
                 <p className="text-sm text-green-600 font-medium">In stock</p>
               )}
+              <WishlistButton product={product} />
             </Link>
           );
         })}

@@ -20,6 +20,32 @@ export default async function HomePage() {
     ],
   });
 
+  let topRatedProducts = await prisma.product.findMany({
+    include: {
+      reviews: true,
+    },
+  });
+
+  topRatedProducts = topRatedProducts
+    .map((product) => {
+      const reviewCount = product.reviews.length;
+
+      const averageRating =
+        reviewCount === 0
+          ? 0
+          : product.reviews.reduce((sum, review) => sum + review.rating, 0) /
+            reviewCount;
+
+      return {
+        ...product,
+        reviewCount,
+        averageRating,
+      };
+    })
+    .filter((product) => product.reviewCount > 1)
+    .sort((a, b) => b.averageRating - a.averageRating)
+    .slice(0, 3);
+
   return (
     <div>
       <section className="bg-gray-400">
@@ -98,6 +124,47 @@ export default async function HomePage() {
                 <p className="text-gray-600">{product.description}</p>
 
                 <p className="font-bold mt-2">${product.price}</p>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+      <section className="max-w-6xl mx-auto px-8 py-12">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Top Rated Products</h2>
+
+          <Link href="/products?minRating=4" className="text-sm underline">
+            View 4+ rated
+          </Link>
+        </div>
+
+        {topRatedProducts.length === 0 ? (
+          <p className="text-gray-600">No rated products yet.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {topRatedProducts.map((product) => (
+              <Link
+                key={product.id}
+                href={`/products/${product.id}`}
+                className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
+              >
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="w-full h-48 object-cover rounded"
+                />
+
+                <h3 className="text-xl font-semibold mt-4">{product.name}</h3>
+
+                <p className="text-gray-600">{product.description}</p>
+
+                <p className="font-bold mt-2">${product.price}</p>
+
+                <p className="text-sm text-gray-700 mt-1">
+                  ⭐ {product.averageRating.toFixed(1)} / 5 (
+                  {product.reviewCount}{" "}
+                  {product.reviewCount === 1 ? "review" : "reviews"})
+                </p>
               </Link>
             ))}
           </div>

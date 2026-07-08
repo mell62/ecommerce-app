@@ -79,7 +79,11 @@ export default async function ProductsPage({ searchParams }) {
   return (
     <div className="max-w-6xl mx-auto p-8">
       <h1 className="text-3xl font-bold mb-6">
-        {category ? `${category} Products` : "Products"}
+        {deals === "true"
+          ? "Deals"
+          : category
+            ? `${category} Products`
+            : "Products"}
       </h1>
 
       <div className="flex gap-3 mb-6">

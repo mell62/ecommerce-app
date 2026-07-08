@@ -202,6 +202,13 @@ export default async function HomePage() {
                 href={`/products/${product.id}`}
                 className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
               >
+                {product.discountPercent > 0 && (
+                  <div className="mb-2">
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                      {product.discountPercent}% OFF
+                    </span>
+                  </div>
+                )}
                 <img
                   src={product.imageUrl}
                   alt={product.name}
@@ -259,6 +266,13 @@ export default async function HomePage() {
                 href={`/products/${product.id}`}
                 className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
               >
+                {product.discountPercent > 0 && (
+                  <div className="mb-2">
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                      {product.discountPercent}% OFF
+                    </span>
+                  </div>
+                )}
                 <img
                   src={product.imageUrl}
                   alt={product.name}
@@ -322,6 +336,13 @@ export default async function HomePage() {
                 href={`/products/${product.id}`}
                 className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
               >
+                {product.discountPercent > 0 && (
+                  <div className="mb-2">
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                      {product.discountPercent}% OFF
+                    </span>
+                  </div>
+                )}
                 <img
                   src={product.imageUrl}
                   alt={product.name}

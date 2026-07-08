@@ -9,6 +9,7 @@ export default function CartContents() {
   function saveCart(updatedCart) {
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
+    window.dispatchEvent(new Event("cartUpdated"));
   }
 
   function removeItem(id) {
@@ -88,7 +89,7 @@ export default function CartContents() {
               </button>
             </div>
 
-            <p>${item.price}</p>
+            <p>${item.price.toFixed(2)}</p>
             <button
               onClick={() => removeItem(item.id)}
               className="mt-2 bg-red-500 text-white px-3 py-1 rounded"

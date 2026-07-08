@@ -6,7 +6,12 @@ export default function AddToCartButton({ product }) {
   const hasDiscount = product.discountPercent > 0;
 
   const finalPrice = hasDiscount
-    ? product.price - (product.price * product.discountPercent) / 100
+    ? Number(
+        (
+          product.price -
+          (product.price * product.discountPercent) / 100
+        ).toFixed(2)
+      )
     : product.price;
 
   function handleClick() {
@@ -26,6 +31,8 @@ export default function AddToCartButton({ product }) {
     }
 
     localStorage.setItem("cart", JSON.stringify(existing));
+
+    window.dispatchEvent(new Event("cartUpdated"));
 
     alert("Added to cart!");
   }

@@ -103,6 +103,12 @@ export default async function ProductsPage({ searchParams }) {
         >
           Monitors
         </Link>
+        <Link
+          href="/products?deals=true"
+          className="border px-4 py-2 rounded hover:bg-gray-100"
+        >
+          Deals
+        </Link>
       </div>
 
       <ProductFilters />

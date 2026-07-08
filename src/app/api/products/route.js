@@ -13,6 +13,8 @@ export async function GET(request) {
 
   const sort = searchParams.get("sort");
 
+  const minRating = searchParams.get("minRating");
+
   let orderBy = [
     {
       createdAt: "desc",
@@ -44,7 +46,7 @@ export async function GET(request) {
     ];
   }
 
-  const products = await prisma.product.findMany({
+  let products = await prisma.product.findMany({
     where: {
       ...(category && {
         category: category,
@@ -83,6 +85,22 @@ export async function GET(request) {
     },
     orderBy,
   });
+
+  if (minRating) {
+  products = products.filter((product) => {
+    const reviewCount = product.reviews.length;
+
+    if (reviewCount === 0) {
+      return false;
+    }
+
+    const averageRating =
+      product.reviews.reduce((sum, review) => sum + review.rating, 0) /
+      reviewCount;
+
+    return averageRating >= Number(minRating);
+  });
+}
 
   return NextResponse.json(products);
 }

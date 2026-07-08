@@ -15,6 +15,8 @@ export async function GET(request) {
 
   const minRating = searchParams.get("minRating");
 
+  const deals = searchParams.get("deals");
+
   let orderBy = [
     {
       createdAt: "desc",
@@ -79,6 +81,11 @@ export async function GET(request) {
           }),
         },
       }),
+      ...(deals === "true" && {
+        discountPercent: {
+          gt: 0,
+        },
+      }),
     },
     include: {
       reviews: true,
@@ -87,20 +94,20 @@ export async function GET(request) {
   });
 
   if (minRating) {
-  products = products.filter((product) => {
-    const reviewCount = product.reviews.length;
+    products = products.filter((product) => {
+      const reviewCount = product.reviews.length;
 
-    if (reviewCount === 0) {
-      return false;
-    }
+      if (reviewCount === 0) {
+        return false;
+      }
 
-    const averageRating =
-      product.reviews.reduce((sum, review) => sum + review.rating, 0) /
-      reviewCount;
+      const averageRating =
+        product.reviews.reduce((sum, review) => sum + review.rating, 0) /
+        reviewCount;
 
-    return averageRating >= Number(minRating);
-  });
-}
+      return averageRating >= Number(minRating);
+    });
+  }
 
   return NextResponse.json(products);
 }

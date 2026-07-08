@@ -148,6 +148,12 @@ export default async function ProductsPage({ searchParams }) {
                     </span>
                   )}
 
+                  {product.discountPercent > 0 && (
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                      {product.discountPercent}% OFF
+                    </span>
+                  )}
+
                   {product.isNew && (
                     <span className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
                       New Arrival

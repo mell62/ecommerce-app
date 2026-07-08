@@ -212,7 +212,29 @@ export default async function HomePage() {
 
                 <p className="text-gray-600">{product.description}</p>
 
-                <p className="font-bold mt-2">${product.price}</p>
+                {product.discountPercent > 0 ? (
+                  <div className="mt-2">
+                    <p className="font-bold">
+                      $
+                      {Number(
+                        (
+                          product.price -
+                          (product.price * product.discountPercent) / 100
+                        ).toFixed(2)
+                      ).toFixed(2)}
+                    </p>
+
+                    <p className="text-sm text-gray-500 line-through">
+                      ${product.price.toFixed(2)}
+                    </p>
+
+                    <p className="text-sm text-green-700">
+                      {product.discountPercent}% off
+                    </p>
+                  </div>
+                ) : (
+                  <p className="font-bold mt-2">${product.price.toFixed(2)}</p>
+                )}
               </Link>
             ))}
           </div>
@@ -247,7 +269,29 @@ export default async function HomePage() {
 
                 <p className="text-gray-600">{product.description}</p>
 
-                <p className="font-bold mt-2">${product.price}</p>
+                {product.discountPercent > 0 ? (
+                  <div className="mt-2">
+                    <p className="font-bold">
+                      $
+                      {Number(
+                        (
+                          product.price -
+                          (product.price * product.discountPercent) / 100
+                        ).toFixed(2)
+                      ).toFixed(2)}
+                    </p>
+
+                    <p className="text-sm text-gray-500 line-through">
+                      ${product.price.toFixed(2)}
+                    </p>
+
+                    <p className="text-sm text-green-700">
+                      {product.discountPercent}% off
+                    </p>
+                  </div>
+                ) : (
+                  <p className="font-bold mt-2">${product.price.toFixed(2)}</p>
+                )}
 
                 <p className="text-sm text-gray-700 mt-1">
                   ⭐ {product.averageRating.toFixed(1)} / 5 (
@@ -288,7 +332,29 @@ export default async function HomePage() {
 
                 <p className="text-gray-600">{product.description}</p>
 
-                <p className="font-bold mt-2">${product.price}</p>
+                {product.discountPercent > 0 ? (
+                  <div className="mt-2">
+                    <p className="font-bold">
+                      $
+                      {Number(
+                        (
+                          product.price -
+                          (product.price * product.discountPercent) / 100
+                        ).toFixed(2)
+                      ).toFixed(2)}
+                    </p>
+
+                    <p className="text-sm text-gray-500 line-through">
+                      ${product.price.toFixed(2)}
+                    </p>
+
+                    <p className="text-sm text-green-700">
+                      {product.discountPercent}% off
+                    </p>
+                  </div>
+                ) : (
+                  <p className="font-bold mt-2">${product.price.toFixed(2)}</p>
+                )}
               </Link>
             ))}
           </div>

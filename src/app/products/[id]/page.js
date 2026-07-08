@@ -68,7 +68,7 @@ export default async function ProductPage({ params }) {
         <div>
           <h1 className="text-3xl font-bold">{product.name}</h1>
 
-          {product.discountPercent > 0 && (
+          {productHasDiscount && (
             <span className="inline-block mt-3 rounded bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
               {product.discountPercent}% OFF
             </span>
@@ -87,7 +87,7 @@ export default async function ProductPage({ params }) {
 
           <p className="mt-4 text-gray-600">{product.description}</p>
 
-          {product.discountPercent ? (
+          {productHasDiscount ? (
             <div className="mt-6">
               <p className="text-2xl font-bold">
                 ${discountedPrice.toFixed(2)}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import SortDropdown from "@/components/SortDropdown";
 import ProductFilters from "@/components/ProductFilters";
 import WishlistButton from "@/components/WishlistButton";
+import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 
 async function getProducts(
   category,
@@ -140,11 +141,12 @@ export default async function ProductsPage({ searchParams }) {
                     0
                   ) / reviewCount;
 
-            const hasDiscount = product.discountPercent > 0;
+            const productHasDiscount = hasDiscount(product.discountPercent);
 
-            const discountedPrice = hasDiscount
-              ? product.price - (product.price * product.discountPercent) / 100
-              : product.price;
+            const discountedPrice = getDiscountedPrice(
+              product.price,
+              product.discountPercent
+            );
 
             return (
               <Link
@@ -165,7 +167,7 @@ export default async function ProductsPage({ searchParams }) {
                     </span>
                   )}
 
-                  {product.discountPercent > 0 && (
+                  {productHasDiscount && (
                     <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
                       {product.discountPercent}% OFF
                     </span>
@@ -199,7 +201,7 @@ export default async function ProductsPage({ searchParams }) {
 
                 <p className="text-gray-600">{product.description}</p>
 
-                {hasDiscount ? (
+                {productHasDiscount ? (
                   <div className="mt-2">
                     <p className="font-bold">${discountedPrice.toFixed(2)}</p>
 

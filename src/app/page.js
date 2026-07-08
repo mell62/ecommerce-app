@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -140,11 +141,9 @@ export default async function HomePage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {dealProducts.map((product) => {
-              const discountedPrice = Number(
-                (
-                  product.price -
-                  (product.price * product.discountPercent) / 100
-                ).toFixed(2)
+              const discountedPrice = getDiscountedPrice(
+                product.price,
+                product.discountPercent
               );
 
               return (
@@ -196,54 +195,57 @@ export default async function HomePage() {
           <p className="text-gray-600">No featured products yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredProducts.map((product) => (
-              <Link
-                key={product.id}
-                href={`/products/${product.id}`}
-                className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
-              >
-                {product.discountPercent > 0 && (
-                  <div className="mb-2">
-                    <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                      {product.discountPercent}% OFF
-                    </span>
-                  </div>
-                )}
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-48 object-cover rounded"
-                />
+            {featuredProducts.map((product) => {
+              const productHasDiscount = hasDiscount(product.discountPercent);
 
-                <h3 className="text-xl font-semibold mt-4">{product.name}</h3>
+              const discountedPrice = getDiscountedPrice(
+                product.price,
+                product.discountPercent
+              );
 
-                <p className="text-gray-600">{product.description}</p>
+              return (
+                <Link
+                  key={product.id}
+                  href={`/products/${product.id}`}
+                  className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
+                >
+                  {productHasDiscount && (
+                    <div className="mb-2">
+                      <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                        {product.discountPercent}% OFF
+                      </span>
+                    </div>
+                  )}
 
-                {product.discountPercent > 0 ? (
-                  <div className="mt-2">
-                    <p className="font-bold">
-                      $
-                      {Number(
-                        (
-                          product.price -
-                          (product.price * product.discountPercent) / 100
-                        ).toFixed(2)
-                      ).toFixed(2)}
-                    </p>
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-48 object-cover rounded"
+                  />
 
-                    <p className="text-sm text-gray-500 line-through">
+                  <h3 className="text-xl font-semibold mt-4">{product.name}</h3>
+                  <p className="text-gray-600">{product.description}</p>
+
+                  {productHasDiscount ? (
+                    <div className="mt-2">
+                      <p className="font-bold">${discountedPrice.toFixed(2)}</p>
+
+                      <p className="text-sm text-gray-500 line-through">
+                        ${product.price.toFixed(2)}
+                      </p>
+
+                      <p className="text-sm text-green-700">
+                        {product.discountPercent}% off
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="font-bold mt-2">
                       ${product.price.toFixed(2)}
                     </p>
-
-                    <p className="text-sm text-green-700">
-                      {product.discountPercent}% off
-                    </p>
-                  </div>
-                ) : (
-                  <p className="font-bold mt-2">${product.price.toFixed(2)}</p>
-                )}
-              </Link>
-            ))}
+                  )}
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>
@@ -260,60 +262,63 @@ export default async function HomePage() {
           <p className="text-gray-600">No rated products yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {topRatedProducts.map((product) => (
-              <Link
-                key={product.id}
-                href={`/products/${product.id}`}
-                className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
-              >
-                {product.discountPercent > 0 && (
-                  <div className="mb-2">
-                    <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                      {product.discountPercent}% OFF
-                    </span>
-                  </div>
-                )}
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-48 object-cover rounded"
-                />
+            {topRatedProducts.map((product) => {
+              const productHasDiscount = hasDiscount(product.discountPercent);
 
-                <h3 className="text-xl font-semibold mt-4">{product.name}</h3>
+              const discountedPrice = getDiscountedPrice(
+                product.price,
+                product.discountPercent
+              );
 
-                <p className="text-gray-600">{product.description}</p>
+              return (
+                <Link
+                  key={product.id}
+                  href={`/products/${product.id}`}
+                  className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
+                >
+                  {productHasDiscount && (
+                    <div className="mb-2">
+                      <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                        {product.discountPercent}% OFF
+                      </span>
+                    </div>
+                  )}
 
-                {product.discountPercent > 0 ? (
-                  <div className="mt-2">
-                    <p className="font-bold">
-                      $
-                      {Number(
-                        (
-                          product.price -
-                          (product.price * product.discountPercent) / 100
-                        ).toFixed(2)
-                      ).toFixed(2)}
-                    </p>
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-48 object-cover rounded"
+                  />
 
-                    <p className="text-sm text-gray-500 line-through">
+                  <h3 className="text-xl font-semibold mt-4">{product.name}</h3>
+                  <p className="text-gray-600">{product.description}</p>
+
+                  <p className="text-sm text-gray-700 mt-1">
+                    ⭐ {product.averageRating.toFixed(1)} / 5 (
+                    {product.reviewCount}{" "}
+                    {product.reviewCount === 1 ? "review" : "reviews"})
+                  </p>
+
+                  {productHasDiscount ? (
+                    <div className="mt-2">
+                      <p className="font-bold">${discountedPrice.toFixed(2)}</p>
+
+                      <p className="text-sm text-gray-500 line-through">
+                        ${product.price.toFixed(2)}
+                      </p>
+
+                      <p className="text-sm text-green-700">
+                        {product.discountPercent}% off
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="font-bold mt-2">
                       ${product.price.toFixed(2)}
                     </p>
-
-                    <p className="text-sm text-green-700">
-                      {product.discountPercent}% off
-                    </p>
-                  </div>
-                ) : (
-                  <p className="font-bold mt-2">${product.price.toFixed(2)}</p>
-                )}
-
-                <p className="text-sm text-gray-700 mt-1">
-                  ⭐ {product.averageRating.toFixed(1)} / 5 (
-                  {product.reviewCount}{" "}
-                  {product.reviewCount === 1 ? "review" : "reviews"})
-                </p>
-              </Link>
-            ))}
+                  )}
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>
@@ -330,54 +335,57 @@ export default async function HomePage() {
           <p className="text-gray-600">No best sellers yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {bestSellerProducts.map((product) => (
-              <Link
-                key={product.id}
-                href={`/products/${product.id}`}
-                className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
-              >
-                {product.discountPercent > 0 && (
-                  <div className="mb-2">
-                    <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                      {product.discountPercent}% OFF
-                    </span>
-                  </div>
-                )}
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-48 object-cover rounded"
-                />
+            {bestSellerProducts.map((product) => {
+              const productHasDiscount = hasDiscount(product.discountPercent);
 
-                <h3 className="text-xl font-semibold mt-4">{product.name}</h3>
+              const discountedPrice = getDiscountedPrice(
+                product.price,
+                product.discountPercent
+              );
 
-                <p className="text-gray-600">{product.description}</p>
+              return (
+                <Link
+                  key={product.id}
+                  href={`/products/${product.id}`}
+                  className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
+                >
+                  {productHasDiscount && (
+                    <div className="mb-2">
+                      <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                        {product.discountPercent}% OFF
+                      </span>
+                    </div>
+                  )}
 
-                {product.discountPercent > 0 ? (
-                  <div className="mt-2">
-                    <p className="font-bold">
-                      $
-                      {Number(
-                        (
-                          product.price -
-                          (product.price * product.discountPercent) / 100
-                        ).toFixed(2)
-                      ).toFixed(2)}
-                    </p>
+                  <img
+                    src={product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-48 object-cover rounded"
+                  />
 
-                    <p className="text-sm text-gray-500 line-through">
+                  <h3 className="text-xl font-semibold mt-4">{product.name}</h3>
+                  <p className="text-gray-600">{product.description}</p>
+
+                  {productHasDiscount ? (
+                    <div className="mt-2">
+                      <p className="font-bold">${discountedPrice.toFixed(2)}</p>
+
+                      <p className="text-sm text-gray-500 line-through">
+                        ${product.price.toFixed(2)}
+                      </p>
+
+                      <p className="text-sm text-green-700">
+                        {product.discountPercent}% off
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="font-bold mt-2">
                       ${product.price.toFixed(2)}
                     </p>
-
-                    <p className="text-sm text-green-700">
-                      {product.discountPercent}% off
-                    </p>
-                  </div>
-                ) : (
-                  <p className="font-bold mt-2">${product.price.toFixed(2)}</p>
-                )}
-              </Link>
-            ))}
+                  )}
+                </Link>
+              );
+            })}
           </div>
         )}
       </section>

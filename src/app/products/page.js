@@ -10,7 +10,8 @@ async function getProducts(
   minPrice,
   maxPrice,
   sort,
-  minRating
+  minRating,
+  deals
 ) {
   const url = new URL(
     `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products`
@@ -40,6 +41,10 @@ async function getProducts(
     url.searchParams.set("minRating", minRating);
   }
 
+  if (deals) {
+    url.searchParams.set("deals", deals);
+  }
+
   const res = await fetch(url, {
     cache: "no-store",
   });
@@ -59,6 +64,7 @@ export default async function ProductsPage({ searchParams }) {
   const maxPrice = params.maxPrice;
   const sort = params.sort;
   const minRating = params.minRating;
+  const deals = params.deals;
 
   const products = await getProducts(
     category,
@@ -66,7 +72,8 @@ export default async function ProductsPage({ searchParams }) {
     minPrice,
     maxPrice,
     sort,
-    minRating
+    minRating,
+    deals
   );
 
   return (

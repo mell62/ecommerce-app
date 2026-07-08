@@ -130,8 +130,8 @@ export default async function HomePage() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Deals</h2>
 
-          <Link href="/products" className="text-sm underline">
-            View all
+          <Link href="/products?deals=true" className="text-sm underline">
+            View all deals
           </Link>
         </div>
 

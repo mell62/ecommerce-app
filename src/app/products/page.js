@@ -102,9 +102,15 @@ export default async function ProductsPage({ searchParams }) {
 
       <SortDropdown currentSort={sort} />
 
-      {products.length === 0 ? (
-        <p className="text-gray-600">No products found.</p>
-      ) : (
+      <p className="mb-4 text-sm text-gray-600">
+        {products.length === 0
+          ? "No products found"
+          : `Showing ${products.length} ${
+              products.length === 1 ? "product" : "products"
+            }`}
+      </p>
+
+      {products.length === 0 ? null : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {products.map((product) => {
             const reviewCount = product.reviews.length;

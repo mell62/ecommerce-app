@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import AddToCartButton from "@/components/AddToCartButton";
 import Link from "next/link";
+import ReviewForm from "@/components/ReviewForm";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -86,6 +87,7 @@ export default async function ProductPage({ params }) {
           <AddToCartButton product={product} />
         </div>
       </div>
+      <ReviewForm productId={product.id} />
       <div className="mt-10">
         <h2 className="text-2xl font-bold mb-4">Reviews</h2>
 

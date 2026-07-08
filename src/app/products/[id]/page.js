@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import AddToCartButton from "@/components/AddToCartButton";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -24,6 +25,19 @@ export default async function ProductPage({ params }) {
   if (!product) {
     return notFound();
   }
+
+  const relatedProducts = await prisma.product.findMany({
+    where: {
+      category: product.category,
+      NOT: {
+        id: product.id,
+      },
+    },
+    take: 3,
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
   const reviewCount = product.reviews.length;
 
@@ -88,6 +102,33 @@ export default async function ProductPage({ params }) {
 
                 <p className="mt-2 text-gray-700">{review.comment}</p>
               </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="mt-10">
+        <h2 className="text-2xl font-bold mb-4">Related Products</h2>
+
+        {relatedProducts.length === 0 ? (
+          <p className="text-gray-600">No related products found.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {relatedProducts.map((relatedProduct) => (
+              <Link
+                key={relatedProduct.id}
+                href={`/products/${relatedProduct.id}`}
+                className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
+              >
+                <img
+                  src={relatedProduct.imageUrl}
+                  alt={relatedProduct.name}
+                  className="w-full h-40 object-cover rounded"
+                />
+
+                <h3 className="font-semibold mt-4">{relatedProduct.name}</h3>
+
+                <p className="font-bold mt-2">${relatedProduct.price}</p>
+              </Link>
             ))}
           </div>
         )}

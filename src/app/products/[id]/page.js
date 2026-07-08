@@ -66,6 +66,12 @@ export default async function ProductPage({ params }) {
         <div>
           <h1 className="text-3xl font-bold">{product.name}</h1>
 
+          {product.discountPercent > 0 && (
+            <span className="inline-block mt-3 rounded bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
+              {product.discountPercent}% OFF
+            </span>
+          )}
+
           <div className="mt-4">
             {reviewCount === 0 ? (
               <p className="text-gray-600">No ratings yet</p>

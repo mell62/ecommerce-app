@@ -122,6 +122,13 @@ export default async function ProductsPage({ searchParams }) {
                     (sum, review) => sum + review.rating,
                     0
                   ) / reviewCount;
+
+            const hasDiscount = product.discountPercent > 0;
+
+            const discountedPrice = hasDiscount
+              ? product.price - (product.price * product.discountPercent) / 100
+              : product.price;
+
             return (
               <Link
                 key={product.id}
@@ -169,7 +176,21 @@ export default async function ProductsPage({ searchParams }) {
 
                 <p className="text-gray-600">{product.description}</p>
 
-                <p className="font-bold mt-2">${product.price}</p>
+                {hasDiscount ? (
+                  <div className="mt-2">
+                    <p className="font-bold">${discountedPrice.toFixed(2)}</p>
+
+                    <p className="text-sm text-gray-500 line-through">
+                      ${product.price.toFixed(2)}
+                    </p>
+
+                    <p className="text-sm text-green-700">
+                      {product.discountPercent}% off
+                    </p>
+                  </div>
+                ) : (
+                  <p className="font-bold mt-2">${product.price.toFixed(2)}</p>
+                )}
 
                 {reviewCount > 0 && (
                   <p className="text-sm text-gray-700 mt-1">

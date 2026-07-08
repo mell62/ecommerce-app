@@ -3,6 +3,12 @@
 export default function AddToCartButton({ product }) {
   const isOutOfStock = product.stockCount === 0;
 
+  const hasDiscount = product.discountPercent > 0;
+
+  const finalPrice = hasDiscount
+    ? product.price - (product.price * product.discountPercent) / 100
+    : product.price;
+
   function handleClick() {
     const existing = JSON.parse(localStorage.getItem("cart")) || [];
 
@@ -13,6 +19,8 @@ export default function AddToCartButton({ product }) {
     } else {
       existing.push({
         ...product,
+        price: finalPrice,
+        originalPrice: product.price,
         quantity: 1,
       });
     }

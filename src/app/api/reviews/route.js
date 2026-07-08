@@ -4,14 +4,18 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
-    if (!body.productId || !body.name || !body.rating || !body.comment) {
+    const name = body.name?.trim();
+    const comment = body.comment?.trim();
+    const rating = Number(body.rating);
+
+    if (!body.productId || !name || !rating || !comment) {
       return Response.json(
         { error: "Missing required review fields" },
         { status: 400 }
       );
     }
 
-    if (body.rating < 1 || body.rating > 5) {
+    if (rating < 1 || rating > 5) {
       return Response.json(
         { error: "Rating must be between 1 and 5" },
         { status: 400 }
@@ -21,9 +25,9 @@ export async function POST(request) {
     const review = await prisma.review.create({
       data: {
         productId: body.productId,
-        name: body.name,
-        rating: Number(body.rating),
-        comment: body.comment,
+        name,
+        rating,
+        comment,
       },
     });
 

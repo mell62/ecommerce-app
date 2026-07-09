@@ -103,6 +103,10 @@ export default function CartContents() {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+  const hasStockIssue = cart.some(
+    (item) => item.stockCount === 0 || item.quantity > item.stockCount
+  );
+
   return (
     <div className="space-y-6">
       {cart.map((item) => (
@@ -158,12 +162,27 @@ export default function CartContents() {
       ))}
 
       <div className="text-xl font-bold">Total: ${total.toFixed(2)}</div>
-      <Link
-        href="/checkout"
-        className="inline-block bg-black text-white px-4 py-2 rounded"
-      >
-        Checkout
-      </Link>
+      {hasStockIssue ? (
+        <div>
+          <p className="mb-3 text-sm text-red-600">
+            Please update your cart before checkout.
+          </p>
+
+          <button
+            disabled
+            className="inline-block rounded bg-gray-400 px-4 py-2 text-white cursor-not-allowed"
+          >
+            Checkout
+          </button>
+        </div>
+      ) : (
+        <Link
+          href="/checkout"
+          className="inline-block rounded bg-black px-4 py-2 text-white"
+        >
+          Checkout
+        </Link>
+      )}
     </div>
   );
 }

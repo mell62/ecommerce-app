@@ -46,23 +46,36 @@ export default async function OrdersPage({ searchParams }) {
       </div>
 
       <div className="space-y-6">
-        {orders.map((order) => (
-          <div key={order.id} className="border rounded-lg p-4">
-            <h2 className="font-bold">Order #{order.id.slice(-6)}</h2>
+        {orders.map((order) => {
+          const orderDate = new Date(order.createdAt).toLocaleDateString(
+            "en-US",
+            {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            }
+          );
 
-            <p>Status: {order.status}</p>
+          return (
+            <div key={order.id} className="border rounded-lg p-4">
+              <h2 className="font-bold">Order #{order.id.slice(-6)}</h2>
 
-            <p>Total: ${order.totalPrice.toFixed(2)}</p>
+              <p className="text-sm text-gray-600">Placed on {orderDate}</p>
 
-            <div className="mt-4 space-y-2">
-              {order.items.map((item) => (
-                <div key={item.id}>
-                  {item.product.name} × {item.quantity}
-                </div>
-              ))}
+              <p>Status: {order.status}</p>
+
+              <p>Total: ${order.totalPrice.toFixed(2)}</p>
+
+              <div className="mt-4 space-y-2">
+                {order.items.map((item) => (
+                  <div key={item.id}>
+                    {item.product.name} × {item.quantity}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

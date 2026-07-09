@@ -134,6 +134,18 @@ export default function CartContents() {
               </button>
             </div>
 
+            {item.stockCount === 0 && (
+              <p className="mt-1 text-sm text-red-600">
+                This item is currently out of stock.
+              </p>
+            )}
+
+            {item.stockCount > 0 && item.quantity > item.stockCount && (
+              <p className="mt-1 text-sm text-red-600">
+                Only {item.stockCount} available.
+              </p>
+            )}
+
             <p>${item.price.toFixed(2)}</p>
             <button
               onClick={() => removeItem(item.id)}

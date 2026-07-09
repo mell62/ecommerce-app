@@ -53,13 +53,18 @@ export async function POST(request) {
       });
     }
 
+    const validatedTotalPrice = validatedItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
     console.log(body);
 
     const order = await prisma.$transaction(async (tx) => {
       const createdOrder = await tx.order.create({
         data: {
           status: "PENDING",
-          totalPrice: body.totalPrice,
+          totalPrice: validatedTotalPrice,
           userId: body.userId,
           items: {
             create: validatedItems.map((item) => ({

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { getDiscountedPrice } from "@/lib/pricing";
 
 export async function POST(request) {
   try {
@@ -14,6 +15,8 @@ export async function POST(request) {
         { status: 400 }
       );
     }
+
+    const validatedItems = [];
 
     for (const item of body.items) {
       const product = await prisma.product.findUnique({
@@ -37,6 +40,17 @@ export async function POST(request) {
           { status: 400 }
         );
       }
+
+      const finalPrice = getDiscountedPrice(
+        product.price,
+        product.discountPercent
+      );
+
+      validatedItems.push({
+        productId: product.id,
+        quantity: item.quantity,
+        price: finalPrice,
+      });
     }
 
     console.log(body);
@@ -48,8 +62,8 @@ export async function POST(request) {
           totalPrice: body.totalPrice,
           userId: body.userId,
           items: {
-            create: body.items.map((item) => ({
-              productId: item.id,
+            create: validatedItems.map((item) => ({
+              productId: item.productId,
               quantity: item.quantity,
               price: item.price,
             })),
@@ -64,10 +78,10 @@ export async function POST(request) {
         },
       });
 
-      for (const item of body.items) {
+      for (const item of validatedItems) {
         await tx.product.update({
           where: {
-            id: item.id,
+            id: item.productId,
           },
           data: {
             stockCount: {

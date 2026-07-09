@@ -5,10 +5,13 @@ import { useEffect, useState } from "react";
 
 export default function WishlistContents() {
   const [wishlist, setWishlist] = useState([]);
+  const [hasLoadedWishlist, setHasLoadedWishlist] = useState(false);
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("wishlist")) || [];
+
     setWishlist(stored);
+    setHasLoadedWishlist(true);
   }, []);
 
   function removeFromWishlist(id) {
@@ -16,6 +19,10 @@ export default function WishlistContents() {
 
     setWishlist(updated);
     localStorage.setItem("wishlist", JSON.stringify(updated));
+  }
+
+  if (!hasLoadedWishlist) {
+    return <p>Loading wishlist...</p>;
   }
 
   if (wishlist.length === 0) {

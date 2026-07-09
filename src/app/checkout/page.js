@@ -69,7 +69,7 @@ export default function CheckoutPage() {
 
       alert("Order placed successfully!");
 
-      window.location.href = "/orders";
+      window.location.href = "/orders?success=true";
     } catch (error) {
       console.error(error);
       alert(error.message);

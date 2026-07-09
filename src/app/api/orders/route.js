@@ -41,24 +41,43 @@ export async function POST(request) {
 
     console.log(body);
 
-    const order = await prisma.order.create({
-      data: {
-        status: "PENDING",
-        totalPrice: body.totalPrice,
-        userId: body.userId,
-
-        items: {
-          create: body.items.map((item) => ({
-            productId: item.id,
-            quantity: item.quantity,
-            price: item.price,
-          })),
+    const order = await prisma.$transaction(async (tx) => {
+      const createdOrder = await tx.order.create({
+        data: {
+          status: "PENDING",
+          totalPrice: body.totalPrice,
+          userId: body.userId,
+          items: {
+            create: body.items.map((item) => ({
+              productId: item.id,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+          },
         },
-      },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      });
 
-      include: {
-        items: true,
-      },
+      for (const item of body.items) {
+        await tx.product.update({
+          where: {
+            id: item.id,
+          },
+          data: {
+            stockCount: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      }
+
+      return createdOrder;
     });
 
     return Response.json(order);

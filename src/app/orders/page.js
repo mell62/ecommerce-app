@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import Link from "next/link";
 
 export default async function OrdersPage({ searchParams }) {
   const success = (await searchParams)?.success;
@@ -34,6 +35,15 @@ export default async function OrdersPage({ searchParams }) {
           Order placed successfully!
         </div>
       )}
+
+      <div className="mb-6">
+        <Link
+          href="/products"
+          className="inline-block rounded bg-black px-4 py-2 text-white"
+        >
+          Continue Shopping
+        </Link>
+      </div>
 
       <div className="space-y-6">
         {orders.map((order) => (

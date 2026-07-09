@@ -16,6 +16,16 @@ export async function POST(request) {
       );
     }
 
+    const user = await prisma.user.findUnique({
+      where: {
+        id: body.userId,
+      },
+    });
+
+    if (!user) {
+      return Response.json({ error: "User not found." }, { status: 404 });
+    }
+
     const validatedItems = [];
 
     for (const item of body.items) {

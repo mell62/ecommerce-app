@@ -26,6 +26,10 @@ export default function CheckoutPage() {
   }
 
   async function placeOrder() {
+    if (isPlacingOrder) {
+      return;
+    }
+
     try {
       setIsPlacingOrder(true);
 

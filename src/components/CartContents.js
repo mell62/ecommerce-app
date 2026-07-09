@@ -37,10 +37,49 @@ export default function CartContents() {
   }
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("cart")) || [];
+    async function loadCart() {
+      try {
+        const stored = JSON.parse(localStorage.getItem("cart")) || [];
 
-    setCart(stored);
-    setHasLoadedCart(true);
+        if (stored.length === 0) {
+          setCart([]);
+          setHasLoadedCart(true);
+          return;
+        }
+
+        const response = await fetch("/api/cart/validate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            items: stored.map((item) => ({
+              id: item.id,
+              quantity: item.quantity,
+            })),
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load cart");
+        }
+
+        const validatedItems = await response.json();
+
+        setCart(validatedItems);
+        localStorage.setItem("cart", JSON.stringify(validatedItems));
+        window.dispatchEvent(new Event("cartUpdated"));
+      } catch (error) {
+        console.error(error);
+
+        const stored = JSON.parse(localStorage.getItem("cart")) || [];
+        setCart(stored);
+      } finally {
+        setHasLoadedCart(true);
+      }
+    }
+
+    loadCart();
   }, []);
 
   if (!hasLoadedCart) {

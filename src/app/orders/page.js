@@ -76,10 +76,26 @@ export default async function OrdersPage({ searchParams }) {
 
               <div className="mt-4 space-y-2">
                 {order.items.map((item) => (
-                  <div key={item.id}>
-                    {item.product.name} × {item.quantity} - $
-                    {(item.price * item.quantity).toFixed(2)}
-                  </div>
+                  <li
+                    key={item.id}
+                    className="flex items-center justify-between gap-4 py-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={item.product.imageUrl}
+                        alt={item.product.name}
+                        className="h-14 w-14 rounded object-cover"
+                      />
+
+                      <span>
+                        {item.product.name} × {item.quantity}
+                      </span>
+                    </div>
+
+                    <span className="font-medium">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </span>
+                  </li>
                 ))}
               </div>
             </div>

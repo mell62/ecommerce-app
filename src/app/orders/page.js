@@ -72,7 +72,7 @@ export default async function OrdersPage({ searchParams }) {
                 {order.items.map((item) => (
                   <div key={item.id}>
                     {item.product.name} × {item.quantity} - $
-                    {item.price.toFixed(2)}
+                    {(item.price * item.quantity).toFixed(2)}
                   </div>
                 ))}
               </div>

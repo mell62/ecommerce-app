@@ -19,6 +19,13 @@ export async function POST(request) {
     const validatedItems = [];
 
     for (const item of body.items) {
+      if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+        return Response.json(
+          { error: "Invalid item quantity." },
+          { status: 400 }
+        );
+      }
+
       const product = await prisma.product.findUnique({
         where: {
           id: item.id,

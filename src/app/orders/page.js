@@ -22,6 +22,12 @@ export default async function OrdersPage({ searchParams }) {
         <h1 className="text-3xl font-bold mb-6">Orders</h1>
 
         <p>No orders found.</p>
+        <Link
+          href="/products"
+          className="inline-block rounded bg-black px-4 py-2 text-white"
+        >
+          Start Shopping
+        </Link>
       </div>
     );
   }

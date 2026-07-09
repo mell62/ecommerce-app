@@ -9,13 +9,55 @@ export default function CheckoutPage() {
   const [hasLoadedCart, setHasLoadedCart] = useState(false);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("cart")) || [];
+    async function loadCart() {
+      try {
+        const stored = JSON.parse(localStorage.getItem("cart")) || [];
 
-    setCart(stored);
-    setHasLoadedCart(true);
+        if (stored.length === 0) {
+          setCart([]);
+          setHasLoadedCart(true);
+          return;
+        }
+
+        const response = await fetch("/api/cart/validate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            items: stored.map((item) => ({
+              id: item.id,
+              quantity: item.quantity,
+            })),
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load checkout cart");
+        }
+
+        const validatedItems = await response.json();
+
+        setCart(validatedItems);
+        localStorage.setItem("cart", JSON.stringify(validatedItems));
+      } catch (error) {
+        console.error(error);
+
+        const stored = JSON.parse(localStorage.getItem("cart")) || [];
+        setCart(stored);
+      } finally {
+        setHasLoadedCart(true);
+      }
+    }
+
+    loadCart();
   }, []);
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const hasStockIssue = cart.some(
+    (item) => item.stockCount === 0 || item.quantity > item.stockCount
+  );
 
   if (!hasLoadedCart) {
     return (
@@ -95,9 +137,15 @@ export default function CheckoutPage() {
       </div>
 
       <div className="text-xl font-bold">Total: ${total.toFixed(2)}</div>
+      {hasStockIssue && (
+        <p className="mt-4 text-sm text-red-600">
+          Some items in your cart are no longer available in the requested
+          quantity. Please update your cart before placing the order.
+        </p>
+      )}
       <button
         onClick={placeOrder}
-        disabled={isPlacingOrder}
+        disabled={isPlacingOrder || hasStockIssue}
         className="mt-6 px-4 py-2 bg-black text-white disabled:opacity-50"
       >
         {isPlacingOrder ? "Placing Order..." : "Place Order"}

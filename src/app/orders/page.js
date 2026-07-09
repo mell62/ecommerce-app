@@ -62,7 +62,9 @@ export default async function OrdersPage({ searchParams }) {
 
               <p className="text-sm text-gray-600">Placed on {orderDate}</p>
 
-              <p>Status: {order.status}</p>
+              <span className="inline-block mt-2 rounded bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700">
+                {order.status}
+              </span>
 
               <p>Total: ${order.totalPrice.toFixed(2)}</p>
 

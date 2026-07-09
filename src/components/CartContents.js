@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 export default function CartContents() {
   const [cart, setCart] = useState([]);
+  const [hasLoadedCart, setHasLoadedCart] = useState(false);
 
   function saveCart(updatedCart) {
     setCart(updatedCart);
@@ -39,7 +40,12 @@ export default function CartContents() {
     const stored = JSON.parse(localStorage.getItem("cart")) || [];
 
     setCart(stored);
+    setHasLoadedCart(true);
   }, []);
+
+  if (!hasLoadedCart) {
+    return <p>Loading cart...</p>;
+  }
 
   if (cart.length === 0) {
     return (

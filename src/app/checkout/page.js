@@ -6,14 +6,26 @@ import { useEffect, useState } from "react";
 export default function CheckoutPage() {
   const [cart, setCart] = useState([]);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [hasLoadedCart, setHasLoadedCart] = useState(false);
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("cart")) || [];
 
     setCart(stored);
+    setHasLoadedCart(true);
   }, []);
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  if (!hasLoadedCart) {
+    return (
+      <main className="max-w-4xl mx-auto p-8">
+        <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+
+        <p>Loading checkout...</p>
+      </main>
+    );
+  }
 
   if (cart.length === 0) {
     return (

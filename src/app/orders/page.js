@@ -71,7 +71,8 @@ export default async function OrdersPage({ searchParams }) {
               <div className="mt-4 space-y-2">
                 {order.items.map((item) => (
                   <div key={item.id}>
-                    {item.product.name} × {item.quantity}
+                    {item.product.name} × {item.quantity} - $
+                    {item.price.toFixed(2)}
                   </div>
                 ))}
               </div>

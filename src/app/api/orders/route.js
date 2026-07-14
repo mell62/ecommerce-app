@@ -1,12 +1,25 @@
 import { prisma } from "@/lib/db";
 import { getDiscountedPrice } from "@/lib/pricing";
+import { getCurrentUser } from "@/lib/session";
 
 export async function POST(request) {
   try {
     const body = await request.json();
 
-    if (!body.userId || !body.totalPrice || !Array.isArray(body.items)) {
-      return Response.json({ error: "Invalid order data" }, { status: 400 });
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return Response.json(
+        { error: "You must be logged in to place an order." },
+        { status: 401 }
+      );
+    }
+
+    if (!Array.isArray(body.items)) {
+      return Response.json(
+        { error: "Order items are required." },
+        { status: 400 }
+      );
     }
 
     if (body.items.length === 0) {
@@ -14,16 +27,6 @@ export async function POST(request) {
         { error: "Order must contain at least one item" },
         { status: 400 }
       );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: {
-        id: body.userId,
-      },
-    });
-
-    if (!user) {
-      return Response.json({ error: "User not found." }, { status: 404 });
     }
 
     const validatedItems = [];
@@ -82,7 +85,7 @@ export async function POST(request) {
         data: {
           status: "PENDING",
           totalPrice: validatedTotalPrice,
-          userId: body.userId,
+          userId: user.id,
           items: {
             create: validatedItems.map((item) => ({
               productId: item.productId,

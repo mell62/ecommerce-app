@@ -1,5 +1,4 @@
 "use client";
-import { GUEST_USER_ID } from "@/lib/constants";
 
 import { useEffect, useState } from "react";
 
@@ -93,8 +92,6 @@ export default function CheckoutPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: GUEST_USER_ID,
-          totalPrice: total,
           items: cart,
         }),
       });

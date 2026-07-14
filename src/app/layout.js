@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import CartCounter from "@/components/CartCounter";
+import LogoutButton from "@/components/LogoutButton";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
               </Link>
               <Link href="/orders">Orders</Link>
               <Link href="/wishlist">Wishlist</Link>
+              <LogoutButton />
             </div>
           </div>
         </nav>

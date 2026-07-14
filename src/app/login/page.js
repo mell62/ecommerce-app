@@ -2,19 +2,20 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+
+  const router = useRouter();
 
   async function handleSubmit(event) {
     event.preventDefault();
 
     setError("");
-    setMessage("");
 
     try {
       setIsSubmitting(true);
@@ -36,8 +37,9 @@ export default function LoginPage() {
         throw new Error(data.error || "Failed to log in.");
       }
 
-      setMessage(`Login successful. Welcome, ${data.name}!`);
       setPassword("");
+      router.push("/");
+      router.refresh();
     } catch (error) {
       setError(error.message);
     } finally {
@@ -82,12 +84,6 @@ export default function LoginPage() {
 
         {error && (
           <p className="rounded bg-red-50 p-3 text-sm text-red-700">{error}</p>
-        )}
-
-        {message && (
-          <p className="rounded bg-green-50 p-3 text-sm text-green-700">
-            {message}
-          </p>
         )}
 
         <button

@@ -38,7 +38,8 @@ export default function RegisterPage() {
         throw new Error(data.error || "Failed to create account.");
       }
 
-      router.push("/login");
+      router.push("/");
+      router.refresh();
     } catch (error) {
       setError(error.message);
     } finally {

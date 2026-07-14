@@ -1,5 +1,6 @@
 import argon2 from "argon2";
 import { prisma } from "@/lib/db";
+import { createSession } from "@/lib/session";
 
 export async function POST(request) {
   try {
@@ -52,6 +53,8 @@ export async function POST(request) {
         createdAt: true,
       },
     });
+
+    await createSession(user);
 
     return Response.json(user, { status: 201 });
   } catch (error) {

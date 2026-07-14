@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import CartCounter from "@/components/CartCounter";
 import LogoutButton from "@/components/LogoutButton";
+import { getCurrentUser } from "@/lib/session";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,7 +20,8 @@ export const metadata = {
   description: "My E-Commerce App",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const user = await getCurrentUser();
   return (
     <html
       lang="en"
@@ -39,11 +41,20 @@ export default function RootLayout({ children }) {
               </Link>
               <Link href="/orders">Orders</Link>
               <Link href="/wishlist">Wishlist</Link>
-              <LogoutButton />
+              {user ? (
+                <div className="flex items-center gap-4">
+                  <span className="text-sm">Hello, {user.name}</span>
+                  <LogoutButton />
+                </div>
+              ) : (
+                <div className="flex gap-4">
+                  <Link href="/login">Log In</Link>
+                  <Link href="/register">Register</Link>
+                </div>
+              )}
             </div>
           </div>
         </nav>
-
         <main className="flex-1">{children}</main>
       </body>
     </html>

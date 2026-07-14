@@ -1,5 +1,6 @@
 import argon2 from "argon2";
 import { prisma } from "@/lib/db";
+import { createSession } from "@/lib/session";
 
 export async function POST(request) {
   try {
@@ -36,6 +37,8 @@ export async function POST(request) {
         { status: 401 }
       );
     }
+
+    await createSession(user);
 
     return Response.json({
       id: user.id,

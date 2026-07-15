@@ -177,7 +177,7 @@ export default function CartContents({ isLoggedIn }) {
         </div>
       ) : (
         <Link
-          href={isLoggedIn ? "/checkout" : "/login"}
+          href={isLoggedIn ? "/checkout" : "/login?redirect=/checkout"}
           className="inline-block rounded bg-black px-4 py-2 text-white"
         >
           {isLoggedIn ? "Checkout" : "Log In to Checkout"}

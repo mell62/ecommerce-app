@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -11,6 +11,9 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const redirectPath = searchParams.get("redirect") || "/";
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -38,7 +41,7 @@ export default function LoginPage() {
       }
 
       setPassword("");
-      router.push("/");
+      router.push(redirectPath);
       router.refresh();
     } catch (error) {
       setError(error.message);

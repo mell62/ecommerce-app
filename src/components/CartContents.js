@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { useEffect, useState } from "react";
 
-export default function CartContents() {
+export default function CartContents({ isLoggedIn }) {
   const [cart, setCart] = useState([]);
   const [hasLoadedCart, setHasLoadedCart] = useState(false);
 
@@ -177,10 +177,10 @@ export default function CartContents() {
         </div>
       ) : (
         <Link
-          href="/checkout"
+          href={isLoggedIn ? "/checkout" : "/login"}
           className="inline-block rounded bg-black px-4 py-2 text-white"
         >
-          Checkout
+          {isLoggedIn ? "Checkout" : "Log In to Checkout"}
         </Link>
       )}
     </div>

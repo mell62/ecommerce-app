@@ -1,12 +1,14 @@
+import { getCurrentUser } from "@/lib/session";
 import CartContents from "@/components/CartContents";
-import Link from "next/link";
 
-export default function CartPage() {
+export default async function CartPage() {
+  const user = await getCurrentUser();
+
   return (
-    <div className="max-w-6xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-6">Shopping Cart</h1>
+    <main className="max-w-4xl mx-auto p-8">
+      <h1 className="text-3xl font-bold mb-6">Cart</h1>
 
-      <CartContents />
-    </div>
+      <CartContents isLoggedIn={Boolean(user)} />
+    </main>
   );
 }

@@ -13,7 +13,12 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const redirectPath = searchParams.get("redirect") || "/";
+  const requestedRedirect = searchParams.get("redirect");
+
+  const redirectPath =
+    requestedRedirect?.startsWith("/") && !requestedRedirect.startsWith("//")
+      ? requestedRedirect
+      : "/";
 
   async function handleSubmit(event) {
     event.preventDefault();

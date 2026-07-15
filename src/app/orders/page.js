@@ -1,9 +1,19 @@
 import { prisma } from "@/lib/db";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/session";
 import Link from "next/link";
 
 export default async function OrdersPage({ searchParams }) {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/login");
+  }
+
   const success = (await searchParams)?.success;
   const orders = await prisma.order.findMany({
+    where: {
+      userId: user.id,
+    },
     include: {
       items: {
         include: {

@@ -60,6 +60,10 @@ export default async function ProductPage({ params }) {
     product.discountPercent
   );
 
+  const hasReviewed = product.reviews.some(
+    (review) => review.userId === user?.id
+  );
+
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="grid md:grid-cols-2 gap-8">
@@ -125,7 +129,13 @@ export default async function ProductPage({ params }) {
         </div>
       </div>
       {user ? (
-        <ReviewForm productId={product.id} />
+        hasReviewed ? (
+          <p className="rounded border p-4 text-gray-700">
+            You have already reviewed this product.
+          </p>
+        ) : (
+          <ReviewForm productId={product.id} />
+        )
       ) : (
         <div className="rounded border p-4">
           <p className="mb-3 text-gray-700">Log in to leave a review.</p>

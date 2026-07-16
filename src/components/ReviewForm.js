@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 export default function ReviewForm({ productId }) {
   const router = useRouter();
 
-  const [name, setName] = useState("");
   const [rating, setRating] = useState("5");
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -14,8 +13,8 @@ export default function ReviewForm({ productId }) {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!name.trim() || !comment.trim()) {
-      alert("Please enter your name and review comment.");
+    if (!comment.trim()) {
+      alert("Please enter a review comment.");
       return;
     }
 
@@ -29,7 +28,6 @@ export default function ReviewForm({ productId }) {
         },
         body: JSON.stringify({
           productId,
-          name: name.trim(),
           rating: Number(rating),
           comment: comment.trim(),
         }),
@@ -39,7 +37,6 @@ export default function ReviewForm({ productId }) {
         throw new Error("Failed to submit review");
       }
 
-      setName("");
       setRating("5");
       setComment("");
 
@@ -58,14 +55,6 @@ export default function ReviewForm({ productId }) {
       className="mt-10 space-y-4 border rounded p-4"
     >
       <h2 className="text-2xl font-bold">Leave a Review</h2>
-
-      <input
-        type="text"
-        placeholder="Your name"
-        value={name}
-        onChange={(event) => setName(event.target.value)}
-        className="w-full border rounded px-4 py-2"
-      />
 
       <select
         value={rating}

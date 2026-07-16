@@ -45,7 +45,17 @@ export async function POST(request) {
   } catch (error) {
     console.error(error);
 
-    return Response.json({ error: "Failed to create review" }, { status: 500 });
+    if (error.code === "P2002") {
+      return Response.json(
+        { error: "You have already reviewed this product." },
+        { status: 409 }
+      );
+    }
+
+    return Response.json(
+      { error: "Failed to create review." },
+      { status: 500 }
+    );
   }
 }
 

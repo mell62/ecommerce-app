@@ -9,6 +9,7 @@ export default function ReviewForm({ productId }) {
   const [rating, setRating] = useState("5");
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -19,6 +20,7 @@ export default function ReviewForm({ productId }) {
     }
 
     try {
+      setError("");
       setIsSubmitting(true);
 
       const response = await fetch("/api/reviews", {
@@ -33,8 +35,11 @@ export default function ReviewForm({ productId }) {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to submit review");
+        setError(data.error || "Failed to submit review.");
+        return;
       }
 
       setRating("5");
@@ -83,6 +88,8 @@ export default function ReviewForm({ productId }) {
       >
         {isSubmitting ? "Submitting..." : "Submit Review"}
       </button>
+
+      {error && <p>{error}</p>}
     </form>
   );
 }

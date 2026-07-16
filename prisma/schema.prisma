@@ -22,6 +22,7 @@ model User {
 
   orders Order[]
   cart   Cart?
+  reviews Review[]
 }
 
 model Product {
@@ -86,10 +87,12 @@ model CartItem {
 model Review {
   id        String   @id @default(cuid())
   productId String
+  userId    String?
   name      String
   rating    Int
   comment   String
   createdAt DateTime @default(now())
 
   product Product @relation(fields: [productId], references: [id])
+  user    User?   @relation(fields: [userId], references: [id])
 }

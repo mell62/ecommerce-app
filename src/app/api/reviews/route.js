@@ -48,3 +48,59 @@ export async function POST(request) {
     return Response.json({ error: "Failed to create review" }, { status: 500 });
   }
 }
+
+export async function DELETE(request) {
+  try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return Response.json(
+        { error: "You must be logged in to delete a review." },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+
+    if (!body.reviewId) {
+      return Response.json(
+        { error: "Review ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const review = await prisma.review.findUnique({
+      where: {
+        id: body.reviewId,
+      },
+    });
+
+    if (!review) {
+      return Response.json({ error: "Review not found." }, { status: 404 });
+    }
+
+    if (review.userId !== user.id) {
+      return Response.json(
+        { error: "You can only delete your own reviews." },
+        { status: 403 }
+      );
+    }
+
+    await prisma.review.delete({
+      where: {
+        id: review.id,
+      },
+    });
+
+    return Response.json({
+      message: "Review deleted successfully.",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return Response.json(
+      { error: "Failed to delete review." },
+      { status: 500 }
+    );
+  }
+}

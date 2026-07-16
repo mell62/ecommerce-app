@@ -4,6 +4,7 @@ import AddToCartButton from "@/components/AddToCartButton";
 import Link from "next/link";
 import ReviewForm from "@/components/ReviewForm";
 import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
+import { getCurrentUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -23,6 +24,8 @@ export default async function ProductPage({ params }) {
       },
     },
   });
+
+  const user = await getCurrentUser();
 
   if (!product) {
     return notFound();
@@ -120,7 +123,20 @@ export default async function ProductPage({ params }) {
           <AddToCartButton product={product} />
         </div>
       </div>
-      <ReviewForm productId={product.id} />
+      {user ? (
+        <ReviewForm productId={product.id} />
+      ) : (
+        <div className="rounded border p-4">
+          <p className="mb-3 text-gray-700">Log in to leave a review.</p>
+
+          <Link
+            href={`/login?redirect=/products/${product.id}`}
+            className="inline-block rounded bg-black px-4 py-2 text-white"
+          >
+            Log In to Review
+          </Link>
+        </div>
+      )}
       <div className="mt-10">
         <h2 className="text-2xl font-bold mb-4">Reviews</h2>
 

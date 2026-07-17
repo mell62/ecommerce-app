@@ -6,6 +6,7 @@ import ReviewForm from "@/components/ReviewForm";
 import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 import { getCurrentUser } from "@/lib/session";
 import DeleteReviewButton from "@/components/DeleteReviewButton";
+import EditReviewButton from "@/components/EditReviewButton";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -163,6 +164,13 @@ export default async function ProductPage({ params }) {
                 </div>
 
                 <p className="mt-2 text-gray-700">{review.comment}</p>
+                {user?.id === review.userId && (
+                  <EditReviewButton
+                    reviewId={review.id}
+                    initialRating={review.rating}
+                    initialComment={review.comment}
+                  />
+                )}
                 {user?.id === review.userId && (
                   <DeleteReviewButton reviewId={review.id} />
                 )}

@@ -3,11 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function ReviewForm({ productId }) {
+export default function ReviewForm({
+  productId,
+  reviewId,
+  initialRating = "5",
+  initialComment = "",
+  onCancel,
+}) {
   const router = useRouter();
 
-  const [rating, setRating] = useState("5");
-  const [comment, setComment] = useState("");
+  const isEditing = Boolean(reviewId);
+
+  const [rating, setRating] = useState(String(initialRating));
+  const [comment, setComment] = useState(initialComment);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,15 +32,23 @@ export default function ReviewForm({ productId }) {
       setIsSubmitting(true);
 
       const response = await fetch("/api/reviews", {
-        method: "POST",
+        method: isEditing ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          productId,
-          rating: Number(rating),
-          comment: comment.trim(),
-        }),
+        body: JSON.stringify(
+          isEditing
+            ? {
+                reviewId,
+                rating: Number(rating),
+                comment: comment.trim(),
+              }
+            : {
+                productId,
+                rating: Number(rating),
+                comment: comment.trim(),
+              }
+        ),
       });
 
       const data = await response.json();
@@ -42,13 +58,21 @@ export default function ReviewForm({ productId }) {
         return;
       }
 
-      setRating("5");
-      setComment("");
-
-      router.refresh();
+      if (isEditing) {
+        router.refresh();
+        onCancel?.();
+      } else {
+        setRating("5");
+        setComment("");
+        router.refresh();
+      }
     } catch (error) {
       console.error(error);
-      alert("Something went wrong. Please try again.");
+      setError(
+        isEditing
+          ? "Something went wrong while updating the review."
+          : "Something went wrong while submitting the review."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -59,8 +83,9 @@ export default function ReviewForm({ productId }) {
       onSubmit={handleSubmit}
       className="mt-10 space-y-4 border rounded p-4"
     >
-      <h2 className="text-2xl font-bold">Leave a Review</h2>
-
+      <h2 className="text-2xl font-bold">
+        {isEditing ? "Edit Review" : "Leave a Review"}
+      </h2>
       <select
         value={rating}
         onChange={(event) => setRating(event.target.value)}
@@ -86,8 +111,25 @@ export default function ReviewForm({ productId }) {
         disabled={isSubmitting}
         className="bg-black text-white px-4 py-2 rounded disabled:opacity-50"
       >
-        {isSubmitting ? "Submitting..." : "Submit Review"}
+        {isSubmitting
+          ? isEditing
+            ? "Saving..."
+            : "Submitting..."
+          : isEditing
+            ? "Save Changes"
+            : "Submit Review"}
       </button>
+
+      {isEditing && (
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isSubmitting}
+          className="ml-2 rounded border px-4 py-2"
+        >
+          Cancel
+        </button>
+      )}
 
       {error && <p>{error}</p>}
     </form>

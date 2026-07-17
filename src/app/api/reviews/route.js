@@ -114,3 +114,73 @@ export async function DELETE(request) {
     );
   }
 }
+
+export async function PATCH(request) {
+  try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return Response.json(
+        { error: "You must be logged in to edit a review." },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+
+    if (!body.reviewId || !body.rating || !body.comment?.trim()) {
+      return Response.json(
+        { error: "Review ID, rating, and comment are required." },
+        { status: 400 }
+      );
+    }
+
+    const rating = Number(body.rating);
+
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return Response.json(
+        { error: "Rating must be a whole number between 1 and 5." },
+        { status: 400 }
+      );
+    }
+
+    const review = await prisma.review.findUnique({
+      where: {
+        id: body.reviewId,
+      },
+    });
+
+    if (!review) {
+      return Response.json({ error: "Review not found." }, { status: 404 });
+    }
+
+    if (review.userId !== user.id) {
+      return Response.json(
+        { error: "You can only edit your own reviews." },
+        { status: 403 }
+      );
+    }
+
+    const updatedReview = await prisma.review.update({
+      where: {
+        id: review.id,
+      },
+      data: {
+        rating,
+        comment: body.comment.trim(),
+      },
+    });
+
+    return Response.json({
+      message: "Review updated successfully.",
+      review: updatedReview,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return Response.json(
+      { error: "Failed to update review." },
+      { status: 500 }
+    );
+  }
+}

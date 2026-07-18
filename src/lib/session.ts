@@ -1,11 +1,21 @@
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import { cookies } from "next/headers";
+import type { User } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
 const SESSION_COOKIE_NAME = "session";
 const SESSION_DURATION = 60 * 60 * 24 * 7;
 
-function getSessionSecret() {
+type SessionUser = Pick<User, "id" | "role">;
+
+interface SessionPayload extends JWTPayload {
+  userId: string;
+  role: string;
+}
+
+export type CurrentUser = Pick<User, "id" | "name" | "email" | "role">;
+
+function getSessionSecret(): Uint8Array {
   const secret = process.env.SESSION_SECRET;
 
   if (!secret) {
@@ -15,7 +25,7 @@ function getSessionSecret() {
   return new TextEncoder().encode(secret);
 }
 
-export async function createSession(user) {
+export async function createSession(user: SessionUser): Promise<void> {
   const expiresAt = new Date(Date.now() + SESSION_DURATION * 1000);
 
   const token = await new SignJWT({
@@ -40,7 +50,7 @@ export async function createSession(user) {
   });
 }
 
-export async function getSession() {
+export async function getSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
@@ -49,20 +59,21 @@ export async function getSession() {
   }
 
   try {
-    const { payload } = await jwtVerify(token, getSessionSecret(), {
-      algorithms: ["HS256"],
-    });
+    const { payload } = await jwtVerify<SessionPayload>(
+      token,
+      getSessionSecret(),
+      {
+        algorithms: ["HS256"],
+      }
+    );
 
-    return {
-      userId: payload.userId,
-      role: payload.role,
-    };
+    return payload;
   } catch {
     return null;
   }
 }
 
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<CurrentUser | null> {
   const session = await getSession();
 
   if (!session?.userId) {
@@ -84,7 +95,7 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function deleteSession() {
+export async function deleteSession(): Promise<void> {
   const cookieStore = await cookies();
 
   cookieStore.delete(SESSION_COOKIE_NAME);

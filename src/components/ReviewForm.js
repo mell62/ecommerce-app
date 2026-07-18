@@ -9,6 +9,7 @@ export default function ReviewForm({
   initialRating = "5",
   initialComment = "",
   onCancel,
+  onSuccess,
 }) {
   const router = useRouter();
 
@@ -60,7 +61,7 @@ export default function ReviewForm({
 
       if (isEditing) {
         router.refresh();
-        onCancel?.();
+        onSuccess?.();
       } else {
         setRating("5");
         setComment("");

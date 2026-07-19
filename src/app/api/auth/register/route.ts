@@ -2,13 +2,20 @@ import argon2 from "argon2";
 import { prisma } from "@/lib/db";
 import { createSession } from "@/lib/session";
 
-export async function POST(request) {
-  try {
-    const body = await request.json();
+type RegisterRequestBody = {
+  name?: unknown;
+  email?: unknown;
+  password?: unknown;
+};
 
-    const name = body.name?.trim();
-    const email = body.email?.trim().toLowerCase();
-    const password = body.password;
+export async function POST(request: Request): Promise<Response> {
+  try {
+    const body: RegisterRequestBody = await request.json();
+
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    const email =
+      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const password = typeof body.password === "string" ? body.password : "";
 
     if (!name || !email || !password) {
       return Response.json(

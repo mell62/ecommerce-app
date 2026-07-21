@@ -1,8 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+
+function getLoginError(data: unknown): string {
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "error" in data &&
+    typeof data.error === "string"
+  ) {
+    return data.error;
+  }
+
+  return "Failed to log in.";
+}
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -20,7 +33,9 @@ export default function LoginPage() {
       ? requestedRedirect
       : "/";
 
-  async function handleSubmit(event) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ): Promise<void> {
     event.preventDefault();
 
     setError("");
@@ -39,17 +54,20 @@ export default function LoginPage() {
         }),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type");
+      const data: unknown = contentType?.includes("application/json")
+        ? await response.json()
+        : null;
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to log in.");
+        throw new Error(getLoginError(data));
       }
 
       setPassword("");
       router.push(redirectPath);
       router.refresh();
     } catch (error) {
-      setError(error.message);
+      setError(error instanceof Error ? error.message : "Failed to log in.");
     } finally {
       setIsSubmitting(false);
     }

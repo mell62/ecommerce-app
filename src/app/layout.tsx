@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import CartCounter from "@/components/CartCounter";
@@ -15,13 +17,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "E-Commerce Store",
   description: "My E-Commerce App",
 };
 
-export default async function RootLayout({ children }) {
+type RootLayoutProps = Readonly<{
+  children: ReactNode;
+}>;
+
+export default async function RootLayout({ children }: RootLayoutProps) {
   const user = await getCurrentUser();
+
   return (
     <html
       lang="en"

@@ -5,7 +5,7 @@ import { useState } from "react";
 export default function LogoutButton() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  async function handleLogout() {
+  async function handleLogout(): Promise<void> {
     if (isLoggingOut) {
       return;
     }
@@ -17,16 +17,25 @@ export default function LogoutButton() {
         method: "POST",
       });
 
-      const data = await response.json();
+      const data: unknown = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to log out.");
+        const message =
+          typeof data === "object" &&
+          data !== null &&
+          "error" in data &&
+          typeof data.error === "string"
+            ? data.error
+            : "Failed to log out.";
+
+        throw new Error(message);
       }
 
       window.location.href = "/login";
     } catch (error) {
       console.error(error);
-      alert(error.message);
+
+      alert(error instanceof Error ? error.message : "Failed to log out.");
     } finally {
       setIsLoggingOut(false);
     }

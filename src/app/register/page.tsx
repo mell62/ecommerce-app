@@ -1,7 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+
+function getRegistrationError(data: unknown): string {
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "error" in data &&
+    typeof data.error === "string"
+  ) {
+    return data.error;
+  }
+
+  return "Failed to create account.";
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -12,7 +25,9 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(event) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ): Promise<void> {
     event.preventDefault();
 
     setError("");
@@ -32,16 +47,21 @@ export default function RegisterPage() {
         }),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type");
+      const data: unknown = contentType?.includes("application/json")
+        ? await response.json()
+        : null;
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create account.");
+        throw new Error(getRegistrationError(data));
       }
 
       router.push("/");
       router.refresh();
     } catch (error) {
-      setError(error.message);
+      setError(
+        error instanceof Error ? error.message : "Failed to create account."
+      );
     } finally {
       setIsSubmitting(false);
     }

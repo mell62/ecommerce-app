@@ -1,25 +1,79 @@
 "use client";
-import Link from "next/link";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
-export default function CartContents({ isLoggedIn }) {
-  const [cart, setCart] = useState([]);
+type CartContentsProps = {
+  isLoggedIn: boolean;
+};
+
+type CartItem = {
+  id: string;
+  name: string;
+  price: number;
+  originalPrice: number;
+  imageUrl: string;
+  stockCount: number;
+  quantity: number;
+};
+
+function isCartItem(value: unknown): value is CartItem {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    typeof value.id === "string" &&
+    "name" in value &&
+    typeof value.name === "string" &&
+    "price" in value &&
+    typeof value.price === "number" &&
+    Number.isFinite(value.price) &&
+    "originalPrice" in value &&
+    typeof value.originalPrice === "number" &&
+    Number.isFinite(value.originalPrice) &&
+    "imageUrl" in value &&
+    typeof value.imageUrl === "string" &&
+    "stockCount" in value &&
+    typeof value.stockCount === "number" &&
+    Number.isInteger(value.stockCount) &&
+    "quantity" in value &&
+    typeof value.quantity === "number" &&
+    Number.isInteger(value.quantity) &&
+    value.quantity > 0
+  );
+}
+
+function parseCart(value: string | null): CartItem[] {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const cart: unknown = JSON.parse(value);
+
+    return Array.isArray(cart) ? cart.filter(isCartItem) : [];
+  } catch {
+    return [];
+  }
+}
+
+export default function CartContents({ isLoggedIn }: CartContentsProps) {
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [hasLoadedCart, setHasLoadedCart] = useState(false);
 
-  function saveCart(updatedCart) {
+  function saveCart(updatedCart: CartItem[]): void {
     setCart(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
     window.dispatchEvent(new Event("cartUpdated"));
   }
 
-  function removeItem(id) {
+  function removeItem(id: string): void {
     const updated = cart.filter((item) => item.id !== id);
 
     saveCart(updated);
   }
 
-  function updateQuantity(id, change) {
+  function updateQuantity(id: string, change: number): void {
     const updated = cart
       .map((item) => {
         if (item.id === id) {
@@ -37,9 +91,9 @@ export default function CartContents({ isLoggedIn }) {
   }
 
   useEffect(() => {
-    async function loadCart() {
+    async function loadCart(): Promise<void> {
       try {
-        const stored = JSON.parse(localStorage.getItem("cart")) || [];
+        const stored = parseCart(localStorage.getItem("cart"));
 
         if (stored.length === 0) {
           setCart([]);
@@ -64,7 +118,10 @@ export default function CartContents({ isLoggedIn }) {
           throw new Error("Failed to load cart");
         }
 
-        const validatedItems = await response.json();
+        const data: unknown = await response.json();
+        const validatedItems = Array.isArray(data)
+          ? data.filter(isCartItem)
+          : [];
 
         setCart(validatedItems);
         localStorage.setItem("cart", JSON.stringify(validatedItems));
@@ -72,14 +129,13 @@ export default function CartContents({ isLoggedIn }) {
       } catch (error) {
         console.error(error);
 
-        const stored = JSON.parse(localStorage.getItem("cart")) || [];
-        setCart(stored);
+        setCart(parseCart(localStorage.getItem("cart")));
       } finally {
         setHasLoadedCart(true);
       }
     }
 
-    loadCart();
+    void loadCart();
   }, []);
 
   if (!hasLoadedCart) {
@@ -101,7 +157,10 @@ export default function CartContents({ isLoggedIn }) {
     );
   }
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
 
   const hasStockIssue = cart.some(
     (item) => item.stockCount === 0 || item.quantity > item.stockCount

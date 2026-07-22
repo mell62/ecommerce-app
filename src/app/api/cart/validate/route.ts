@@ -1,21 +1,51 @@
+import type { Product } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getDiscountedPrice } from "@/lib/pricing";
 
-export async function POST(request) {
-  try {
-    const body = await request.json();
+type CartRequestItem = {
+  id: string;
+  quantity: number;
+};
 
-    if (!Array.isArray(body.items)) {
+type ValidatedCartItem = Product & {
+  originalPrice: number;
+  quantity: number;
+};
+
+function isCartRequestItem(value: unknown): value is CartRequestItem {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    typeof value.id === "string" &&
+    value.id.length > 0 &&
+    "quantity" in value &&
+    typeof value.quantity === "number" &&
+    Number.isInteger(value.quantity) &&
+    value.quantity > 0
+  );
+}
+
+export async function POST(request: Request): Promise<Response> {
+  try {
+    const body: unknown = await request.json();
+
+    if (
+      typeof body !== "object" ||
+      body === null ||
+      !("items" in body) ||
+      !Array.isArray(body.items)
+    ) {
       return Response.json(
         { error: "Cart items must be an array." },
         { status: 400 }
       );
     }
 
-    const validatedItems = [];
+    const validatedItems: ValidatedCartItem[] = [];
 
     for (const item of body.items) {
-      if (!item.id || !Number.isInteger(item.quantity) || item.quantity < 1) {
+      if (!isCartRequestItem(item)) {
         continue;
       }
 

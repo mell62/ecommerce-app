@@ -2,9 +2,34 @@ import { prisma } from "@/lib/db";
 import { getDiscountedPrice } from "@/lib/pricing";
 import { getCurrentUser } from "@/lib/session";
 
-export async function POST(request) {
+type OrderRequestItem = {
+  id: string;
+  quantity: number;
+};
+
+type ValidatedOrderItem = {
+  productId: string;
+  quantity: number;
+  price: number;
+};
+
+function isOrderRequestItem(value: unknown): value is OrderRequestItem {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    typeof value.id === "string" &&
+    value.id.length > 0 &&
+    "quantity" in value &&
+    typeof value.quantity === "number" &&
+    Number.isInteger(value.quantity) &&
+    value.quantity > 0
+  );
+}
+
+export async function POST(request: Request): Promise<Response> {
   try {
-    const body = await request.json();
+    const body: unknown = await request.json();
 
     const user = await getCurrentUser();
 
@@ -15,7 +40,12 @@ export async function POST(request) {
       );
     }
 
-    if (!Array.isArray(body.items)) {
+    if (
+      typeof body !== "object" ||
+      body === null ||
+      !("items" in body) ||
+      !Array.isArray(body.items)
+    ) {
       return Response.json(
         { error: "Order items are required." },
         { status: 400 }
@@ -29,12 +59,12 @@ export async function POST(request) {
       );
     }
 
-    const validatedItems = [];
+    const validatedItems: ValidatedOrderItem[] = [];
 
     for (const item of body.items) {
-      if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+      if (!isOrderRequestItem(item)) {
         return Response.json(
-          { error: "Invalid item quantity." },
+          { error: "Each order item needs a valid product ID and quantity." },
           { status: 400 }
         );
       }
@@ -77,8 +107,6 @@ export async function POST(request) {
       (sum, item) => sum + item.price * item.quantity,
       0
     );
-
-    console.log(body);
 
     const order = await prisma.$transaction(async (tx) => {
       const createdOrder = await tx.order.create({

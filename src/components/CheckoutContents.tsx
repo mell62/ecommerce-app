@@ -2,15 +2,75 @@
 
 import { useEffect, useState } from "react";
 
-export default function CheckoutPage() {
-  const [cart, setCart] = useState([]);
+type CartItem = {
+  id: string;
+  name: string;
+  price: number;
+  originalPrice: number;
+  stockCount: number;
+  quantity: number;
+};
+
+function isCartItem(value: unknown): value is CartItem {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    typeof value.id === "string" &&
+    "name" in value &&
+    typeof value.name === "string" &&
+    "price" in value &&
+    typeof value.price === "number" &&
+    Number.isFinite(value.price) &&
+    "originalPrice" in value &&
+    typeof value.originalPrice === "number" &&
+    Number.isFinite(value.originalPrice) &&
+    "stockCount" in value &&
+    typeof value.stockCount === "number" &&
+    Number.isInteger(value.stockCount) &&
+    "quantity" in value &&
+    typeof value.quantity === "number" &&
+    Number.isInteger(value.quantity) &&
+    value.quantity > 0
+  );
+}
+
+function parseCart(value: string | null): CartItem[] {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const cart: unknown = JSON.parse(value);
+
+    return Array.isArray(cart) ? cart.filter(isCartItem) : [];
+  } catch {
+    return [];
+  }
+}
+
+function getOrderError(data: unknown): string {
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    "error" in data &&
+    typeof data.error === "string"
+  ) {
+    return data.error;
+  }
+
+  return "Failed to place order";
+}
+
+export default function CheckoutContents() {
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [hasLoadedCart, setHasLoadedCart] = useState(false);
 
   useEffect(() => {
-    async function loadCart() {
+    async function loadCart(): Promise<void> {
       try {
-        const stored = JSON.parse(localStorage.getItem("cart")) || [];
+        const stored = parseCart(localStorage.getItem("cart"));
 
         if (stored.length === 0) {
           setCart([]);
@@ -35,24 +95,29 @@ export default function CheckoutPage() {
           throw new Error("Failed to load checkout cart");
         }
 
-        const validatedItems = await response.json();
+        const data: unknown = await response.json();
+        const validatedItems = Array.isArray(data)
+          ? data.filter(isCartItem)
+          : [];
 
         setCart(validatedItems);
         localStorage.setItem("cart", JSON.stringify(validatedItems));
       } catch (error) {
         console.error(error);
 
-        const stored = JSON.parse(localStorage.getItem("cart")) || [];
-        setCart(stored);
+        setCart(parseCart(localStorage.getItem("cart")));
       } finally {
         setHasLoadedCart(true);
       }
     }
 
-    loadCart();
+    void loadCart();
   }, []);
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
 
   const hasStockIssue = cart.some(
     (item) => item.stockCount === 0 || item.quantity > item.stockCount
@@ -78,7 +143,7 @@ export default function CheckoutPage() {
     );
   }
 
-  async function placeOrder() {
+  async function placeOrder(): Promise<void> {
     if (isPlacingOrder) {
       return;
     }
@@ -96,13 +161,14 @@ export default function CheckoutPage() {
         }),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type");
+      const data: unknown = contentType?.includes("application/json")
+        ? await response.json()
+        : null;
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to place order");
+        throw new Error(getOrderError(data));
       }
-
-      console.log(data);
 
       localStorage.removeItem("cart");
 
@@ -111,7 +177,7 @@ export default function CheckoutPage() {
       window.location.href = "/orders?success=true";
     } catch (error) {
       console.error(error);
-      alert(error.message);
+      alert(error instanceof Error ? error.message : "Failed to place order");
     } finally {
       setIsPlacingOrder(false);
     }

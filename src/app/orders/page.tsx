@@ -1,15 +1,23 @@
-import { prisma } from "@/lib/db";
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/session";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/session";
 
-export default async function OrdersPage({ searchParams }) {
+type OrdersPageProps = Readonly<{
+  searchParams: Promise<{
+    success?: string | string[];
+  }>;
+}>;
+
+export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const user = await getCurrentUser();
+
   if (!user) {
     redirect("/login");
   }
 
-  const success = (await searchParams)?.success;
+  const { success } = await searchParams;
+
   const orders = await prisma.order.findMany({
     where: {
       userId: user.id,
@@ -63,14 +71,11 @@ export default async function OrdersPage({ searchParams }) {
 
       <div className="space-y-6">
         {orders.map((order) => {
-          const orderDate = new Date(order.createdAt).toLocaleDateString(
-            "en-US",
-            {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }
-          );
+          const orderDate = order.createdAt.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
 
           return (
             <div key={order.id} className="border rounded-lg p-4">
@@ -84,7 +89,7 @@ export default async function OrdersPage({ searchParams }) {
 
               <p>Total: ${order.totalPrice.toFixed(2)}</p>
 
-              <div className="mt-4 space-y-2">
+              <ul className="mt-4 space-y-2">
                 {order.items.map((item) => (
                   <li
                     key={item.id}
@@ -107,7 +112,7 @@ export default async function OrdersPage({ searchParams }) {
                     </span>
                   </li>
                 ))}
-              </div>
+              </ul>
             </div>
           );
         })}

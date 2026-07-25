@@ -1,20 +1,26 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import type { ChangeEvent } from "react";
 import { useEffect, useState } from "react";
 
-export default function SortDropdown({ currentSort }) {
+type SortDropdownProps = Readonly<{
+  currentSort?: string;
+}>;
+
+export default function SortDropdown({ currentSort }: SortDropdownProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [sort, setSort] = useState(currentSort || "");
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Synchronize the selected option with back/forward URL navigation.
     setSort(searchParams.get("sort") || "");
   }, [searchParams]);
 
-  function handleChange(event) {
-    const selectedSort = event.target.value;
+  function handleChange(event: ChangeEvent<HTMLSelectElement>): void {
+    const selectedSort = event.currentTarget.value;
 
     setSort(selectedSort);
 

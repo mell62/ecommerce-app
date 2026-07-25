@@ -5,15 +5,45 @@ import ProductFilters from "@/components/ProductFilters";
 import WishlistButton from "@/components/WishlistButton";
 import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 
+type ProductsPageProps = Readonly<{
+  searchParams: Promise<{
+    category?: string;
+    search?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    sort?: string;
+    minRating?: string;
+    deals?: string;
+  }>;
+}>;
+
+type ProductReview = {
+  rating: number;
+};
+
+type Product = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  stockCount: number;
+  discountPercent: number;
+  isNew: boolean;
+  isBestSeller: boolean;
+  isFeatured: boolean;
+  reviews: ProductReview[];
+};
+
 async function getProducts(
-  category,
-  search,
-  minPrice,
-  maxPrice,
-  sort,
-  minRating,
-  deals
-) {
+  category?: string,
+  search?: string,
+  minPrice?: string,
+  maxPrice?: string,
+  sort?: string,
+  minRating?: string,
+  deals?: string
+): Promise<Product[]> {
   const url = new URL(
     `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/products`
   );
@@ -57,7 +87,9 @@ async function getProducts(
   return res.json();
 }
 
-export default async function ProductsPage({ searchParams }) {
+export default async function ProductsPage({
+  searchParams,
+}: ProductsPageProps) {
   const params = await searchParams;
   const category = params.category;
   const search = params.search;

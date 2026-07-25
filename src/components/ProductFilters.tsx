@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import type { SubmitEvent } from "react";
 import { useEffect, useState } from "react";
 
 export default function ProductFilters() {
@@ -15,13 +16,18 @@ export default function ProductFilters() {
   );
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect --
+     * Keep the form fields synchronized with URL changes, including back/forward
+     * navigation. These values come from Next.js rather than another React state.
+     */
     setSearch(searchParams.get("search") || "");
     setMinPrice(searchParams.get("minPrice") || "");
     setMaxPrice(searchParams.get("maxPrice") || "");
     setMinRating(searchParams.get("minRating") || "");
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [searchParams]);
 
-  function applyFilters(event) {
+  function applyFilters(event: SubmitEvent<HTMLFormElement>): void {
     event.preventDefault();
 
     const params = new URLSearchParams(searchParams.toString());
@@ -55,7 +61,7 @@ export default function ProductFilters() {
     router.push(queryString ? `/products?${queryString}` : "/products");
   }
 
-  function clearFilters() {
+  function clearFilters(): void {
     const params = new URLSearchParams(searchParams.toString());
 
     params.delete("search");

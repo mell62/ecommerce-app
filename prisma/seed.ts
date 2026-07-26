@@ -13,11 +13,16 @@ const prisma = new PrismaClient({
   adapter,
 });
 
-async function main() {
-  await prisma.review.deleteMany();
-  await prisma.product.deleteMany();
+async function main(): Promise<void> {
+  await prisma.$transaction([
+    prisma.review.deleteMany(),
+    prisma.orderItem.deleteMany(),
+    prisma.order.deleteMany(),
+    prisma.cartItem.deleteMany(),
+    prisma.product.deleteMany(),
+  ]);
 
-  const keyboard = await prisma.product.create({
+  await prisma.product.create({
     data: {
       name: "Mechanical Keyboard",
       description: "RGB mechanical keyboard with blue switches",
@@ -45,7 +50,7 @@ async function main() {
     },
   });
 
-  const mouse = await prisma.product.create({
+  await prisma.product.create({
     data: {
       name: "Gaming Mouse",
       description: "Wireless gaming mouse with adjustable DPI",
@@ -69,7 +74,7 @@ async function main() {
     },
   });
 
-  const monitor = await prisma.product.create({
+  await prisma.product.create({
     data: {
       name: "27-inch Monitor",
       description: "144Hz IPS gaming monitor",

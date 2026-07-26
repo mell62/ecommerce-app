@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import AddToCartButton from "@/components/AddToCartButton";
+import Image from "next/image";
 import Link from "next/link";
 import ReviewForm from "@/components/ReviewForm";
 import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
@@ -74,9 +75,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="grid md:grid-cols-2 gap-8">
-        <img
+        <Image
           src={product.imageUrl}
           alt={product.name}
+          width={800}
+          height={600}
+          sizes="(min-width: 768px) 50vw, 100vw"
           className="w-full rounded-lg"
         />
 
@@ -215,9 +219,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
                       </span>
                     </div>
                   )}
-                  <img
+                  <Image
                     src={relatedProduct.imageUrl}
                     alt={relatedProduct.name}
+                    width={800}
+                    height={600}
+                    sizes="(min-width: 768px) 33vw, 100vw"
                     className="w-full h-40 object-cover rounded"
                   />
 

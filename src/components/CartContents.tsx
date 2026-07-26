@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -157,10 +158,7 @@ export default function CartContents({ isLoggedIn }: CartContentsProps) {
     );
   }
 
-  const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const hasStockIssue = cart.some(
     (item) => item.stockCount === 0 || item.quantity > item.stockCount
@@ -170,9 +168,12 @@ export default function CartContents({ isLoggedIn }: CartContentsProps) {
     <div className="space-y-6">
       {cart.map((item) => (
         <div key={item.id} className="border rounded-lg p-4 flex gap-4">
-          <img
+          <Image
             src={item.imageUrl}
             alt={item.name}
+            width={96}
+            height={96}
+            sizes="96px"
             className="w-24 h-24 object-cover rounded"
           />
 

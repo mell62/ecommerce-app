@@ -3,13 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function DeleteReviewButton({ reviewId }) {
+type DeleteReviewButtonProps = Readonly<{
+  reviewId: string;
+}>;
+
+export default function DeleteReviewButton({
+  reviewId,
+}: DeleteReviewButtonProps) {
   const router = useRouter();
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleDelete() {
+  async function handleDelete(): Promise<void> {
     const confirmed = window.confirm(
       "Are you sure you want to delete this review?"
     );
@@ -32,10 +38,18 @@ export default function DeleteReviewButton({ reviewId }) {
         }),
       });
 
-      const data = await response.json();
+      const data: unknown = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Failed to delete review.");
+        const message =
+          typeof data === "object" &&
+          data !== null &&
+          "error" in data &&
+          typeof data.error === "string"
+            ? data.error
+            : "Failed to delete review.";
+
+        setError(message);
         return;
       }
 

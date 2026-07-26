@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
@@ -158,9 +159,12 @@ export default async function HomePage() {
                     </span>
                   </div>
 
-                  <img
+                  <Image
                     src={product.imageUrl}
                     alt={product.name}
+                    width={800}
+                    height={600}
+                    sizes="(min-width: 768px) 33vw, 100vw"
                     className="w-full h-48 object-cover rounded"
                   />
 
@@ -217,9 +221,12 @@ export default async function HomePage() {
                     </div>
                   )}
 
-                  <img
+                  <Image
                     src={product.imageUrl}
                     alt={product.name}
+                    width={800}
+                    height={600}
+                    sizes="(min-width: 768px) 33vw, 100vw"
                     className="w-full h-48 object-cover rounded"
                   />
 
@@ -284,9 +291,12 @@ export default async function HomePage() {
                     </div>
                   )}
 
-                  <img
+                  <Image
                     src={product.imageUrl}
                     alt={product.name}
+                    width={800}
+                    height={600}
+                    sizes="(min-width: 768px) 33vw, 100vw"
                     className="w-full h-48 object-cover rounded"
                   />
 
@@ -357,9 +367,12 @@ export default async function HomePage() {
                     </div>
                   )}
 
-                  <img
+                  <Image
                     src={product.imageUrl}
                     alt={product.name}
+                    width={800}
+                    height={600}
+                    sizes="(min-width: 768px) 33vw, 100vw"
                     className="w-full h-48 object-cover rounded"
                   />
 

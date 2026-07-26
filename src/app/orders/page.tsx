@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -96,9 +97,12 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                     className="flex items-center justify-between gap-4 py-3"
                   >
                     <div className="flex items-center gap-3">
-                      <img
+                      <Image
                         src={item.product.imageUrl}
                         alt={item.product.name}
+                        width={56}
+                        height={56}
+                        sizes="56px"
                         className="h-14 w-14 rounded object-cover"
                       />
 

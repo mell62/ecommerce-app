@@ -3,11 +3,17 @@
 import { useEffect, useState } from "react";
 import ReviewForm from "@/components/ReviewForm";
 
+type EditReviewButtonProps = Readonly<{
+  reviewId: string;
+  initialRating: number;
+  initialComment: string;
+}>;
+
 export default function EditReviewButton({
   reviewId,
   initialRating,
   initialComment,
-}) {
+}: EditReviewButtonProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -23,7 +29,7 @@ export default function EditReviewButton({
     return () => clearTimeout(timeoutId);
   }, [successMessage]);
 
-  function handleSuccess() {
+  function handleSuccess(): void {
     setIsEditing(false);
     setSuccessMessage("Review updated successfully.");
   }

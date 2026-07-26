@@ -3,18 +3,64 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+type WishlistProduct = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+};
+
+function isWishlistProduct(value: unknown): value is WishlistProduct {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    typeof value.id === "string" &&
+    "name" in value &&
+    typeof value.name === "string" &&
+    "description" in value &&
+    typeof value.description === "string" &&
+    "price" in value &&
+    typeof value.price === "number" &&
+    Number.isFinite(value.price) &&
+    "imageUrl" in value &&
+    typeof value.imageUrl === "string"
+  );
+}
+
+function getStoredWishlist(): WishlistProduct[] {
+  const storedWishlist = localStorage.getItem("wishlist");
+
+  if (!storedWishlist) {
+    return [];
+  }
+
+  try {
+    const wishlist: unknown = JSON.parse(storedWishlist);
+
+    return Array.isArray(wishlist) ? wishlist.filter(isWishlistProduct) : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function WishlistContents() {
-  const [wishlist, setWishlist] = useState([]);
+  const [wishlist, setWishlist] = useState<WishlistProduct[]>([]);
   const [hasLoadedWishlist, setHasLoadedWishlist] = useState(false);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("wishlist")) || [];
+    const stored = getStoredWishlist();
 
+    /* eslint-disable react-hooks/set-state-in-effect --
+     * Load browser-only storage after the component mounts.
+     */
     setWishlist(stored);
     setHasLoadedWishlist(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
-  function removeFromWishlist(id) {
+  function removeFromWishlist(id: string): void {
     const updated = wishlist.filter((item) => item.id !== id);
 
     setWishlist(updated);

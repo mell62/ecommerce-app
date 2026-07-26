@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import SortDropdown from "@/components/SortDropdown";
 import ProductFilters from "@/components/ProductFilters";
@@ -223,9 +224,12 @@ export default async function ProductsPage({
                     </span>
                   )}
                 </div>
-                <img
+                <Image
                   src={product.imageUrl}
                   alt={product.name}
+                  width={800}
+                  height={600}
+                  sizes="(min-width: 768px) 33vw, 100vw"
                   className="w-full h-48 object-cover rounded"
                 />
 

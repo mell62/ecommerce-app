@@ -1,12 +1,48 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
-export async function POST(request) {
-  try {
-    const body = await request.json();
+type ReviewRequestBody = {
+  productId?: unknown;
+  reviewId?: unknown;
+  rating?: unknown;
+  comment?: unknown;
+};
 
-    const comment = body.comment?.trim();
-    const rating = Number(body.rating);
+function isReviewRequestBody(value: unknown): value is ReviewRequestBody {
+  return typeof value === "object" && value !== null;
+}
+
+async function getReviewRequestBody(
+  request: Request
+): Promise<ReviewRequestBody | null> {
+  try {
+    const body: unknown = await request.json();
+
+    return isReviewRequestBody(body) ? body : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function POST(request: Request): Promise<Response> {
+  try {
+    const body = await getReviewRequestBody(request);
+
+    if (!body) {
+      return Response.json(
+        { error: "Missing required review fields" },
+        { status: 400 }
+      );
+    }
+
+    const productId =
+      typeof body.productId === "string" ? body.productId.trim() : "";
+    const comment = typeof body.comment === "string" ? body.comment.trim() : "";
+    const rating =
+      typeof body.rating === "string" || typeof body.rating === "number"
+        ? Number(body.rating)
+        : Number.NaN;
 
     const user = await getCurrentUser();
 
@@ -17,14 +53,14 @@ export async function POST(request) {
       );
     }
 
-    if (!body.productId || !rating || !comment) {
+    if (!productId || !comment || !Number.isFinite(rating)) {
       return Response.json(
         { error: "Missing required review fields" },
         { status: 400 }
       );
     }
 
-    if (rating < 1 || rating > 5) {
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       return Response.json(
         { error: "Rating must be between 1 and 5" },
         { status: 400 }
@@ -33,7 +69,7 @@ export async function POST(request) {
 
     const review = await prisma.review.create({
       data: {
-        productId: body.productId,
+        productId,
         userId: user.id,
         name: user.name,
         rating,
@@ -45,7 +81,10 @@ export async function POST(request) {
   } catch (error) {
     console.error(error);
 
-    if (error.code === "P2002") {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
       return Response.json(
         { error: "You have already reviewed this product." },
         { status: 409 }
@@ -59,7 +98,7 @@ export async function POST(request) {
   }
 }
 
-export async function DELETE(request) {
+export async function DELETE(request: Request): Promise<Response> {
   try {
     const user = await getCurrentUser();
 
@@ -70,9 +109,9 @@ export async function DELETE(request) {
       );
     }
 
-    const body = await request.json();
+    const body = await getReviewRequestBody(request);
 
-    if (!body.reviewId) {
+    if (!body || typeof body.reviewId !== "string" || !body.reviewId) {
       return Response.json(
         { error: "Review ID is required." },
         { status: 400 }
@@ -115,7 +154,7 @@ export async function DELETE(request) {
   }
 }
 
-export async function PATCH(request) {
+export async function PATCH(request: Request): Promise<Response> {
   try {
     const user = await getCurrentUser();
 
@@ -126,16 +165,29 @@ export async function PATCH(request) {
       );
     }
 
-    const body = await request.json();
+    const body = await getReviewRequestBody(request);
 
-    if (!body.reviewId || !body.rating || !body.comment?.trim()) {
+    if (!body) {
       return Response.json(
         { error: "Review ID, rating, and comment are required." },
         { status: 400 }
       );
     }
 
-    const rating = Number(body.rating);
+    const reviewId =
+      typeof body.reviewId === "string" ? body.reviewId.trim() : "";
+    const comment = typeof body.comment === "string" ? body.comment.trim() : "";
+    const rating =
+      typeof body.rating === "string" || typeof body.rating === "number"
+        ? Number(body.rating)
+        : Number.NaN;
+
+    if (!reviewId || !comment || !Number.isFinite(rating)) {
+      return Response.json(
+        { error: "Review ID, rating, and comment are required." },
+        { status: 400 }
+      );
+    }
 
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       return Response.json(
@@ -146,7 +198,7 @@ export async function PATCH(request) {
 
     const review = await prisma.review.findUnique({
       where: {
-        id: body.reviewId,
+        id: reviewId,
       },
     });
 
@@ -167,7 +219,7 @@ export async function PATCH(request) {
       },
       data: {
         rating,
-        comment: body.comment.trim(),
+        comment,
       },
     });
 

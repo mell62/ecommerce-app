@@ -24,7 +24,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const minRating = parseOptionalNumber(searchParams.get("minRating"));
   const deals = searchParams.get("deals");
 
-  let orderBy: Prisma.ProductOrderByWithRelationInput[] = [
+  const orderBy: Prisma.ProductOrderByWithRelationInput[] = [
     {
       createdAt: "desc",
     },
@@ -32,28 +32,6 @@ export async function GET(request: Request): Promise<NextResponse> {
       id: "desc",
     },
   ];
-
-  if (sort === "price-asc") {
-    orderBy = [
-      {
-        price: "asc",
-      },
-      {
-        id: "desc",
-      },
-    ];
-  }
-
-  if (sort === "price-desc") {
-    orderBy = [
-      {
-        price: "desc",
-      },
-      {
-        id: "desc",
-      },
-    ];
-  }
 
   const where: Prisma.ProductWhereInput = {
     ...(category && {
@@ -117,6 +95,26 @@ export async function GET(request: Request): Promise<NextResponse> {
         reviewCount;
 
       return averageRating >= minRating;
+    });
+  }
+
+  if (sort === "price-asc" || sort === "price-desc") {
+    products.sort((firstProduct, secondProduct) => {
+      const firstPrice = getDiscountedPrice(
+        firstProduct.price,
+        firstProduct.discountPercent
+      );
+      const secondPrice = getDiscountedPrice(
+        secondProduct.price,
+        secondProduct.discountPercent
+      );
+      const priceDifference = firstPrice - secondPrice;
+
+      if (priceDifference === 0) {
+        return secondProduct.id.localeCompare(firstProduct.id);
+      }
+
+      return sort === "price-asc" ? priceDifference : -priceDifference;
     });
   }
 

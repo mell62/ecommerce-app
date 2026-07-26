@@ -1,7 +1,29 @@
 "use client";
 
+import type { SubmitEvent } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+
+type ReviewFormCallbacks = {
+  initialRating?: string | number;
+  initialComment?: string;
+  onCancel?: () => void;
+  onSuccess?: () => void;
+};
+
+type ReviewFormProps = Readonly<
+  ReviewFormCallbacks &
+    (
+      | {
+          productId: string;
+          reviewId?: never;
+        }
+      | {
+          productId?: never;
+          reviewId: string;
+        }
+    )
+>;
 
 export default function ReviewForm({
   productId,
@@ -10,7 +32,7 @@ export default function ReviewForm({
   initialComment = "",
   onCancel,
   onSuccess,
-}) {
+}: ReviewFormProps) {
   const router = useRouter();
 
   const isEditing = Boolean(reviewId);
@@ -20,7 +42,9 @@ export default function ReviewForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(event) {
+  async function handleSubmit(
+    event: SubmitEvent<HTMLFormElement>
+  ): Promise<void> {
     event.preventDefault();
 
     if (!comment.trim()) {
@@ -52,10 +76,18 @@ export default function ReviewForm({
         ),
       });
 
-      const data = await response.json();
+      const data: unknown = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Failed to submit review.");
+        const message =
+          typeof data === "object" &&
+          data !== null &&
+          "error" in data &&
+          typeof data.error === "string"
+            ? data.error
+            : "Failed to submit review.";
+
+        setError(message);
         return;
       }
 
@@ -104,7 +136,7 @@ export default function ReviewForm({
         value={comment}
         onChange={(event) => setComment(event.target.value)}
         className="w-full border rounded px-4 py-2"
-        rows="4"
+        rows={4}
       />
 
       <button

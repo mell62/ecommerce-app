@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getDiscountedPrice } from "@/lib/pricing";
 
 function parseOptionalNumber(value: string | null): number | undefined {
   if (!value) {
@@ -74,16 +75,6 @@ export async function GET(request: Request): Promise<NextResponse> {
         },
       ],
     }),
-    ...((minPrice !== undefined || maxPrice !== undefined) && {
-      price: {
-        ...(minPrice !== undefined && {
-          gte: minPrice,
-        }),
-        ...(maxPrice !== undefined && {
-          lte: maxPrice,
-        }),
-      },
-    }),
     ...(deals === "true" && {
       discountPercent: {
         gt: 0,
@@ -98,6 +89,20 @@ export async function GET(request: Request): Promise<NextResponse> {
     },
     orderBy,
   });
+
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    products = products.filter((product) => {
+      const finalPrice = getDiscountedPrice(
+        product.price,
+        product.discountPercent
+      );
+
+      return (
+        (minPrice === undefined || finalPrice >= minPrice) &&
+        (maxPrice === undefined || finalPrice <= maxPrice)
+      );
+    });
+  }
 
   if (minRating !== undefined) {
     products = products.filter((product) => {

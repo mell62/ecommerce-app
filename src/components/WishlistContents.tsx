@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -91,9 +92,12 @@ export default function WishlistContents() {
       {wishlist.map((product) => (
         <div key={product.id} className="border rounded-lg p-4 shadow">
           <Link href={`/products/${product.id}`}>
-            <img
+            <Image
               src={product.imageUrl}
               alt={product.name}
+              width={800}
+              height={600}
+              sizes="(min-width: 768px) 33vw, 100vw"
               className="w-full h-48 object-cover rounded"
             />
 

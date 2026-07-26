@@ -21,7 +21,7 @@ export default async function HomePage() {
     ],
   });
 
-  let topRatedProducts = await prisma.product.findMany({
+  const productsWithReviews = await prisma.product.findMany({
     include: {
       reviews: true,
     },
@@ -59,7 +59,7 @@ export default async function HomePage() {
     ],
   });
 
-  topRatedProducts = topRatedProducts
+  const topRatedProducts = productsWithReviews
     .map((product) => {
       const reviewCount = product.reviews.length;
 

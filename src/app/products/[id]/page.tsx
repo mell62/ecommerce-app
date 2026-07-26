@@ -11,7 +11,13 @@ import EditReviewButton from "@/components/EditReviewButton";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export default async function ProductPage({ params }) {
+type ProductPageProps = Readonly<{
+  params: Promise<{
+    id: string;
+  }>;
+}>;
+
+export default async function ProductPage({ params }: ProductPageProps) {
   const id = (await params).id;
 
   const product = await prisma.product.findUnique({

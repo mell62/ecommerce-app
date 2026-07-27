@@ -140,7 +140,7 @@ export default async function HomePage() {
         {dealProducts.length === 0 ? (
           <p className="text-gray-600">No deals available right now.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {dealProducts.map((product) => {
               const discountedPrice = getDiscountedPrice(
                 product.price,
@@ -164,8 +164,8 @@ export default async function HomePage() {
                     alt={product.name}
                     width={800}
                     height={600}
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                    className="w-full h-48 object-cover rounded"
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="aspect-[4/3] h-auto w-full rounded object-cover"
                   />
 
                   <h3 className="text-xl font-semibold mt-4">{product.name}</h3>
@@ -198,7 +198,7 @@ export default async function HomePage() {
         {featuredProducts.length === 0 ? (
           <p className="text-gray-600">No featured products yet.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {featuredProducts.map((product) => {
               const productHasDiscount = hasDiscount(product.discountPercent);
 
@@ -226,8 +226,8 @@ export default async function HomePage() {
                     alt={product.name}
                     width={800}
                     height={600}
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                    className="w-full h-48 object-cover rounded"
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="aspect-[4/3] h-auto w-full rounded object-cover"
                   />
 
                   <h3 className="text-xl font-semibold mt-4">{product.name}</h3>
@@ -268,7 +268,7 @@ export default async function HomePage() {
         {topRatedProducts.length === 0 ? (
           <p className="text-gray-600">No rated products yet.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {topRatedProducts.map((product) => {
               const productHasDiscount = hasDiscount(product.discountPercent);
 
@@ -296,8 +296,8 @@ export default async function HomePage() {
                     alt={product.name}
                     width={800}
                     height={600}
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                    className="w-full h-48 object-cover rounded"
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="aspect-[4/3] h-auto w-full rounded object-cover"
                   />
 
                   <h3 className="text-xl font-semibold mt-4">{product.name}</h3>
@@ -344,7 +344,7 @@ export default async function HomePage() {
         {bestSellerProducts.length === 0 ? (
           <p className="text-gray-600">No best sellers yet.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {bestSellerProducts.map((product) => {
               const productHasDiscount = hasDiscount(product.discountPercent);
 
@@ -372,8 +372,8 @@ export default async function HomePage() {
                     alt={product.name}
                     width={800}
                     height={600}
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                    className="w-full h-48 object-cover rounded"
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="aspect-[4/3] h-auto w-full rounded object-cover"
                   />
 
                   <h3 className="text-xl font-semibold mt-4">{product.name}</h3>

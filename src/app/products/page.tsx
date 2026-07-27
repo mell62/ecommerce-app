@@ -162,7 +162,7 @@ export default async function ProductsPage({
       </p>
 
       {products.length === 0 ? null : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => {
             const reviewCount = product.reviews.length;
 
@@ -229,8 +229,8 @@ export default async function ProductsPage({
                   alt={product.name}
                   width={800}
                   height={600}
-                  sizes="(min-width: 768px) 33vw, 100vw"
-                  className="w-full h-48 object-cover rounded"
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className="aspect-[4/3] h-auto w-full rounded object-cover"
                 />
 
                 <h2 className="text-xl font-semibold mt-4">{product.name}</h2>

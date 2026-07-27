@@ -68,7 +68,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md p-8">
+    <div className="mx-auto max-w-md p-8">
       <h1 className="mb-6 text-3xl font-bold">Create Account</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -134,6 +134,6 @@ export default function RegisterPage() {
           {isSubmitting ? "Creating Account..." : "Create Account"}
         </button>
       </form>
-    </main>
+    </div>
   );
 }

@@ -46,7 +46,7 @@ export default function LogoutButton() {
       type="button"
       onClick={handleLogout}
       disabled={isLoggingOut}
-      className="disabled:opacity-50"
+      className="flex min-h-11 items-center justify-center rounded-md border border-border px-4 text-sm font-semibold text-foreground hover:border-brand-500 hover:text-brand-700 disabled:opacity-50"
     >
       {isLoggingOut ? "Logging Out..." : "Log Out"}
     </button>

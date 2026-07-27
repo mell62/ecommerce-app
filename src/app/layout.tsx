@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import Link from "next/link";
-import CartCounter from "@/components/CartCounter";
-import LogoutButton from "@/components/LogoutButton";
+import SiteHeader from "@/components/SiteHeader";
 import { getCurrentUser } from "@/lib/session";
 import "./globals.css";
 
@@ -18,8 +17,12 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "E-Commerce Store",
-  description: "My E-Commerce App",
+  title: {
+    default: "Zeus Electronics",
+    template: "%s | Zeus",
+  },
+  description:
+    "Shop thoughtfully selected electronics and accessories for work, gaming, and everyday life.",
 };
 
 type RootLayoutProps = Readonly<{
@@ -35,34 +38,39 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       className={`${manrope.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <nav className="border-b p-4">
-          <div className="max-w-6xl mx-auto flex justify-between">
-            <Link href="/" className="text-xl font-bold">
-              Store
-            </Link>
+        <Link
+          href="#main-content"
+          className="fixed left-4 top-4 z-[100] -translate-y-24 rounded-md bg-brand-700 px-4 py-3 font-semibold text-white shadow-card focus:translate-y-0"
+        >
+          Skip to main content
+        </Link>
 
-            <div className="flex gap-6">
-              <Link href="/products">Products</Link>
-              <Link href="/cart">
-                Cart <CartCounter />
+        <SiteHeader userName={user?.name ?? null} />
+
+        <main id="main-content" tabIndex={-1} className="flex-1">
+          {children}
+        </main>
+
+        <footer className="border-t border-border bg-surface">
+          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-muted sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+            <p>© {new Date().getFullYear()} Zeus. Built for better setups.</p>
+
+            <nav
+              aria-label="Footer navigation"
+              className="flex flex-wrap gap-4"
+            >
+              <Link href="/products" className="hover:text-brand-700">
+                Shop products
               </Link>
-              <Link href="/orders">Orders</Link>
-              <Link href="/wishlist">Wishlist</Link>
-              {user ? (
-                <div className="flex items-center gap-4">
-                  <span className="text-sm">Hello, {user.name}</span>
-                  <LogoutButton />
-                </div>
-              ) : (
-                <div className="flex gap-4">
-                  <Link href="/login">Log In</Link>
-                  <Link href="/register">Register</Link>
-                </div>
-              )}
-            </div>
+              <Link href="/cart" className="hover:text-brand-700">
+                Cart
+              </Link>
+              <Link href="/wishlist" className="hover:text-brand-700">
+                Wishlist
+              </Link>
+            </nav>
           </div>
-        </nav>
-        <main className="flex-1">{children}</main>
+        </footer>
       </body>
     </html>
   );

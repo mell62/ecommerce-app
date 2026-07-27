@@ -74,7 +74,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md p-8">
+    <div className="mx-auto max-w-md p-8">
       <h1 className="mb-6 text-3xl font-bold">Log In</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -127,6 +127,6 @@ export default function LoginPage() {
           Create one
         </Link>
       </p>
-    </main>
+    </div>
   );
 }

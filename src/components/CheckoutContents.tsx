@@ -114,10 +114,7 @@ export default function CheckoutContents() {
     void loadCart();
   }, []);
 
-  const total = cart.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const hasStockIssue = cart.some(
     (item) => item.stockCount === 0 || item.quantity > item.stockCount
@@ -125,21 +122,21 @@ export default function CheckoutContents() {
 
   if (!hasLoadedCart) {
     return (
-      <main className="max-w-4xl mx-auto p-8">
+      <div className="max-w-4xl mx-auto p-8">
         <h1 className="text-3xl font-bold mb-6">Checkout</h1>
 
         <p>Loading checkout...</p>
-      </main>
+      </div>
     );
   }
 
   if (cart.length === 0) {
     return (
-      <main className="max-w-4xl mx-auto p-8">
+      <div className="max-w-4xl mx-auto p-8">
         <h1 className="text-3xl font-bold mb-6">Checkout</h1>
 
         <p>Your cart is empty.</p>
-      </main>
+      </div>
     );
   }
 
@@ -184,7 +181,7 @@ export default function CheckoutContents() {
   }
 
   return (
-    <main className="max-w-4xl mx-auto p-8">
+    <div className="max-w-4xl mx-auto p-8">
       <h1 className="text-3xl font-bold mb-6">Checkout</h1>
 
       <div className="space-y-2 mb-8">
@@ -213,6 +210,6 @@ export default function CheckoutContents() {
       >
         {isPlacingOrder ? "Placing Order..." : "Place Order"}
       </button>
-    </main>
+    </div>
   );
 }

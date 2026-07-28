@@ -4,6 +4,20 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { SubmitEvent } from "react";
 import { useEffect, useState } from "react";
 
+const PRICE_FILTER_MIN = 0;
+const PRICE_FILTER_MAX = 500;
+const PRICE_FILTER_STEP = 5;
+
+function getPriceWithinRange(value: string, fallback: number): number {
+  const parsedPrice = Number(value);
+
+  if (!value || !Number.isFinite(parsedPrice)) {
+    return fallback;
+  }
+
+  return Math.min(PRICE_FILTER_MAX, Math.max(PRICE_FILTER_MIN, parsedPrice));
+}
+
 export default function ProductFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -14,6 +28,8 @@ export default function ProductFilters() {
   const [minRating, setMinRating] = useState(
     searchParams.get("minRating") || ""
   );
+  const selectedMinPrice = getPriceWithinRange(minPrice, PRICE_FILTER_MIN);
+  const selectedMaxPrice = getPriceWithinRange(maxPrice, PRICE_FILTER_MAX);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect --
@@ -111,44 +127,74 @@ export default function ProductFilters() {
           </div>
 
           <div>
-            <label
-              htmlFor="minimum-price"
-              className="mb-1.5 block text-sm font-semibold text-foreground"
-            >
-              Minimum price
-            </label>
+            <div className="mb-1 flex items-center justify-between gap-3">
+              <label
+                htmlFor="minimum-price"
+                className="text-sm font-semibold text-foreground"
+              >
+                Minimum price
+              </label>
+              <output
+                htmlFor="minimum-price"
+                className="text-sm font-semibold text-brand-700"
+              >
+                ${selectedMinPrice}
+              </output>
+            </div>
             <input
               id="minimum-price"
               name="minPrice"
-              type="number"
-              min="0"
-              step="0.01"
-              inputMode="decimal"
-              placeholder="$0"
-              value={minPrice}
-              onChange={(event) => setMinPrice(event.target.value)}
-              className="store-field min-h-11 w-full rounded-ui border border-border bg-surface px-3 py-2 text-foreground placeholder:text-muted"
+              type="range"
+              min={PRICE_FILTER_MIN}
+              max={PRICE_FILTER_MAX}
+              step={PRICE_FILTER_STEP}
+              value={selectedMinPrice}
+              aria-valuetext={`$${selectedMinPrice}`}
+              onChange={(event) => {
+                const nextMinimum = Math.min(
+                  Number(event.target.value),
+                  selectedMaxPrice
+                );
+
+                setMinPrice(String(nextMinimum));
+              }}
+              className="store-range h-11 w-full cursor-pointer"
             />
           </div>
 
           <div>
-            <label
-              htmlFor="maximum-price"
-              className="mb-1.5 block text-sm font-semibold text-foreground"
-            >
-              Maximum price
-            </label>
+            <div className="mb-1 flex items-center justify-between gap-3">
+              <label
+                htmlFor="maximum-price"
+                className="text-sm font-semibold text-foreground"
+              >
+                Maximum price
+              </label>
+              <output
+                htmlFor="maximum-price"
+                className="text-sm font-semibold text-brand-700"
+              >
+                ${selectedMaxPrice}
+              </output>
+            </div>
             <input
               id="maximum-price"
               name="maxPrice"
-              type="number"
-              min="0"
-              step="0.01"
-              inputMode="decimal"
-              placeholder="Any price"
-              value={maxPrice}
-              onChange={(event) => setMaxPrice(event.target.value)}
-              className="store-field min-h-11 w-full rounded-ui border border-border bg-surface px-3 py-2 text-foreground placeholder:text-muted"
+              type="range"
+              min={PRICE_FILTER_MIN}
+              max={PRICE_FILTER_MAX}
+              step={PRICE_FILTER_STEP}
+              value={selectedMaxPrice}
+              aria-valuetext={`$${selectedMaxPrice}`}
+              onChange={(event) => {
+                const nextMaximum = Math.max(
+                  Number(event.target.value),
+                  selectedMinPrice
+                );
+
+                setMaxPrice(String(nextMaximum));
+              }}
+              className="store-range h-11 w-full cursor-pointer"
             />
           </div>
         </div>

@@ -107,6 +107,73 @@ body {
   outline: none;
 }
 
+.store-range {
+  appearance: none;
+  background: transparent;
+}
+
+.store-range::-webkit-slider-runnable-track {
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--store-border);
+}
+
+.store-range::-webkit-slider-thumb {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: -0.4375rem;
+  appearance: none;
+  border: 2px solid var(--store-brand-600);
+  border-radius: 50%;
+  background: var(--store-surface);
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.16);
+  transition:
+    border-color var(--store-duration-fast) var(--store-ease-standard),
+    box-shadow var(--store-duration-fast) var(--store-ease-standard),
+    transform var(--store-duration-fast) var(--store-ease-standard);
+}
+
+.store-range::-moz-range-track {
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--store-border);
+}
+
+.store-range::-moz-range-thumb {
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid var(--store-brand-600);
+  border-radius: 50%;
+  background: var(--store-surface);
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.16);
+  transition:
+    border-color var(--store-duration-fast) var(--store-ease-standard),
+    box-shadow var(--store-duration-fast) var(--store-ease-standard),
+    transform var(--store-duration-fast) var(--store-ease-standard);
+}
+
+.store-range:hover::-webkit-slider-thumb {
+  border-color: var(--store-brand-700);
+  transform: scale(1.08);
+}
+
+.store-range:hover::-moz-range-thumb {
+  border-color: var(--store-brand-700);
+  transform: scale(1.08);
+}
+
+.store-range:focus-visible {
+  outline: none;
+}
+
+.store-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px var(--store-brand-100);
+}
+
+.store-range:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px var(--store-brand-100);
+}
+
 :where(a, button) {
   transition:
     color var(--store-duration-fast) var(--store-ease-standard),
@@ -146,5 +213,9 @@ button:disabled {
   .store-field:focus-visible {
     outline: 2px solid Highlight;
     outline-offset: 1px;
+  }
+
+  .store-range {
+    appearance: auto;
   }
 }

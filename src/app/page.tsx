@@ -483,7 +483,7 @@ export default async function HomePage() {
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
               <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand-700">
-                Customer favourites
+                Customer favorites
               </p>
               <h2 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                 Top rated products
@@ -500,7 +500,7 @@ export default async function HomePage() {
 
           {topRatedProducts.length === 0 ? (
             <div className="rounded-ui border border-border bg-surface p-6 text-muted">
-              No rated products yet. Customer favourites will appear here as
+              No rated products yet. Customer favorites will appear here as
               reviews arrive.
             </div>
           ) : (
@@ -606,7 +606,7 @@ export default async function HomePage() {
 
         {bestSellerProducts.length === 0 ? (
           <div className="rounded-ui border border-border bg-surface p-6 text-muted">
-            No best sellers yet. Customer favourites will appear here soon.
+            No best sellers yet. Customer favorites will appear here soon.
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

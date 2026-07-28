@@ -158,8 +158,13 @@ export default async function ProductsPage({
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
       <header className="mb-8 max-w-3xl sm:min-h-40">
-        <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand-700">
-          Zeus catalog
+        <p className="mb-2 flex items-baseline gap-1">
+          <span className="font-display text-base font-bold tracking-tight text-foreground">
+            Zeus
+          </span>
+          <span className="text-sm font-semibold uppercase tracking-wider text-brand-700">
+            Catalog
+          </span>
         </p>
         <h1 className="min-h-[2.3em] font-display text-4xl font-bold tracking-tight text-foreground sm:min-h-0 sm:text-5xl">
           {pageTitle}

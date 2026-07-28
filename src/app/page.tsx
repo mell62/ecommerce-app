@@ -217,62 +217,88 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-8 py-12">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Deals</h2>
+      <section className="border-y border-border bg-surface-muted">
+        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl">
+              <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-deal">
+                Limited-time value
+              </p>
+              <h2 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                Deals worth checking out
+              </h2>
+              <p className="mt-3 text-muted">
+                Save on practical upgrades for work, gaming, and everyday use.
+              </p>
+            </div>
 
-          <Link href="/products?deals=true" className="text-sm underline">
-            View all deals
-          </Link>
-        </div>
-
-        {dealProducts.length === 0 ? (
-          <p className="text-gray-600">No deals available right now.</p>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {dealProducts.map((product) => {
-              const discountedPrice = getDiscountedPrice(
-                product.price,
-                product.discountPercent
-              );
-
-              return (
-                <Link
-                  key={product.id}
-                  href={`/products/${product.id}`}
-                  className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
-                >
-                  <div className="mb-2">
-                    <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                      {product.discountPercent}% OFF
-                    </span>
-                  </div>
-
-                  <Image
-                    src={product.imageUrl}
-                    alt={product.name}
-                    width={800}
-                    height={600}
-                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                    className="aspect-[4/3] h-auto w-full rounded object-cover"
-                  />
-
-                  <h3 className="text-xl font-semibold mt-4">{product.name}</h3>
-
-                  <p className="text-gray-600">{product.description}</p>
-
-                  <div className="mt-2">
-                    <p className="font-bold">${discountedPrice.toFixed(2)}</p>
-
-                    <p className="text-sm text-gray-500 line-through">
-                      ${product.price.toFixed(2)}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
+            <Link
+              href="/products?deals=true"
+              className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md px-3 font-semibold text-brand-700 hover:bg-brand-50"
+            >
+              View all deals
+              <span aria-hidden="true">→</span>
+            </Link>
           </div>
-        )}
+
+          {dealProducts.length === 0 ? (
+            <div className="rounded-xl border border-border bg-surface p-6 text-muted">
+              No deals are available right now. Check back soon for new offers.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {dealProducts.map((product) => {
+                const discountedPrice = getDiscountedPrice(
+                  product.price,
+                  product.discountPercent
+                );
+
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/products/${product.id}`}
+                    className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card"
+                  >
+                    <div className="relative overflow-hidden bg-brand-50">
+                      <Image
+                        src={product.imageUrl}
+                        alt={product.name}
+                        width={800}
+                        height={600}
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        className="aspect-[4/3] h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      />
+
+                      <span className="absolute left-4 top-4 rounded-md bg-deal px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+                        {product.discountPercent}% OFF
+                      </span>
+                    </div>
+
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="text-xl font-semibold text-foreground">
+                        {product.name}
+                      </h3>
+
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        {product.description}
+                      </p>
+
+                      <div className="mt-auto flex items-baseline gap-2 pt-5">
+                        <p className="text-xl font-bold text-foreground">
+                          ${discountedPrice.toFixed(2)}
+                        </p>
+
+                        <p className="text-sm text-muted line-through">
+                          ${product.price.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="max-w-6xl mx-auto px-8 py-12">

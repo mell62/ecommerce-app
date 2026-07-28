@@ -6,10 +6,57 @@ import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+function getRatingSummary(reviews: { rating: number }[]) {
+  const reviewCount = reviews.length;
+  const averageRating =
+    reviewCount === 0
+      ? 0
+      : reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount;
+
+  return {
+    reviewCount,
+    averageRating,
+  };
+}
+
+type ProductRatingProps = Readonly<{
+  reviews: { rating: number }[];
+}>;
+
+function ProductRating({ reviews }: ProductRatingProps) {
+  const { reviewCount, averageRating } = getRatingSummary(reviews);
+
+  if (reviewCount === 0) {
+    return null;
+  }
+
+  return (
+    <p className="mt-4 flex items-center gap-2 text-sm font-medium text-foreground">
+      <span aria-hidden="true" className="text-warning">
+        ★
+      </span>
+      <span>
+        {averageRating.toFixed(1)}
+        <span className="text-muted">
+          {" "}
+          · {reviewCount} {reviewCount === 1 ? "review" : "reviews"}
+        </span>
+      </span>
+    </p>
+  );
+}
+
 export default async function HomePage() {
   const featuredProducts = await prisma.product.findMany({
     where: {
       isFeatured: true,
+    },
+    include: {
+      reviews: {
+        select: {
+          rating: true,
+        },
+      },
     },
     take: 3,
     orderBy: [
@@ -24,13 +71,24 @@ export default async function HomePage() {
 
   const productsWithReviews = await prisma.product.findMany({
     include: {
-      reviews: true,
+      reviews: {
+        select: {
+          rating: true,
+        },
+      },
     },
   });
 
   const bestSellerProducts = await prisma.product.findMany({
     where: {
       isBestSeller: true,
+    },
+    include: {
+      reviews: {
+        select: {
+          rating: true,
+        },
+      },
     },
     take: 3,
     orderBy: [
@@ -49,6 +107,13 @@ export default async function HomePage() {
         gt: 0,
       },
     },
+    include: {
+      reviews: {
+        select: {
+          rating: true,
+        },
+      },
+    },
     take: 3,
     orderBy: [
       {
@@ -62,18 +127,11 @@ export default async function HomePage() {
 
   const topRatedProducts = productsWithReviews
     .map((product) => {
-      const reviewCount = product.reviews.length;
-
-      const averageRating =
-        reviewCount === 0
-          ? 0
-          : product.reviews.reduce((sum, review) => sum + review.rating, 0) /
-            reviewCount;
+      const ratingSummary = getRatingSummary(product.reviews);
 
       return {
         ...product,
-        reviewCount,
-        averageRating,
+        ...ratingSummary,
       };
     })
     .filter((product) => product.reviewCount > 1)
@@ -283,6 +341,8 @@ export default async function HomePage() {
                         {product.description}
                       </p>
 
+                      <ProductRating reviews={product.reviews} />
+
                       <div className="mt-auto flex items-baseline gap-2 pt-5">
                         <p className="text-xl font-bold text-foreground">
                           ${discountedPrice.toFixed(2)}
@@ -380,6 +440,8 @@ export default async function HomePage() {
                     <p className="mt-2 text-sm leading-6 text-muted">
                       {product.description}
                     </p>
+
+                    <ProductRating reviews={product.reviews} />
 
                     {productHasDiscount ? (
                       <div className="mt-auto flex items-baseline gap-2 pt-5">
@@ -561,6 +623,8 @@ export default async function HomePage() {
 
                   <h3 className="text-xl font-semibold mt-4">{product.name}</h3>
                   <p className="text-gray-600">{product.description}</p>
+
+                  <ProductRating reviews={product.reviews} />
 
                   {productHasDiscount ? (
                     <div className="mt-2">

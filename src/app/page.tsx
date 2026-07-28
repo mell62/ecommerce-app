@@ -187,14 +187,14 @@ export default async function HomePage() {
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
                 href="/products"
-                className="inline-flex min-h-11 items-center justify-center rounded-md bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
+                className="inline-flex min-h-11 items-center justify-center rounded-ui bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
               >
                 Shop products
               </Link>
 
               <Link
                 href="/products?deals=true"
-                className="inline-flex min-h-11 items-center justify-center rounded-md border border-border bg-surface px-6 py-3 font-semibold text-foreground shadow-sm hover:-translate-y-0.5 hover:border-brand-500 hover:text-brand-700"
+                className="inline-flex min-h-11 items-center justify-center rounded-ui border border-border bg-surface px-6 py-3 font-semibold text-foreground shadow-sm hover:-translate-y-0.5 hover:border-brand-500 hover:text-brand-700"
               >
                 Explore deals
               </Link>
@@ -226,7 +226,7 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <Link
             href="/products?category=Accessories"
-            className="group rounded-xl border border-border bg-surface p-6 shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card sm:p-8"
+            className="group rounded-ui border border-border bg-surface p-6 shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card sm:p-8"
           >
             <span className="grid size-12 place-items-center rounded-lg bg-brand-50 text-brand-700">
               <svg
@@ -262,7 +262,7 @@ export default async function HomePage() {
 
           <Link
             href="/products?category=Monitors"
-            className="group rounded-xl border border-border bg-surface p-6 shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card sm:p-8"
+            className="group rounded-ui border border-border bg-surface p-6 shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card sm:p-8"
           >
             <span className="grid size-12 place-items-center rounded-lg bg-brand-50 text-brand-700">
               <svg
@@ -319,7 +319,7 @@ export default async function HomePage() {
           </div>
 
           {dealProducts.length === 0 ? (
-            <div className="rounded-xl border border-border bg-surface p-6 text-muted">
+            <div className="rounded-ui border border-border bg-surface p-6 text-muted">
               No deals are available right now. Check back soon for new offers.
             </div>
           ) : (
@@ -334,7 +334,7 @@ export default async function HomePage() {
                   <Link
                     key={product.id}
                     href={`/products/${product.id}`}
-                    className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card"
+                    className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card"
                   >
                     <div className="relative overflow-hidden bg-brand-50">
                       <Image
@@ -404,7 +404,7 @@ export default async function HomePage() {
         </div>
 
         {featuredProducts.length === 0 ? (
-          <div className="rounded-xl border border-border bg-surface p-6 text-muted">
+          <div className="rounded-ui border border-border bg-surface p-6 text-muted">
             Featured products are being selected. Check back soon.
           </div>
         ) : (
@@ -421,7 +421,7 @@ export default async function HomePage() {
                 <Link
                   key={product.id}
                   href={`/products/${product.id}`}
-                  className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card"
+                  className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card"
                 >
                   <div className="relative overflow-hidden bg-brand-50">
                     <Image
@@ -499,7 +499,7 @@ export default async function HomePage() {
           </div>
 
           {topRatedProducts.length === 0 ? (
-            <div className="rounded-xl border border-border bg-surface p-6 text-muted">
+            <div className="rounded-ui border border-border bg-surface p-6 text-muted">
               No rated products yet. Customer favourites will appear here as
               reviews arrive.
             </div>
@@ -517,7 +517,7 @@ export default async function HomePage() {
                   <Link
                     key={product.id}
                     href={`/products/${product.id}`}
-                    className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card"
+                    className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card"
                   >
                     <div className="relative overflow-hidden bg-brand-50">
                       <Image
@@ -609,7 +609,7 @@ export default async function HomePage() {
                 <Link
                   key={product.id}
                   href={`/products/${product.id}`}
-                  className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
+                  className="block rounded-ui border p-4 shadow transition hover:shadow-lg"
                 >
                   {productHasDiscount && (
                     <div className="mb-2">

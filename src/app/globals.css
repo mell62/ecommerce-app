@@ -34,6 +34,7 @@
   --store-radius-md: 0.625rem;
   --store-radius-lg: 0.875rem;
   --store-radius-xl: 1.25rem;
+  --store-radius-ui: 0.375rem;
 
   --store-shadow-card: 0 8px 24px rgb(15 23 42 / 0.08);
   --store-shadow-card-hover: 0 16px 36px rgb(15 23 42 / 0.12);
@@ -66,6 +67,7 @@
   --radius-md: var(--store-radius-md);
   --radius-lg: var(--store-radius-lg);
   --radius-xl: var(--store-radius-xl);
+  --radius-ui: var(--store-radius-ui);
   --shadow-card: var(--store-shadow-card);
   --shadow-card-hover: var(--store-shadow-card-hover);
 }

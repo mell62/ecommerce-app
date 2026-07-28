@@ -161,7 +161,7 @@ export default async function ProductsPage({
         <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand-700">
           Zeus catalog
         </p>
-        <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+        <h1 className="min-h-[2.3em] font-display text-4xl font-bold tracking-tight text-foreground sm:min-h-0 sm:text-5xl">
           {pageTitle}
         </h1>
         <p className="mt-4 text-base leading-7 text-muted sm:text-lg">

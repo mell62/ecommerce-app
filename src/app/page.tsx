@@ -82,23 +82,49 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section className="bg-gray-400">
-        <div className="max-w-6xl mx-auto px-8 py-20">
-          <h1 className="text-5xl font-bold max-w-2xl">
-            Upgrade your setup with premium tech accessories
-          </h1>
+      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-brand-50 via-surface to-brand-100">
+        <div
+          aria-hidden="true"
+          className="absolute -right-24 -top-32 size-80 rounded-full bg-brand-500/10 blur-3xl"
+        />
 
-          <p className="mt-4 text-gray-600 max-w-xl">
-            Discover keyboards, mice, monitors, and essentials selected for
-            productivity, gaming, and everyday use.
-          </p>
+        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="mx-auto mb-5 w-fit rounded-full border border-brand-100 bg-surface/80 px-4 py-2 text-sm font-semibold text-brand-700 shadow-sm">
+              Thoughtful tech for better setups
+            </p>
 
-          <Link
-            href="/products"
-            className="inline-block mt-8 bg-black text-white px-6 py-3 rounded"
-          >
-            Shop Now
-          </Link>
+            <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+              Upgrade the way you work, play, and create
+            </h1>
+
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-muted sm:text-lg">
+              Explore carefully selected keyboards, mice, monitors, and everyday
+              electronics built to make every setup feel better.
+            </p>
+
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link
+                href="/products"
+                className="inline-flex min-h-11 items-center justify-center rounded-md bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
+              >
+                Shop products
+              </Link>
+
+              <Link
+                href="/products?deals=true"
+                className="inline-flex min-h-11 items-center justify-center rounded-md border border-border bg-surface px-6 py-3 font-semibold text-foreground shadow-sm hover:-translate-y-0.5 hover:border-brand-500 hover:text-brand-700"
+              >
+                Explore deals
+              </Link>
+            </div>
+
+            <p className="mt-8 text-sm font-medium text-muted">
+              Keyboards <span aria-hidden="true">•</span> Mice{" "}
+              <span aria-hidden="true">•</span> Monitors{" "}
+              <span aria-hidden="true">•</span> Accessories
+            </p>
+          </div>
         </div>
       </section>
 

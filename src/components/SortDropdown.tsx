@@ -38,15 +38,24 @@ export default function SortDropdown({ currentSort }: SortDropdownProps) {
   }
 
   return (
-    <select
-      name="sort"
-      value={sort}
-      onChange={handleChange}
-      className="border rounded px-4 py-2 mb-6"
-    >
-      <option value="">Newest</option>
-      <option value="price-asc">Price: Low to High</option>
-      <option value="price-desc">Price: High to Low</option>
-    </select>
+    <div className="flex min-h-11 items-center rounded-ui border border-border bg-surface shadow-sm focus-within:border-brand-500">
+      <label
+        htmlFor="product-sort"
+        className="shrink-0 border-r border-border px-3 text-sm font-semibold text-muted"
+      >
+        Sort by
+      </label>
+      <select
+        id="product-sort"
+        name="sort"
+        value={sort}
+        onChange={handleChange}
+        className="store-field min-h-11 w-36 rounded-ui border-0 bg-surface px-3 py-2 font-medium text-foreground lg:w-48"
+      >
+        <option value="">Newest</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+      </select>
+    </div>
   );
 }

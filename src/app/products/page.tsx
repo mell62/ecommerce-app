@@ -169,35 +169,38 @@ export default async function ProductsPage({
         </p>
       </header>
 
-      <nav aria-label="Product categories" className="mb-8">
-        <ul className="flex flex-wrap gap-2">
-          {categoryLinks.map((categoryLink) => {
-            const isActive = categoryLink.deals
-              ? deals === "true"
-              : deals !== "true" && category === categoryLink.category;
+      <div className="relative mb-8 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <nav aria-label="Product categories">
+          <ul className="flex flex-wrap gap-2">
+            {categoryLinks.map((categoryLink) => {
+              const isActive = categoryLink.deals
+                ? deals === "true"
+                : deals !== "true" && category === categoryLink.category;
 
-            return (
-              <li key={categoryLink.label}>
-                <Link
-                  href={categoryLink.href}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`inline-flex min-h-11 items-center justify-center rounded-ui border px-4 py-2 text-sm font-semibold ${
-                    isActive
-                      ? "border-brand-600 bg-brand-600 text-white shadow-sm"
-                      : "border-border bg-surface text-foreground hover:border-brand-500 hover:text-brand-700"
-                  }`}
-                >
-                  {categoryLink.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+              return (
+                <li key={categoryLink.label}>
+                  <Link
+                    href={categoryLink.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`inline-flex min-h-11 items-center justify-center rounded-ui border px-4 py-2 text-sm font-semibold ${
+                      isActive
+                        ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+                        : "border-border bg-surface text-foreground hover:border-brand-500 hover:text-brand-700"
+                    }`}
+                  >
+                    {categoryLink.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
-      <ProductFilters />
-
-      <SortDropdown currentSort={sort} />
+        <div className="flex flex-wrap items-start gap-3 lg:justify-end">
+          <ProductFilters />
+          <SortDropdown currentSort={sort} />
+        </div>
+      </div>
 
       <p
         className="mb-4 text-sm font-medium text-muted"

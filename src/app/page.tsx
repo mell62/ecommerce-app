@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { prisma } from "@/lib/db";
 import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 
@@ -43,6 +44,28 @@ function ProductRating({ reviews }: ProductRatingProps) {
         </span>
       </span>
     </p>
+  );
+}
+
+type SectionLinkProps = Readonly<{
+  href: string;
+  children: ReactNode;
+}>;
+
+function SectionLink({ href, children }: SectionLinkProps) {
+  return (
+    <Link
+      href={href}
+      className="group relative inline-flex min-h-11 w-fit items-center gap-2 px-1 font-semibold text-brand-700 after:absolute after:bottom-1.5 after:left-1 after:h-px after:w-8 after:bg-brand-500 after:transition-[width,background-color] after:duration-200 hover:text-brand-900 hover:after:w-[calc(100%-0.5rem)] hover:after:bg-brand-700"
+    >
+      {children}
+      <span
+        aria-hidden="true"
+        className="transition-transform duration-200 group-hover:translate-x-1"
+      >
+        →
+      </span>
+    </Link>
   );
 }
 
@@ -290,13 +313,9 @@ export default async function HomePage() {
               </p>
             </div>
 
-            <Link
-              href="/products?deals=true"
-              className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md px-3 font-semibold text-brand-700 hover:bg-brand-50"
-            >
+            <SectionLink href="/products?deals=true">
               View all deals
-              <span aria-hidden="true">→</span>
-            </Link>
+            </SectionLink>
           </div>
 
           {dealProducts.length === 0 ? (
@@ -381,13 +400,7 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <Link
-            href="/products"
-            className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md px-3 font-semibold text-brand-700 hover:bg-brand-50"
-          >
-            View all products
-            <span aria-hidden="true">→</span>
-          </Link>
+          <SectionLink href="/products">View all products</SectionLink>
         </div>
 
         {featuredProducts.length === 0 ? (
@@ -480,13 +493,9 @@ export default async function HomePage() {
               </p>
             </div>
 
-            <Link
-              href="/products?minRating=4"
-              className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md px-3 font-semibold text-brand-700 hover:bg-brand-50"
-            >
+            <SectionLink href="/products?minRating=4">
               View 4+ rated
-              <span aria-hidden="true">→</span>
-            </Link>
+            </SectionLink>
           </div>
 
           {topRatedProducts.length === 0 ? (
@@ -581,9 +590,7 @@ export default async function HomePage() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Best Sellers</h2>
 
-          <Link href="/products" className="text-sm underline">
-            View all
-          </Link>
+          <SectionLink href="/products">View all</SectionLink>
         </div>
 
         {bestSellerProducts.length === 0 ? (

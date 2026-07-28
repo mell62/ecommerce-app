@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ChangeEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type SortDropdownProps = Readonly<{
   currentSort?: string;
@@ -11,6 +11,7 @@ type SortDropdownProps = Readonly<{
 export default function SortDropdown({ currentSort }: SortDropdownProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const selectRef = useRef<HTMLSelectElement>(null);
 
   const [sort, setSort] = useState(currentSort || "");
 
@@ -37,25 +38,63 @@ export default function SortDropdown({ currentSort }: SortDropdownProps) {
     router.push(queryString ? `/products?${queryString}` : "/products");
   }
 
+  function openSortOptions(): void {
+    const select = selectRef.current;
+
+    if (!select) {
+      return;
+    }
+
+    select.focus();
+
+    try {
+      select.showPicker();
+    } catch {
+      // Browsers without an available native picker still receive focus.
+    }
+  }
+
   return (
-    <div className="flex min-h-11 items-center rounded-ui border border-border bg-surface shadow-sm focus-within:border-brand-500">
+    <div className="store-select-control group flex min-h-11 cursor-pointer items-center rounded-ui border border-border bg-surface shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-brand-500">
       <label
         htmlFor="product-sort"
-        className="shrink-0 border-r border-border px-3 text-sm font-semibold text-muted"
+        onClick={(event) => {
+          event.preventDefault();
+          openSortOptions();
+        }}
+        className="flex min-h-11 shrink-0 cursor-pointer items-center border-r border-border px-3 text-sm font-semibold text-muted transition-colors duration-200 group-hover:text-brand-700"
       >
         Sort by
       </label>
-      <select
-        id="product-sort"
-        name="sort"
-        value={sort}
-        onChange={handleChange}
-        className="store-field min-h-11 w-36 rounded-ui border-0 bg-surface px-3 py-2 font-medium text-foreground lg:w-48"
-      >
-        <option value="">Newest</option>
-        <option value="price-asc">Price: Low to High</option>
-        <option value="price-desc">Price: High to Low</option>
-      </select>
+      <div className="relative">
+        <select
+          ref={selectRef}
+          id="product-sort"
+          name="sort"
+          value={sort}
+          onChange={handleChange}
+          className="min-h-11 w-40 cursor-pointer appearance-none rounded-ui border-0 bg-surface py-2 pl-3 pr-10 font-medium text-foreground focus-visible:outline-none lg:w-48"
+        >
+          <option value="">Newest first</option>
+          <option value="price-asc">Price: Low to high</option>
+          <option value="price-desc">Price: High to low</option>
+        </select>
+
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          fill="none"
+          className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted transition-colors duration-200 group-hover:text-brand-700"
+        >
+          <path
+            d="m5 7.5 5 5 5-5"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
     </div>
   );
 }

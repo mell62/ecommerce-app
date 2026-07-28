@@ -107,6 +107,16 @@ body {
   outline: none;
 }
 
+.store-select-control:focus-within {
+  border-color: var(--store-brand-500);
+  box-shadow: 0 0 0 3px var(--store-brand-100);
+}
+
+.store-select-control select:focus-visible {
+  box-shadow: none;
+  outline: none;
+}
+
 .store-range {
   appearance: none;
   background: transparent;
@@ -213,6 +223,20 @@ button:disabled {
   .store-field:focus-visible {
     outline: 2px solid Highlight;
     outline-offset: 1px;
+  }
+
+  .store-select-control:focus-within {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+
+  .store-select-control select {
+    appearance: auto;
+    padding-right: 0.75rem;
+  }
+
+  .store-select-control svg {
+    display: none;
   }
 
   .store-range {

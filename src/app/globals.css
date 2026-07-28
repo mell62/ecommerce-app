@@ -101,6 +101,12 @@ body {
   outline-offset: 3px;
 }
 
+.store-field:focus-visible {
+  border-color: var(--store-brand-500);
+  box-shadow: 0 0 0 3px var(--store-brand-100);
+  outline: none;
+}
+
 :where(a, button) {
   transition:
     color var(--store-duration-fast) var(--store-ease-standard),
@@ -135,5 +141,10 @@ button:disabled {
 @media (forced-colors: active) {
   :where(a, button, input, select, textarea, [tabindex]):focus-visible {
     outline-color: Highlight;
+  }
+
+  .store-field:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
   }
 }

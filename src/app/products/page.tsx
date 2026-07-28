@@ -36,6 +36,33 @@ type Product = {
   reviews: ProductReview[];
 };
 
+const categoryLinks = [
+  {
+    label: "All",
+    href: "/products",
+    category: undefined,
+    deals: false,
+  },
+  {
+    label: "Accessories",
+    href: "/products?category=Accessories",
+    category: "Accessories",
+    deals: false,
+  },
+  {
+    label: "Monitors",
+    href: "/products?category=Monitors",
+    category: "Monitors",
+    deals: false,
+  },
+  {
+    label: "Deals",
+    href: "/products?deals=true",
+    category: undefined,
+    deals: true,
+  },
+] as const;
+
 async function getProducts(
   category?: string,
   search?: string,
@@ -142,34 +169,31 @@ export default async function ProductsPage({
         </p>
       </header>
 
-      <div className="flex gap-3 mb-6">
-        <Link
-          href="/products"
-          className="border px-4 py-2 rounded hover:bg-gray-100"
-        >
-          All
-        </Link>
+      <nav aria-label="Product categories" className="mb-8">
+        <ul className="flex flex-wrap gap-2">
+          {categoryLinks.map((categoryLink) => {
+            const isActive = categoryLink.deals
+              ? deals === "true"
+              : deals !== "true" && category === categoryLink.category;
 
-        <Link
-          href="/products?category=Accessories"
-          className="border px-4 py-2 rounded hover:bg-gray-100"
-        >
-          Accessories
-        </Link>
-
-        <Link
-          href="/products?category=Monitors"
-          className="border px-4 py-2 rounded hover:bg-gray-100"
-        >
-          Monitors
-        </Link>
-        <Link
-          href="/products?deals=true"
-          className="border px-4 py-2 rounded hover:bg-gray-100"
-        >
-          Deals
-        </Link>
-      </div>
+            return (
+              <li key={categoryLink.label}>
+                <Link
+                  href={categoryLink.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`inline-flex min-h-11 items-center justify-center rounded-ui border px-4 py-2 text-sm font-semibold ${
+                    isActive
+                      ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+                      : "border-border bg-surface text-foreground hover:border-brand-500 hover:text-brand-700"
+                  }`}
+                >
+                  {categoryLink.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
 
       <ProductFilters />
 

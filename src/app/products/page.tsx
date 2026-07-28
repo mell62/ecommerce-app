@@ -169,7 +169,7 @@ export default async function ProductsPage({
         </p>
       </header>
 
-      <div className="relative mb-8 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <div className="relative mb-8 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <nav aria-label="Product categories">
           <ul className="flex flex-wrap gap-2">
             {categoryLinks.map((categoryLink) => {
@@ -196,7 +196,7 @@ export default async function ProductsPage({
           </ul>
         </nav>
 
-        <div className="flex flex-wrap items-start gap-3 lg:justify-end">
+        <div className="flex flex-wrap items-start gap-3 xl:justify-end">
           <ProductFilters />
           <SortDropdown currentSort={sort} />
         </div>

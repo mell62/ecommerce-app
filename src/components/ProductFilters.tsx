@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import type { SubmitEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const PRICE_FILTER_MIN = 0;
 const PRICE_FILTER_MAX = 500;
@@ -21,8 +21,11 @@ function getPriceWithinRange(value: string, fallback: number): number {
 export default function ProductFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [isFilterPanelClosing, setIsFilterPanelClosing] = useState(false);
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
@@ -37,6 +40,7 @@ export default function ProductFilters() {
     "maxPrice",
     "minRating",
   ].filter((filterName) => searchParams.has(filterName)).length;
+  const isFilterPanelVisible = isFilterPanelOpen || isFilterPanelClosing;
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect --
@@ -49,6 +53,46 @@ export default function ProductFilters() {
     setMinRating(searchParams.get("minRating") || "");
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [searchParams]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
+
+  function openFilterPanel(): void {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+    }
+
+    setIsFilterPanelClosing(false);
+    setIsFilterPanelOpen(true);
+  }
+
+  function closeFilterPanel(): void {
+    const closeDelay = window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches
+      ? 0
+      : 200;
+
+    setIsFilterPanelOpen(false);
+    setIsFilterPanelClosing(true);
+
+    closeTimerRef.current = setTimeout(() => {
+      setIsFilterPanelClosing(false);
+      closeTimerRef.current = null;
+    }, closeDelay);
+  }
+
+  function toggleFilterPanel(): void {
+    if (isFilterPanelOpen) {
+      closeFilterPanel();
+    } else {
+      openFilterPanel();
+    }
+  }
 
   function applyFilters(event: SubmitEvent<HTMLFormElement>): void {
     event.preventDefault();
@@ -81,7 +125,8 @@ export default function ProductFilters() {
 
     const queryString = params.toString();
 
-    setIsFilterPanelOpen(false);
+    closeFilterPanel();
+    filterButtonRef.current?.focus();
     router.push(queryString ? `/products?${queryString}` : "/products");
   }
 
@@ -100,18 +145,24 @@ export default function ProductFilters() {
     setMinPrice("");
     setMaxPrice("");
     setMinRating("");
-    setIsFilterPanelOpen(false);
+    closeFilterPanel();
+    filterButtonRef.current?.focus();
 
     router.push(queryString ? `/products?${queryString}` : "/products");
   }
 
   return (
-    <div className={`relative ${isFilterPanelOpen ? "w-full lg:w-auto" : ""}`}>
+    <div
+      className={`relative ${
+        isFilterPanelVisible ? "w-full xl:w-auto" : "w-fit"
+      }`}
+    >
       <button
+        ref={filterButtonRef}
         type="button"
         aria-expanded={isFilterPanelOpen}
         aria-controls="product-filter-panel"
-        onClick={() => setIsFilterPanelOpen((isOpen) => !isOpen)}
+        onClick={toggleFilterPanel}
         className="inline-flex min-h-11 items-center justify-center gap-2 rounded-ui border border-border bg-surface px-4 py-2 font-semibold text-foreground shadow-sm hover:border-brand-500 hover:text-brand-700"
       >
         <svg
@@ -156,161 +207,173 @@ export default function ProductFilters() {
         </svg>
       </button>
 
-      {isFilterPanelOpen && (
-        <form
-          id="product-filter-panel"
-          onSubmit={applyFilters}
-          className="mt-3 rounded-ui border border-border bg-surface p-4 shadow-card sm:p-6 lg:absolute lg:right-0 lg:z-20 lg:w-[min(48rem,calc(100vw-4rem))]"
-        >
-          <fieldset>
-            <legend className="px-1 text-lg font-semibold text-foreground">
-              Filter products
-            </legend>
+      <div
+        inert={!isFilterPanelOpen}
+        aria-hidden={!isFilterPanelOpen}
+        className={`grid rounded-ui transition-[grid-template-rows,opacity,transform,margin] duration-200 ${
+          isFilterPanelOpen
+            ? "mt-3 w-full grid-rows-[1fr] translate-y-0 opacity-100 shadow-card xl:absolute xl:right-0 xl:z-20 xl:w-[min(48rem,calc(100vw-4rem))]"
+            : isFilterPanelClosing
+              ? "pointer-events-none mt-0 w-full grid-rows-[0fr] -translate-y-1 opacity-0 xl:absolute xl:right-0 xl:z-20 xl:w-[min(48rem,calc(100vw-4rem))]"
+              : "pointer-events-none absolute left-0 mt-0 w-0 grid-rows-[0fr] -translate-y-1 opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden rounded-ui">
+          <form
+            id="product-filter-panel"
+            onSubmit={applyFilters}
+            className="rounded-ui border border-border bg-surface p-4 sm:p-6"
+          >
+            <fieldset>
+              <legend className="px-1 text-lg font-semibold text-foreground">
+                Filter products
+              </legend>
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="sm:col-span-2">
-                <label
-                  htmlFor="product-search"
-                  className="mb-1.5 block text-sm font-semibold text-foreground"
-                >
-                  Search
-                </label>
-                <input
-                  id="product-search"
-                  name="search"
-                  type="search"
-                  placeholder="Search by product name"
-                  autoComplete="off"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  className="store-field min-h-11 w-full rounded-ui border border-border bg-surface px-3 py-2 text-foreground placeholder:text-muted"
-                />
-              </div>
-
-              <div>
-                <div className="mb-1 flex items-center justify-between gap-3">
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="sm:col-span-2">
                   <label
-                    htmlFor="minimum-price"
-                    className="text-sm font-semibold text-foreground"
+                    htmlFor="product-search"
+                    className="mb-1.5 block text-sm font-semibold text-foreground"
                   >
-                    Minimum price
+                    Search
                   </label>
-                  <output
-                    htmlFor="minimum-price"
-                    className="text-sm font-semibold text-brand-700"
-                  >
-                    ${selectedMinPrice}
-                  </output>
-                </div>
-                <input
-                  id="minimum-price"
-                  name="minPrice"
-                  type="range"
-                  min={PRICE_FILTER_MIN}
-                  max={PRICE_FILTER_MAX}
-                  step={PRICE_FILTER_STEP}
-                  value={selectedMinPrice}
-                  aria-valuetext={`$${selectedMinPrice}`}
-                  onChange={(event) => {
-                    const nextMinimum = Math.min(
-                      Number(event.target.value),
-                      selectedMaxPrice
-                    );
-
-                    setMinPrice(String(nextMinimum));
-                  }}
-                  className="store-range h-11 w-full cursor-pointer"
-                />
-              </div>
-
-              <div>
-                <div className="mb-1 flex items-center justify-between gap-3">
-                  <label
-                    htmlFor="maximum-price"
-                    className="text-sm font-semibold text-foreground"
-                  >
-                    Maximum price
-                  </label>
-                  <output
-                    htmlFor="maximum-price"
-                    className="text-sm font-semibold text-brand-700"
-                  >
-                    ${selectedMaxPrice}
-                  </output>
-                </div>
-                <input
-                  id="maximum-price"
-                  name="maxPrice"
-                  type="range"
-                  min={PRICE_FILTER_MIN}
-                  max={PRICE_FILTER_MAX}
-                  step={PRICE_FILTER_STEP}
-                  value={selectedMaxPrice}
-                  aria-valuetext={`$${selectedMaxPrice}`}
-                  onChange={(event) => {
-                    const nextMaximum = Math.max(
-                      Number(event.target.value),
-                      selectedMinPrice
-                    );
-
-                    setMaxPrice(String(nextMaximum));
-                  }}
-                  className="store-range h-11 w-full cursor-pointer"
-                />
-              </div>
-            </div>
-
-            <div className="mt-5 flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
-              <label className="flex min-h-11 w-fit cursor-pointer items-center gap-3 text-sm font-medium text-foreground">
-                <span className="relative grid size-5 shrink-0 place-items-center">
                   <input
-                    type="checkbox"
-                    name="minRating"
-                    value="4"
-                    checked={minRating === "4"}
-                    onChange={(event) => {
-                      setMinRating(event.target.checked ? "4" : "");
-                    }}
-                    className="peer size-5 appearance-none rounded border border-muted bg-surface checked:border-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2"
+                    id="product-search"
+                    name="search"
+                    type="search"
+                    placeholder="Search by product name"
+                    autoComplete="off"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    className="store-field min-h-11 w-full rounded-ui border border-border bg-surface px-3 py-2 text-foreground placeholder:text-muted"
                   />
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    className="pointer-events-none absolute hidden size-4 text-brand-600 peer-checked:block"
-                  >
-                    <path
-                      d="m5 10 3 3 7-7"
-                      stroke="currentColor"
-                      strokeWidth="2.25"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-                <span>4 stars and above</span>
-              </label>
+                </div>
 
-              <div className="flex flex-col-reverse gap-2 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="inline-flex min-h-11 items-center justify-center rounded-ui border border-border bg-surface px-5 py-2.5 font-semibold text-foreground hover:border-brand-500 hover:text-brand-700"
-                >
-                  Clear filters
-                </button>
+                <div>
+                  <div className="mb-1 flex items-center justify-between gap-3">
+                    <label
+                      htmlFor="minimum-price"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Minimum price
+                    </label>
+                    <output
+                      htmlFor="minimum-price"
+                      className="text-sm font-semibold text-brand-700"
+                    >
+                      ${selectedMinPrice}
+                    </output>
+                  </div>
+                  <input
+                    id="minimum-price"
+                    name="minPrice"
+                    type="range"
+                    min={PRICE_FILTER_MIN}
+                    max={PRICE_FILTER_MAX}
+                    step={PRICE_FILTER_STEP}
+                    value={selectedMinPrice}
+                    aria-valuetext={`$${selectedMinPrice}`}
+                    onChange={(event) => {
+                      const nextMinimum = Math.min(
+                        Number(event.target.value),
+                        selectedMaxPrice
+                      );
 
-                <button
-                  type="submit"
-                  className="inline-flex min-h-11 items-center justify-center rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
-                >
-                  Apply filters
-                </button>
+                      setMinPrice(String(nextMinimum));
+                    }}
+                    className="store-range h-11 w-full cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <div className="mb-1 flex items-center justify-between gap-3">
+                    <label
+                      htmlFor="maximum-price"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Maximum price
+                    </label>
+                    <output
+                      htmlFor="maximum-price"
+                      className="text-sm font-semibold text-brand-700"
+                    >
+                      ${selectedMaxPrice}
+                    </output>
+                  </div>
+                  <input
+                    id="maximum-price"
+                    name="maxPrice"
+                    type="range"
+                    min={PRICE_FILTER_MIN}
+                    max={PRICE_FILTER_MAX}
+                    step={PRICE_FILTER_STEP}
+                    value={selectedMaxPrice}
+                    aria-valuetext={`$${selectedMaxPrice}`}
+                    onChange={(event) => {
+                      const nextMaximum = Math.max(
+                        Number(event.target.value),
+                        selectedMinPrice
+                      );
+
+                      setMaxPrice(String(nextMaximum));
+                    }}
+                    className="store-range h-11 w-full cursor-pointer"
+                  />
+                </div>
               </div>
-            </div>
-          </fieldset>
-        </form>
-      )}
+
+              <div className="mt-5 flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <label className="flex min-h-11 w-fit cursor-pointer items-center gap-3 text-sm font-medium text-foreground">
+                  <span className="relative grid size-5 shrink-0 place-items-center">
+                    <input
+                      type="checkbox"
+                      name="minRating"
+                      value="4"
+                      checked={minRating === "4"}
+                      onChange={(event) => {
+                        setMinRating(event.target.checked ? "4" : "");
+                      }}
+                      className="peer size-5 appearance-none rounded border border-muted bg-surface checked:border-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2"
+                    />
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      className="pointer-events-none absolute hidden size-4 text-brand-600 peer-checked:block"
+                    >
+                      <path
+                        d="m5 10 3 3 7-7"
+                        stroke="currentColor"
+                        strokeWidth="2.25"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                  <span>4 stars and above</span>
+                </label>
+
+                <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="inline-flex min-h-11 items-center justify-center rounded-ui border border-border bg-surface px-5 py-2.5 font-semibold text-foreground hover:border-brand-500 hover:text-brand-700"
+                  >
+                    Clear filters
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="inline-flex min-h-11 items-center justify-center rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
+                  >
+                    Apply filters
+                  </button>
+                </div>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

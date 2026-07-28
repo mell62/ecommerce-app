@@ -110,15 +110,37 @@ export default async function ProductsPage({
     deals
   );
 
+  const pageTitle =
+    deals === "true"
+      ? "Electronics deals"
+      : category
+        ? `${category}`
+        : search
+          ? `Results for “${search}”`
+          : "Shop all products";
+
+  const pageDescription =
+    deals === "true"
+      ? "Explore limited-time savings on practical upgrades for work, gaming, and everyday use."
+      : category
+        ? `Browse Zeus ${category.toLowerCase()} selected for dependable performance and everyday value.`
+        : search
+          ? "Compare matching products, refine your filters, or try a different search."
+          : "Explore carefully selected electronics designed to improve the way you work, play, and create.";
+
   return (
-    <div className="max-w-6xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-6">
-        {deals === "true"
-          ? "Deals"
-          : category
-            ? `${category} Products`
-            : "Products"}
-      </h1>
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
+      <header className="mb-8 max-w-3xl sm:min-h-40">
+        <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand-700">
+          Zeus catalog
+        </p>
+        <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+          {pageTitle}
+        </h1>
+        <p className="mt-4 text-base leading-7 text-muted sm:text-lg">
+          {pageDescription}
+        </p>
+      </header>
 
       <div className="flex gap-3 mb-6">
         <Link
@@ -153,7 +175,11 @@ export default async function ProductsPage({
 
       <SortDropdown currentSort={sort} />
 
-      <p className="mb-4 text-sm text-gray-600">
+      <p
+        className="mb-4 text-sm font-medium text-muted"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {products.length === 0
           ? "No products found"
           : `Showing ${products.length} ${
@@ -161,7 +187,22 @@ export default async function ProductsPage({
             }`}
       </p>
 
-      {products.length === 0 ? null : (
+      {products.length === 0 ? (
+        <div className="rounded-ui border border-border bg-surface p-6 sm:p-8">
+          <h2 className="text-xl font-semibold text-foreground">
+            No matching products
+          </h2>
+          <p className="mt-2 max-w-xl text-muted">
+            Try clearing your filters or searching for a different product.
+          </p>
+          <Link
+            href="/products"
+            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
+          >
+            Browse all products
+          </Link>
+        </div>
+      ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {products.map((product) => {
             const reviewCount = product.reviews.length;

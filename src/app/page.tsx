@@ -128,28 +128,91 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-8 py-12">
-        <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
+      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
+        <div className="mb-8 max-w-2xl">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand-700">
+            Find your next upgrade
+          </p>
+          <h2 className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            Shop by category
+          </h2>
+          <p className="mt-3 text-muted">
+            Start with the gear that matters most to your desk, workflow, and
+            downtime.
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <Link
             href="/products?category=Accessories"
-            className="border rounded-lg p-6 shadow hover:shadow-lg transition"
+            className="group rounded-xl border border-border bg-surface p-6 shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card sm:p-8"
           >
-            <h3 className="text-xl font-semibold">Accessories</h3>
-            <p className="mt-2 text-gray-600">
+            <span className="grid size-12 place-items-center rounded-lg bg-brand-50 text-brand-700">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                className="size-6"
+              >
+                <rect x="3" y="6" width="18" height="12" rx="2" />
+                <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
+              </svg>
+            </span>
+
+            <h3 className="mt-6 text-xl font-semibold text-foreground">
+              Accessories
+            </h3>
+            <p className="mt-2 text-muted">
               Keyboards, mice, and everyday desk essentials.
             </p>
+
+            <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand-700">
+              Browse accessories
+              <span
+                aria-hidden="true"
+                className="transition-transform group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </span>
           </Link>
 
           <Link
             href="/products?category=Monitors"
-            className="border rounded-lg p-6 shadow hover:shadow-lg transition"
+            className="group rounded-xl border border-border bg-surface p-6 shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card sm:p-8"
           >
-            <h3 className="text-xl font-semibold">Monitors</h3>
-            <p className="mt-2 text-gray-600">
+            <span className="grid size-12 place-items-center rounded-lg bg-brand-50 text-brand-700">
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                className="size-6"
+              >
+                <rect x="3" y="4" width="18" height="13" rx="2" />
+                <path d="M8 21h8M12 17v4" />
+              </svg>
+            </span>
+
+            <h3 className="mt-6 text-xl font-semibold text-foreground">
+              Monitors
+            </h3>
+            <p className="mt-2 text-muted">
               High-refresh displays for gaming and productivity.
             </p>
+
+            <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand-700">
+              Browse monitors
+              <span
+                aria-hidden="true"
+                className="transition-transform group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </span>
           </Link>
         </div>
       </section>

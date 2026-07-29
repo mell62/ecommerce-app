@@ -190,7 +190,7 @@ export default async function HomePage() {
 
               <Link
                 href="/products?deals=true"
-                className="inline-flex min-h-11 items-center justify-center rounded-ui border border-border bg-surface px-6 py-3 font-semibold text-foreground shadow-sm hover:-translate-y-0.5 hover:border-brand-500 hover:text-brand-700"
+                className="inline-flex min-h-11 items-center justify-center rounded-ui border border-border bg-surface px-6 py-3 font-semibold text-foreground shadow-sm hover:-translate-y-0.5 hover:border-border-hover hover:text-brand-700"
               >
                 Explore deals
               </Link>
@@ -381,7 +381,7 @@ export default async function HomePage() {
                   <Link
                     key={product.id}
                     href={`/products/${product.id}`}
-                    className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card"
+                    className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
                   >
                     <div className="relative overflow-hidden bg-brand-50">
                       <Image
@@ -468,7 +468,7 @@ export default async function HomePage() {
                 <Link
                   key={product.id}
                   href={`/products/${product.id}`}
-                  className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card"
+                  className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
                 >
                   <div className="relative overflow-hidden bg-brand-50">
                     <Image
@@ -564,7 +564,7 @@ export default async function HomePage() {
                   <Link
                     key={product.id}
                     href={`/products/${product.id}`}
-                    className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card"
+                    className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
                   >
                     <div className="relative overflow-hidden bg-brand-50">
                       <Image
@@ -669,7 +669,7 @@ export default async function HomePage() {
                 <Link
                   key={product.id}
                   href={`/products/${product.id}`}
-                  className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card"
+                  className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
                 >
                   <div className="relative overflow-hidden bg-brand-50">
                     <Image

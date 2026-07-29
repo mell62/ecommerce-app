@@ -163,7 +163,7 @@ export default function ProductFilters() {
         aria-expanded={isFilterPanelOpen}
         aria-controls="product-filter-panel"
         onClick={toggleFilterPanel}
-        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-ui border border-border bg-surface px-4 py-2 font-semibold text-foreground shadow-sm hover:border-brand-500 hover:text-brand-700"
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-ui border border-border bg-surface px-4 py-2 font-semibold text-foreground shadow-sm hover:border-border-hover hover:text-brand-700"
       >
         <svg
           aria-hidden="true"
@@ -357,7 +357,7 @@ export default function ProductFilters() {
                   <button
                     type="button"
                     onClick={clearFilters}
-                    className="inline-flex min-h-11 items-center justify-center rounded-ui border border-border bg-surface px-5 py-2.5 font-semibold text-foreground hover:border-brand-500 hover:text-brand-700"
+                    className="inline-flex min-h-11 items-center justify-center rounded-ui border border-border bg-surface px-5 py-2.5 font-semibold text-foreground hover:border-border-hover hover:text-brand-700"
                   >
                     Clear filters
                   </button>

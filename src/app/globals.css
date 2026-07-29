@@ -9,6 +9,7 @@
   --store-surface-muted: #f1f5f9;
   --store-text-muted: #526071;
   --store-border: #d8e0ea;
+  --store-border-hover: #b8c8dc;
 
   --store-brand-50: #eff6ff;
   --store-brand-100: #dbeafe;
@@ -52,6 +53,7 @@
   --color-surface-muted: var(--store-surface-muted);
   --color-muted: var(--store-text-muted);
   --color-border: var(--store-border);
+  --color-border-hover: var(--store-border-hover);
   --color-brand-50: var(--store-brand-50);
   --color-brand-100: var(--store-brand-100);
   --color-brand-500: var(--store-brand-500);
@@ -211,7 +213,7 @@ body {
 }
 
 .category-card:hover {
-  border-color: var(--store-brand-500);
+  border-color: var(--store-border-hover);
   box-shadow: var(--store-shadow-card);
   transform: translateY(-0.25rem);
 }

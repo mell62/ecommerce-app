@@ -55,7 +55,7 @@ export default function SortDropdown({ currentSort }: SortDropdownProps) {
   }
 
   return (
-    <div className="store-select-control group flex min-h-11 cursor-pointer items-center rounded-ui border border-border bg-surface shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-brand-500">
+    <div className="store-select-control group flex min-h-11 cursor-pointer items-center rounded-ui border border-border bg-surface shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-border-hover">
       <label
         htmlFor="product-sort"
         onClick={(event) => {

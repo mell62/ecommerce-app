@@ -190,7 +190,7 @@ export default async function ProductsPage({
                     className={`inline-flex min-h-11 items-center justify-center rounded-ui border px-4 py-2 text-sm font-semibold ${
                       isActive
                         ? "border-brand-600 bg-brand-600 text-white shadow-sm"
-                        : "border-border bg-surface text-foreground hover:border-brand-500 hover:text-brand-700"
+                        : "border-border bg-surface text-foreground hover:border-border-hover hover:text-brand-700"
                     }`}
                   >
                     {categoryLink.label}

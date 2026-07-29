@@ -138,59 +138,67 @@ export default function SiteHeader({ userName }: SiteHeaderProps) {
         </button>
       </div>
 
-      {isMenuOpen && (
-        <div
-          id="mobile-navigation"
-          className="border-t border-border bg-surface px-4 py-4 shadow-card lg:hidden"
-        >
-          <nav
-            aria-label="Mobile primary navigation"
-            className="mx-auto flex max-w-7xl flex-col gap-1"
-          >
-            {navigationItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={closeMenu}
-                className={navigationLinkClass}
-              >
-                {item.label}
-                {item.href === "/cart" && (
-                  <span className="ml-1">
-                    <CartCounter />
-                  </span>
-                )}
-              </Link>
-            ))}
+      <div
+        id="mobile-navigation"
+        aria-hidden={!isMenuOpen}
+        inert={!isMenuOpen}
+        className={`grid transition-[grid-template-rows,opacity,transform] duration-200 ease-out lg:hidden ${
+          isMenuOpen
+            ? "grid-rows-[1fr] translate-y-0 opacity-100"
+            : "pointer-events-none grid-rows-[0fr] -translate-y-1 opacity-0"
+        }`}
+      >
+        <div className="min-h-0 overflow-hidden border-t border-border bg-surface shadow-card">
+          <div className="px-4 py-4">
+            <nav
+              aria-label="Mobile primary navigation"
+              className="mx-auto flex max-w-7xl flex-col gap-1"
+            >
+              {navigationItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={closeMenu}
+                  className={navigationLinkClass}
+                >
+                  {item.label}
+                  {item.href === "/cart" && (
+                    <span className="ml-1">
+                      <CartCounter />
+                    </span>
+                  )}
+                </Link>
+              ))}
 
-            <div className="mt-3 border-t border-border pt-3">
-              {userName ? (
-                <div className="flex flex-col gap-2">
-                  <p className="px-3 text-sm text-muted">Hello, {userName}</p>
-                  <LogoutButton />
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <Link
-                    href="/login"
-                    onClick={closeMenu}
-                    className="flex min-h-11 items-center justify-center rounded-md border border-border px-4 text-sm font-semibold hover:bg-surface-muted"
-                  >
-                    Log in
-                  </Link>
-                  <Link
-                    href="/register"
-                    onClick={closeMenu}
-                    className="flex min-h-11 items-center justify-center rounded-md bg-brand-600 px-4 text-center text-sm font-semibold text-white hover:bg-brand-700"
-                  >
-                    Create account
-                  </Link>
-                </div>
-              )}
-            </div>
-          </nav>
+              <div className="mt-3 border-t border-border pt-3">
+                {userName ? (
+                  <div className="flex flex-col gap-2">
+                    <p className="px-3 text-sm text-muted">Hello, {userName}</p>
+                    <LogoutButton />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Link
+                      href="/login"
+                      onClick={closeMenu}
+                      className="flex min-h-11 items-center justify-center rounded-md border border-border px-4 text-sm font-semibold hover:bg-surface-muted"
+                    >
+                      Log in
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={closeMenu}
+                      className="flex min-h-11 items-center justify-center rounded-md bg-brand-600 px-4 text-center text-sm font-semibold text-white hover:bg-brand-700"
+                    >
+                      Create account
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </nav>
+          </div>
         </div>
-      )}
+      </div>
     </header>
   );
 }

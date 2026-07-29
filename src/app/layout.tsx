@@ -52,23 +52,8 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         </main>
 
         <footer className="border-t border-border bg-surface">
-          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-muted sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-6 text-sm text-muted sm:px-6 lg:px-8">
             <p>© {new Date().getFullYear()} Zeus. Built for better setups.</p>
-
-            <nav
-              aria-label="Footer navigation"
-              className="flex flex-wrap gap-4"
-            >
-              <Link href="/products" className="hover:text-brand-700">
-                Shop products
-              </Link>
-              <Link href="/cart" className="hover:text-brand-700">
-                Cart
-              </Link>
-              <Link href="/wishlist" className="hover:text-brand-700">
-                Wishlist
-              </Link>
-            </nav>
           </div>
         </footer>
       </body>

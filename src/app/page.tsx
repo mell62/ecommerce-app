@@ -232,72 +232,113 @@ export default async function HomePage() {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <Link
             href="/products?category=Accessories"
-            className="group rounded-ui border border-border bg-surface p-6 shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card sm:p-8"
+            className="category-card group"
           >
-            <span className="grid size-12 place-items-center rounded-lg bg-brand-50 text-brand-700">
+            <span className="category-card-visual" aria-hidden="true">
               <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
+                viewBox="0 0 320 190"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.75"
-                className="size-6"
+                strokeWidth="2.25"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="category-card-art"
               >
-                <rect x="3" y="6" width="18" height="12" rx="2" />
-                <path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10" />
+                <rect x="38" y="55" width="202" height="100" rx="7" />
+                <rect
+                  x="48"
+                  y="65"
+                  width="182"
+                  height="80"
+                  rx="3"
+                  opacity=".35"
+                />
+                <path
+                  d="M61 80h13m12 0h13m12 0h13m12 0h13m12 0h13m12 0h13M61 98h13m12 0h13m12 0h13m12 0h13m12 0h13m12 0h13M61 116h13m12 0h13m12 0h13m12 0h13m12 0h13m12 0h13M86 134h106"
+                  opacity=".62"
+                />
+                <rect x="262" y="65" width="44" height="82" rx="22" />
+                <path d="M284 66v25m-21 5h42" opacity=".62" />
               </svg>
             </span>
 
-            <h3 className="mt-6 text-xl font-semibold text-foreground">
-              Accessories
-            </h3>
-            <p className="mt-2 text-muted">
-              Keyboards, mice, and everyday desk essentials.
-            </p>
-
-            <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand-700">
-              Browse accessories
-              <span
-                aria-hidden="true"
-                className="transition-transform group-hover:translate-x-1"
-              >
-                →
+            <span className="category-card-content">
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+                Desk essentials
+              </span>
+              <span className="mt-2 block font-display text-2xl font-semibold text-foreground">
+                Accessories
+              </span>
+              <span className="mt-2 block text-sm leading-6 text-muted">
+                Keyboards, mice, and everyday desk essentials.
+              </span>
+              <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand-700">
+                Browse accessories
+                <span
+                  aria-hidden="true"
+                  className="transition-transform group-hover:translate-x-1"
+                >
+                  →
+                </span>
               </span>
             </span>
           </Link>
 
           <Link
             href="/products?category=Monitors"
-            className="group rounded-ui border border-border bg-surface p-6 shadow-sm hover:-translate-y-1 hover:border-brand-500 hover:shadow-card sm:p-8"
+            className="category-card group"
           >
-            <span className="grid size-12 place-items-center rounded-lg bg-brand-50 text-brand-700">
+            <span className="category-card-visual" aria-hidden="true">
               <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
+                viewBox="0 0 320 190"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.75"
-                className="size-6"
+                strokeWidth="2.25"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="category-card-art"
               >
-                <rect x="3" y="4" width="18" height="13" rx="2" />
-                <path d="M8 21h8M12 17v4" />
+                <rect x="43" y="23" width="247" height="132" rx="7" />
+                <rect
+                  x="54"
+                  y="34"
+                  width="225"
+                  height="110"
+                  rx="2"
+                  opacity=".35"
+                />
+                <path d="M142 174h49m-25-19v19" />
+                <path d="M75 116h72" opacity=".62" />
+                <path d="M75 126h43" opacity=".35" />
+                <circle
+                  cx="255"
+                  cy="119"
+                  r="4"
+                  fill="currentColor"
+                  stroke="none"
+                  opacity=".62"
+                />
               </svg>
             </span>
 
-            <h3 className="mt-6 text-xl font-semibold text-foreground">
-              Monitors
-            </h3>
-            <p className="mt-2 text-muted">
-              High-refresh displays for gaming and productivity.
-            </p>
-
-            <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand-700">
-              Browse monitors
-              <span
-                aria-hidden="true"
-                className="transition-transform group-hover:translate-x-1"
-              >
-                →
+            <span className="category-card-content">
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-600">
+                Visual clarity
+              </span>
+              <span className="mt-2 block font-display text-2xl font-semibold text-foreground">
+                Monitors
+              </span>
+              <span className="mt-2 block text-sm leading-6 text-muted">
+                High-refresh displays for gaming and productivity.
+              </span>
+              <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand-700">
+                Browse monitors
+                <span
+                  aria-hidden="true"
+                  className="transition-transform group-hover:translate-x-1"
+                >
+                  →
+                </span>
               </span>
             </span>
           </Link>

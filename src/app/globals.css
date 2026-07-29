@@ -194,6 +194,53 @@ body {
   transform-origin: center;
 }
 
+.category-card {
+  position: relative;
+  display: grid;
+  min-height: 16.5rem;
+  overflow: hidden;
+  border: 1px solid var(--store-border);
+  border-radius: var(--store-radius-ui);
+  background: linear-gradient(
+    151deg,
+    var(--store-brand-50) 0 39%,
+    color-mix(in srgb, var(--store-brand-50) 45%, var(--store-surface)) 44%,
+    var(--store-surface) 50% 100%
+  );
+  box-shadow: 0 2px 8px rgb(15 23 42 / 0.05);
+}
+
+.category-card:hover {
+  border-color: var(--store-brand-500);
+  box-shadow: var(--store-shadow-card);
+  transform: translateY(-0.25rem);
+}
+
+.category-card-visual {
+  position: absolute;
+  inset: 0 0 auto auto;
+  width: min(58%, 17rem);
+  color: var(--store-brand-700);
+  pointer-events: none;
+}
+
+.category-card-art {
+  display: block;
+  width: 100%;
+  transition: transform 400ms var(--store-ease-emphasized);
+}
+
+.category-card:hover .category-card-art {
+  transform: translate3d(-0.35rem, 0.25rem, 0);
+}
+
+.category-card-content {
+  position: relative;
+  align-self: end;
+  width: min(86%, 25rem);
+  padding: 1.125rem;
+}
+
 @keyframes hero-setup-float {
   0%,
   100% {
@@ -233,6 +280,16 @@ button:not(:disabled) {
 
 button:disabled {
   cursor: not-allowed;
+}
+
+@media (min-width: 40rem) {
+  .category-card {
+    min-height: 17.5rem;
+  }
+
+  .category-card-content {
+    padding: 1.25rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

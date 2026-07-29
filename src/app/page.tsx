@@ -169,22 +169,18 @@ export default async function HomePage() {
           className="absolute -right-24 -top-32 size-80 rounded-full bg-brand-500/10 blur-3xl"
         />
 
-        <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="mx-auto mb-5 w-fit rounded-full border border-brand-100 bg-surface/80 px-4 py-2 text-sm font-semibold text-brand-700 shadow-sm">
-              Thoughtful tech for better setups
-            </p>
-
-            <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:px-8 lg:py-16">
+          <div className="max-w-2xl">
+            <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               Upgrade the way you work, play, and create
             </h1>
 
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-muted sm:text-lg">
+            <p className="mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg">
               Explore carefully selected keyboards, mice, monitors, and everyday
               electronics built to make every setup feel better.
             </p>
 
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/products"
                 className="inline-flex min-h-11 items-center justify-center rounded-ui bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
@@ -199,12 +195,22 @@ export default async function HomePage() {
                 Explore deals
               </Link>
             </div>
+          </div>
 
-            <p className="mt-8 text-sm font-medium text-muted">
-              Keyboards <span aria-hidden="true">•</span> Mice{" "}
-              <span aria-hidden="true">•</span> Monitors{" "}
-              <span aria-hidden="true">•</span> Accessories
-            </p>
+          <div
+            aria-hidden="true"
+            className="hero-setup-float relative mx-auto hidden w-full max-w-xl lg:block"
+          >
+            <span className="hero-signal-pulse absolute right-[28%] top-[45%] z-10 size-12 rounded-full bg-brand-500/10 blur-md" />
+            <Image
+              src="/hero-zeus-connected-v2.png"
+              alt=""
+              width={1717}
+              height={916}
+              priority
+              sizes="(min-width: 1280px) 36rem, (min-width: 1024px) 45vw, 0px"
+              className="aspect-[4/3] h-auto w-full object-cover object-right"
+            />
           </div>
         </div>
       </section>

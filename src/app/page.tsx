@@ -180,7 +180,7 @@ export default async function HomePage() {
               electronics built to make every setup feel better.
             </p>
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row">
               <Link
                 href="/products"
                 className="inline-flex min-h-11 items-center justify-center rounded-ui bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"

@@ -169,7 +169,7 @@ export default async function HomePage() {
           className="absolute -right-24 -top-32 size-80 rounded-full bg-brand-500/10 blur-3xl"
         />
 
-        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:px-8 lg:py-16">
+        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:px-8 lg:py-16 xl:py-12">
           <div className="max-w-2xl">
             <h1 className="font-display text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               Upgrade the way you work, play, and create
@@ -199,7 +199,7 @@ export default async function HomePage() {
 
           <div
             aria-hidden="true"
-            className="hero-setup-float relative mx-auto hidden w-full max-w-xl lg:block"
+            className="hero-setup-float relative mx-auto hidden w-full max-w-xl lg:block xl:max-w-lg"
           >
             <span className="hero-signal-pulse absolute right-[28%] top-[45%] z-10 size-12 rounded-full bg-brand-500/10 blur-md" />
             <Image
@@ -215,7 +215,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
+      <section className="home-section mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 max-w-2xl">
           <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand-700">
             Find your next upgrade
@@ -346,7 +346,7 @@ export default async function HomePage() {
       </section>
 
       <section className="border-y border-border bg-surface-muted">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
+        <div className="home-section mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
               <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-deal">
@@ -370,7 +370,7 @@ export default async function HomePage() {
               No deals are available right now. Check back soon for new offers.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="home-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {dealProducts.map((product) => {
                 const discountedPrice = getDiscountedPrice(
                   product.price,
@@ -381,7 +381,7 @@ export default async function HomePage() {
                   <Link
                     key={product.id}
                     href={`/products/${product.id}`}
-                    className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
+                    className="home-product-card group flex h-full w-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
                   >
                     <div className="relative overflow-hidden bg-brand-50">
                       <Image
@@ -398,8 +398,8 @@ export default async function HomePage() {
                       </span>
                     </div>
 
-                    <div className="flex flex-1 flex-col p-5">
-                      <h3 className="text-xl font-semibold text-foreground">
+                    <div className="home-product-card-content flex flex-1 flex-col">
+                      <h3 className="text-lg font-semibold text-foreground">
                         {product.name}
                       </h3>
 
@@ -410,7 +410,7 @@ export default async function HomePage() {
                       <ProductRating reviews={product.reviews} />
 
                       <div className="mt-auto flex items-baseline gap-2 pt-5">
-                        <p className="text-xl font-bold text-foreground">
+                        <p className="text-lg font-bold text-foreground">
                           ${discountedPrice.toFixed(2)}
                         </p>
 
@@ -427,7 +427,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
+      <section className="home-section mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
             <p className="mb-2 flex items-baseline gap-1">
@@ -455,7 +455,7 @@ export default async function HomePage() {
             Featured products are being selected. Check back soon.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="home-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {featuredProducts.map((product) => {
               const productHasDiscount = hasDiscount(product.discountPercent);
 
@@ -468,7 +468,7 @@ export default async function HomePage() {
                 <Link
                   key={product.id}
                   href={`/products/${product.id}`}
-                  className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
+                  className="home-product-card group flex h-full w-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
                 >
                   <div className="relative overflow-hidden bg-brand-50">
                     <Image
@@ -493,8 +493,8 @@ export default async function HomePage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-1 flex-col p-5">
-                    <h3 className="text-xl font-semibold text-foreground">
+                  <div className="home-product-card-content flex flex-1 flex-col">
+                    <h3 className="text-lg font-semibold text-foreground">
                       {product.name}
                     </h3>
                     <p className="mt-2 text-sm leading-6 text-muted">
@@ -505,7 +505,7 @@ export default async function HomePage() {
 
                     {productHasDiscount ? (
                       <div className="mt-auto flex items-baseline gap-2 pt-5">
-                        <p className="text-xl font-bold text-foreground">
+                        <p className="text-lg font-bold text-foreground">
                           ${discountedPrice.toFixed(2)}
                         </p>
 
@@ -514,7 +514,7 @@ export default async function HomePage() {
                         </p>
                       </div>
                     ) : (
-                      <p className="mt-auto pt-5 text-xl font-bold text-foreground">
+                      <p className="mt-auto pt-5 text-lg font-bold text-foreground">
                         ${product.price.toFixed(2)}
                       </p>
                     )}
@@ -526,7 +526,7 @@ export default async function HomePage() {
         )}
       </section>
       <section className="border-y border-border bg-surface-muted">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
+        <div className="home-section mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
               <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand-700">
@@ -551,7 +551,7 @@ export default async function HomePage() {
               reviews arrive.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="home-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {topRatedProducts.map((product) => {
                 const productHasDiscount = hasDiscount(product.discountPercent);
 
@@ -564,7 +564,7 @@ export default async function HomePage() {
                   <Link
                     key={product.id}
                     href={`/products/${product.id}`}
-                    className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
+                    className="home-product-card group flex h-full w-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
                   >
                     <div className="relative overflow-hidden bg-brand-50">
                       <Image
@@ -589,8 +589,8 @@ export default async function HomePage() {
                       </div>
                     </div>
 
-                    <div className="flex flex-1 flex-col p-5">
-                      <h3 className="text-xl font-semibold text-foreground">
+                    <div className="home-product-card-content flex flex-1 flex-col">
+                      <h3 className="text-lg font-semibold text-foreground">
                         {product.name}
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-muted">
@@ -612,7 +612,7 @@ export default async function HomePage() {
 
                       {productHasDiscount ? (
                         <div className="mt-auto flex items-baseline gap-2 pt-5">
-                          <p className="text-xl font-bold text-foreground">
+                          <p className="text-lg font-bold text-foreground">
                             ${discountedPrice.toFixed(2)}
                           </p>
 
@@ -621,7 +621,7 @@ export default async function HomePage() {
                           </p>
                         </div>
                       ) : (
-                        <p className="mt-auto pt-5 text-xl font-bold text-foreground">
+                        <p className="mt-auto pt-5 text-lg font-bold text-foreground">
                           ${product.price.toFixed(2)}
                         </p>
                       )}
@@ -633,7 +633,7 @@ export default async function HomePage() {
           )}
         </div>
       </section>
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
+      <section className="home-section mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
             <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand-700">
@@ -656,7 +656,7 @@ export default async function HomePage() {
             No best sellers yet. Customer favorites will appear here soon.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="home-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {bestSellerProducts.map((product) => {
               const productHasDiscount = hasDiscount(product.discountPercent);
 
@@ -669,7 +669,7 @@ export default async function HomePage() {
                 <Link
                   key={product.id}
                   href={`/products/${product.id}`}
-                  className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
+                  className="home-product-card group flex h-full w-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
                 >
                   <div className="relative overflow-hidden bg-brand-50">
                     <Image
@@ -694,8 +694,8 @@ export default async function HomePage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-1 flex-col p-5">
-                    <h3 className="text-xl font-semibold text-foreground">
+                  <div className="home-product-card-content flex flex-1 flex-col">
+                    <h3 className="text-lg font-semibold text-foreground">
                       {product.name}
                     </h3>
                     <p className="mt-2 text-sm leading-6 text-muted">
@@ -706,7 +706,7 @@ export default async function HomePage() {
 
                     {productHasDiscount ? (
                       <div className="mt-auto flex items-baseline gap-2 pt-5">
-                        <p className="text-xl font-bold text-foreground">
+                        <p className="text-lg font-bold text-foreground">
                           ${discountedPrice.toFixed(2)}
                         </p>
 
@@ -715,7 +715,7 @@ export default async function HomePage() {
                         </p>
                       </div>
                     ) : (
-                      <p className="mt-auto pt-5 text-xl font-bold text-foreground">
+                      <p className="mt-auto pt-5 text-lg font-bold text-foreground">
                         ${product.price.toFixed(2)}
                       </p>
                     )}

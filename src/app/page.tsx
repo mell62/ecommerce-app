@@ -47,6 +47,28 @@ function ProductRating({ reviews }: ProductRatingProps) {
   );
 }
 
+type ProductStockStatusProps = Readonly<{
+  stockCount: number;
+}>;
+
+function ProductStockStatus({ stockCount }: ProductStockStatusProps) {
+  if (stockCount === 0) {
+    return (
+      <p className="mt-3 text-sm font-semibold text-danger">Out of stock</p>
+    );
+  }
+
+  if (stockCount <= 10) {
+    return (
+      <p className="mt-3 text-sm font-semibold text-warning">
+        Only {stockCount} left
+      </p>
+    );
+  }
+
+  return <p className="mt-3 text-sm font-semibold text-success">In stock</p>;
+}
+
 type SectionLinkProps = Readonly<{
   href: string;
   children: ReactNode;
@@ -408,6 +430,7 @@ export default async function HomePage() {
                       </p>
 
                       <ProductRating reviews={product.reviews} />
+                      <ProductStockStatus stockCount={product.stockCount} />
 
                       <div className="mt-auto flex items-baseline gap-2 pt-5">
                         <p className="text-lg font-bold text-foreground">
@@ -502,6 +525,7 @@ export default async function HomePage() {
                     </p>
 
                     <ProductRating reviews={product.reviews} />
+                    <ProductStockStatus stockCount={product.stockCount} />
 
                     {productHasDiscount ? (
                       <div className="mt-auto flex items-baseline gap-2 pt-5">
@@ -609,6 +633,7 @@ export default async function HomePage() {
                           </span>
                         </span>
                       </p>
+                      <ProductStockStatus stockCount={product.stockCount} />
 
                       {productHasDiscount ? (
                         <div className="mt-auto flex items-baseline gap-2 pt-5">
@@ -703,6 +728,7 @@ export default async function HomePage() {
                     </p>
 
                     <ProductRating reviews={product.reviews} />
+                    <ProductStockStatus stockCount={product.stockCount} />
 
                     {productHasDiscount ? (
                       <div className="mt-auto flex items-baseline gap-2 pt-5">

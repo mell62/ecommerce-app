@@ -196,6 +196,25 @@ body {
   transform-origin: center;
 }
 
+.wishlist-icon-feedback {
+  animation: wishlist-icon-feedback 240ms var(--store-ease-emphasized);
+  transform-origin: center;
+}
+
+.wishlist-button {
+  width: 7rem;
+  transition:
+    width 360ms var(--store-ease-emphasized),
+    color var(--store-duration-fast) var(--store-ease-standard),
+    background-color var(--store-duration-fast) var(--store-ease-standard),
+    border-color var(--store-duration-fast) var(--store-ease-standard);
+  will-change: width;
+}
+
+.wishlist-button[aria-pressed="true"] {
+  width: 8.25rem;
+}
+
 .category-card {
   position: relative;
   display: grid;
@@ -283,6 +302,17 @@ body {
   50% {
     opacity: 0.42;
     transform: scale(1.08);
+  }
+}
+
+@keyframes wishlist-icon-feedback {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
   }
 }
 

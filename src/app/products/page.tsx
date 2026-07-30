@@ -255,96 +255,119 @@ export default async function ProductsPage({
             );
 
             return (
-              <Link
+              <article
                 key={product.id}
-                href={`/products/${product.id}`}
-                className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
+                className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card focus-within:border-brand-500 focus-within:shadow-card"
               >
-                <div className="mb-2 flex gap-2">
-                  {product.stockCount === 0 && (
-                    <span className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
-                      Out of Stock
-                    </span>
-                  )}
+                <Link
+                  href={`/products/${product.id}`}
+                  className="flex flex-1 flex-col"
+                >
+                  <div className="relative overflow-hidden bg-brand-50">
+                    <Image
+                      src={product.imageUrl}
+                      alt={product.name}
+                      width={800}
+                      height={600}
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      className="aspect-[4/3] h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                    />
 
-                  {product.stockCount > 0 && product.stockCount <= 10 && (
-                    <span className="rounded bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700">
-                      Low Stock
-                    </span>
-                  )}
+                    <div className="absolute inset-x-3 top-3 flex flex-wrap items-start justify-between gap-2">
+                      <div className="flex flex-wrap gap-2">
+                        {productHasDiscount && (
+                          <span className="rounded-ui bg-deal px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                            {product.discountPercent}% off
+                          </span>
+                        )}
 
-                  {productHasDiscount && (
-                    <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                      {product.discountPercent}% OFF
-                    </span>
-                  )}
+                        {product.isNew && (
+                          <span className="rounded-ui bg-brand-700 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                            New
+                          </span>
+                        )}
+                      </div>
 
-                  {product.isNew && (
-                    <span className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
-                      New Arrival
-                    </span>
-                  )}
+                      <div className="flex flex-wrap justify-end gap-2">
+                        {product.isBestSeller && (
+                          <span className="rounded-ui border border-border bg-surface/95 px-2.5 py-1 text-xs font-semibold text-foreground shadow-sm backdrop-blur">
+                            Best seller
+                          </span>
+                        )}
 
-                  {product.isBestSeller && (
-                    <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
-                      Best Seller
-                    </span>
-                  )}
-
-                  {product.isFeatured && (
-                    <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-                      Featured
-                    </span>
-                  )}
-                </div>
-                <Image
-                  src={product.imageUrl}
-                  alt={product.name}
-                  width={800}
-                  height={600}
-                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  className="aspect-[4/3] h-auto w-full rounded object-cover"
-                />
-
-                <h2 className="text-xl font-semibold mt-4">{product.name}</h2>
-
-                <p className="text-gray-600">{product.description}</p>
-
-                {productHasDiscount ? (
-                  <div className="mt-2">
-                    <p className="font-bold">${discountedPrice.toFixed(2)}</p>
-
-                    <p className="text-sm text-gray-500 line-through">
-                      ${product.price.toFixed(2)}
-                    </p>
-
-                    <p className="text-sm text-green-700">
-                      {product.discountPercent}% off
-                    </p>
+                        {product.isFeatured && (
+                          <span className="rounded-ui border border-border bg-surface/95 px-2.5 py-1 text-xs font-semibold text-foreground shadow-sm backdrop-blur">
+                            Featured
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <p className="font-bold mt-2">${product.price.toFixed(2)}</p>
-                )}
 
-                {reviewCount > 0 && (
-                  <p className="text-sm text-gray-700 mt-1">
-                    ⭐ {averageRating.toFixed(1)} / 5 ({reviewCount} reviews)
-                  </p>
-                )}
+                  <div className="flex flex-1 flex-col p-4">
+                    <h2 className="font-display text-lg font-semibold text-foreground">
+                      {product.name}
+                    </h2>
 
-                {product.stockCount === 0 ? (
-                  <p className="text-sm text-red-600 font-medium">
-                    Out of stock
-                  </p>
-                ) : product.stockCount <= 10 ? (
-                  <p className="text-sm text-orange-600 font-medium">
-                    Only {product.stockCount} left
-                  </p>
-                ) : (
-                  <p className="text-sm text-green-600 font-medium">In stock</p>
-                )}
-                <WishlistButton product={product} />
-              </Link>
+                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">
+                      {product.description}
+                    </p>
+
+                    {reviewCount > 0 ? (
+                      <p className="mt-3 flex items-center gap-2 text-sm font-medium text-foreground">
+                        <span aria-hidden="true" className="text-warning">
+                          ★
+                        </span>
+                        <span>
+                          {averageRating.toFixed(1)}
+                          <span className="text-muted">
+                            {" "}
+                            · {reviewCount}{" "}
+                            {reviewCount === 1 ? "review" : "reviews"}
+                          </span>
+                        </span>
+                      </p>
+                    ) : (
+                      <p className="mt-3 text-sm text-muted">No reviews yet</p>
+                    )}
+
+                    {productHasDiscount ? (
+                      <div className="mt-auto flex items-baseline gap-2 pt-4">
+                        <p className="text-lg font-bold text-foreground">
+                          ${discountedPrice.toFixed(2)}
+                        </p>
+                        <p className="text-sm text-muted line-through">
+                          ${product.price.toFixed(2)}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="mt-auto pt-4 text-lg font-bold text-foreground">
+                        ${product.price.toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+
+                <div className="border-t border-border px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    {product.stockCount === 0 ? (
+                      <p className="text-sm font-semibold text-danger">
+                        Out of stock
+                      </p>
+                    ) : product.stockCount <= 10 ? (
+                      <p className="text-sm font-semibold text-warning">
+                        Only {product.stockCount} left
+                      </p>
+                    ) : (
+                      <p className="text-sm font-semibold text-success">
+                        In stock
+                      </p>
+                    )}
+
+                    <WishlistButton product={product} />
+                  </div>
+                </div>
+              </article>
             );
           })}
         </div>

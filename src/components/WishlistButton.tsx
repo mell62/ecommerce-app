@@ -75,10 +75,24 @@ export default function WishlistButton({ product }: WishlistButtonProps) {
 
   return (
     <button
+      type="button"
       onClick={toggleWishlist}
-      className="mt-3 rounded border px-3 py-2 text-sm"
+      aria-pressed={isWishlisted}
+      aria-label={
+        isWishlisted
+          ? `Remove ${product.name} from wishlist`
+          : `Add ${product.name} to wishlist`
+      }
+      className="wishlist-button inline-flex min-h-11 shrink-0 items-center justify-center overflow-hidden whitespace-nowrap rounded-ui border border-border bg-surface px-3 text-sm font-semibold text-foreground hover:border-border-hover hover:text-brand-700"
     >
-      {isWishlisted ? "♥ Wishlisted" : "♡ Add to Wishlist"}
+      <span
+        key={isWishlisted ? "wishlisted" : "not-wishlisted"}
+        aria-hidden="true"
+        className="wishlist-icon-feedback mr-1.5 inline-block text-base text-brand-600"
+      >
+        {isWishlisted ? "♥" : "♡"}
+      </span>
+      {isWishlisted ? "Wishlisted" : "Wishlist"}
     </button>
   );
 }

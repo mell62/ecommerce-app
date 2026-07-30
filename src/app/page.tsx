@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import WishlistButton from "@/components/WishlistButton";
 import { prisma } from "@/lib/db";
 import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 
@@ -400,49 +401,57 @@ export default async function HomePage() {
                 );
 
                 return (
-                  <Link
+                  <article
                     key={product.id}
-                    href={`/products/${product.id}`}
                     className="home-product-card group flex h-full w-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
                   >
-                    <div className="relative overflow-hidden bg-brand-50">
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.name}
-                        width={800}
-                        height={600}
-                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        className="aspect-[4/3] h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                      />
+                    <Link
+                      href={`/products/${product.id}`}
+                      className="flex flex-1 flex-col"
+                    >
+                      <div className="relative overflow-hidden bg-brand-50">
+                        <Image
+                          src={product.imageUrl}
+                          alt={product.name}
+                          width={800}
+                          height={600}
+                          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                          className="aspect-[4/3] h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                        />
 
-                      <span className="absolute left-4 top-4 rounded-md bg-deal px-3 py-1.5 text-xs font-bold text-white shadow-sm">
-                        {product.discountPercent}% OFF
-                      </span>
-                    </div>
-
-                    <div className="home-product-card-content flex flex-1 flex-col">
-                      <h3 className="text-lg font-semibold text-foreground">
-                        {product.name}
-                      </h3>
-
-                      <p className="mt-2 text-sm leading-6 text-muted">
-                        {product.description}
-                      </p>
-
-                      <ProductRating reviews={product.reviews} />
-                      <ProductStockStatus stockCount={product.stockCount} />
-
-                      <div className="mt-auto flex items-baseline gap-2 pt-5">
-                        <p className="text-lg font-bold text-foreground">
-                          ${discountedPrice.toFixed(2)}
-                        </p>
-
-                        <p className="text-sm text-muted line-through">
-                          ${product.price.toFixed(2)}
-                        </p>
+                        <span className="absolute left-4 top-4 rounded-md bg-deal px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+                          {product.discountPercent}% OFF
+                        </span>
                       </div>
+
+                      <div className="home-product-card-content flex flex-1 flex-col">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {product.name}
+                        </h3>
+
+                        <p className="mt-2 text-sm leading-6 text-muted">
+                          {product.description}
+                        </p>
+
+                        <ProductRating reviews={product.reviews} />
+                        <ProductStockStatus stockCount={product.stockCount} />
+
+                        <div className="mt-auto flex items-baseline gap-2 pt-5">
+                          <p className="text-lg font-bold text-foreground">
+                            ${discountedPrice.toFixed(2)}
+                          </p>
+
+                          <p className="text-sm text-muted line-through">
+                            ${product.price.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+
+                    <div className="flex justify-end border-t border-border px-4 py-3">
+                      <WishlistButton product={product} />
                     </div>
-                  </Link>
+                  </article>
                 );
               })}
             </div>
@@ -488,62 +497,70 @@ export default async function HomePage() {
               );
 
               return (
-                <Link
+                <article
                   key={product.id}
-                  href={`/products/${product.id}`}
                   className="home-product-card group flex h-full w-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
                 >
-                  <div className="relative overflow-hidden bg-brand-50">
-                    <Image
-                      src={product.imageUrl}
-                      alt={product.name}
-                      width={800}
-                      height={600}
-                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      className="aspect-[4/3] h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                    />
+                  <Link
+                    href={`/products/${product.id}`}
+                    className="flex flex-1 flex-col"
+                  >
+                    <div className="relative overflow-hidden bg-brand-50">
+                      <Image
+                        src={product.imageUrl}
+                        alt={product.name}
+                        width={800}
+                        height={600}
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        className="aspect-[4/3] h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      />
 
-                    <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-2">
-                      <span className="rounded-md bg-brand-700 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
-                        Featured
-                      </span>
-
-                      {productHasDiscount && (
-                        <span className="rounded-md bg-deal px-3 py-1.5 text-xs font-bold text-white shadow-sm">
-                          {product.discountPercent}% OFF
+                      <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-2">
+                        <span className="rounded-md bg-brand-700 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+                          Featured
                         </span>
-                      )}
+
+                        {productHasDiscount && (
+                          <span className="rounded-md bg-deal px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+                            {product.discountPercent}% OFF
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="home-product-card-content flex flex-1 flex-col">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {product.name}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-muted">
-                      {product.description}
-                    </p>
+                    <div className="home-product-card-content flex flex-1 flex-col">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {product.name}
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        {product.description}
+                      </p>
 
-                    <ProductRating reviews={product.reviews} />
-                    <ProductStockStatus stockCount={product.stockCount} />
+                      <ProductRating reviews={product.reviews} />
+                      <ProductStockStatus stockCount={product.stockCount} />
 
-                    {productHasDiscount ? (
-                      <div className="mt-auto flex items-baseline gap-2 pt-5">
-                        <p className="text-lg font-bold text-foreground">
-                          ${discountedPrice.toFixed(2)}
-                        </p>
+                      {productHasDiscount ? (
+                        <div className="mt-auto flex items-baseline gap-2 pt-5">
+                          <p className="text-lg font-bold text-foreground">
+                            ${discountedPrice.toFixed(2)}
+                          </p>
 
-                        <p className="text-sm text-muted line-through">
+                          <p className="text-sm text-muted line-through">
+                            ${product.price.toFixed(2)}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="mt-auto pt-5 text-lg font-bold text-foreground">
                           ${product.price.toFixed(2)}
                         </p>
-                      </div>
-                    ) : (
-                      <p className="mt-auto pt-5 text-lg font-bold text-foreground">
-                        ${product.price.toFixed(2)}
-                      </p>
-                    )}
+                      )}
+                    </div>
+                  </Link>
+
+                  <div className="flex justify-end border-t border-border px-4 py-3">
+                    <WishlistButton product={product} />
                   </div>
-                </Link>
+                </article>
               );
             })}
           </div>
@@ -585,73 +602,81 @@ export default async function HomePage() {
                 );
 
                 return (
-                  <Link
+                  <article
                     key={product.id}
-                    href={`/products/${product.id}`}
                     className="home-product-card group flex h-full w-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
                   >
-                    <div className="relative overflow-hidden bg-brand-50">
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.name}
-                        width={800}
-                        height={600}
-                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        className="aspect-[4/3] h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                      />
+                    <Link
+                      href={`/products/${product.id}`}
+                      className="flex flex-1 flex-col"
+                    >
+                      <div className="relative overflow-hidden bg-brand-50">
+                        <Image
+                          src={product.imageUrl}
+                          alt={product.name}
+                          width={800}
+                          height={600}
+                          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                          className="aspect-[4/3] h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                        />
 
-                      <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-2">
-                        <span className="rounded-md bg-brand-700 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
-                          Top rated
-                        </span>
-
-                        {productHasDiscount && (
-                          <span className="rounded-md bg-deal px-3 py-1.5 text-xs font-bold text-white shadow-sm">
-                            {product.discountPercent}% OFF
+                        <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-2">
+                          <span className="rounded-md bg-brand-700 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+                            Top rated
                           </span>
-                        )}
+
+                          {productHasDiscount && (
+                            <span className="rounded-md bg-deal px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+                              {product.discountPercent}% OFF
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="home-product-card-content flex flex-1 flex-col">
-                      <h3 className="text-lg font-semibold text-foreground">
-                        {product.name}
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-muted">
-                        {product.description}
-                      </p>
+                      <div className="home-product-card-content flex flex-1 flex-col">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {product.name}
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-muted">
+                          {product.description}
+                        </p>
 
-                      <p className="mt-4 flex items-center gap-2 text-sm font-medium text-foreground">
-                        <span aria-hidden="true" className="text-warning">
-                          ★
-                        </span>
-                        <span>
-                          {product.averageRating.toFixed(1)} out of 5{" "}
-                          <span className="text-muted">
-                            · {product.reviewCount}{" "}
-                            {product.reviewCount === 1 ? "review" : "reviews"}
+                        <p className="mt-4 flex items-center gap-2 text-sm font-medium text-foreground">
+                          <span aria-hidden="true" className="text-warning">
+                            ★
                           </span>
-                        </span>
-                      </p>
-                      <ProductStockStatus stockCount={product.stockCount} />
+                          <span>
+                            {product.averageRating.toFixed(1)} out of 5{" "}
+                            <span className="text-muted">
+                              · {product.reviewCount}{" "}
+                              {product.reviewCount === 1 ? "review" : "reviews"}
+                            </span>
+                          </span>
+                        </p>
+                        <ProductStockStatus stockCount={product.stockCount} />
 
-                      {productHasDiscount ? (
-                        <div className="mt-auto flex items-baseline gap-2 pt-5">
-                          <p className="text-lg font-bold text-foreground">
-                            ${discountedPrice.toFixed(2)}
-                          </p>
+                        {productHasDiscount ? (
+                          <div className="mt-auto flex items-baseline gap-2 pt-5">
+                            <p className="text-lg font-bold text-foreground">
+                              ${discountedPrice.toFixed(2)}
+                            </p>
 
-                          <p className="text-sm text-muted line-through">
+                            <p className="text-sm text-muted line-through">
+                              ${product.price.toFixed(2)}
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="mt-auto pt-5 text-lg font-bold text-foreground">
                             ${product.price.toFixed(2)}
                           </p>
-                        </div>
-                      ) : (
-                        <p className="mt-auto pt-5 text-lg font-bold text-foreground">
-                          ${product.price.toFixed(2)}
-                        </p>
-                      )}
+                        )}
+                      </div>
+                    </Link>
+
+                    <div className="flex justify-end border-t border-border px-4 py-3">
+                      <WishlistButton product={product} />
                     </div>
-                  </Link>
+                  </article>
                 );
               })}
             </div>
@@ -691,62 +716,70 @@ export default async function HomePage() {
               );
 
               return (
-                <Link
+                <article
                   key={product.id}
-                  href={`/products/${product.id}`}
                   className="home-product-card group flex h-full w-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card"
                 >
-                  <div className="relative overflow-hidden bg-brand-50">
-                    <Image
-                      src={product.imageUrl}
-                      alt={product.name}
-                      width={800}
-                      height={600}
-                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      className="aspect-[4/3] h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                    />
+                  <Link
+                    href={`/products/${product.id}`}
+                    className="flex flex-1 flex-col"
+                  >
+                    <div className="relative overflow-hidden bg-brand-50">
+                      <Image
+                        src={product.imageUrl}
+                        alt={product.name}
+                        width={800}
+                        height={600}
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        className="aspect-[4/3] h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      />
 
-                    <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-2">
-                      <span className="rounded-md bg-brand-700 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
-                        Best seller
-                      </span>
-
-                      {productHasDiscount && (
-                        <span className="rounded-md bg-deal px-3 py-1.5 text-xs font-bold text-white shadow-sm">
-                          {product.discountPercent}% OFF
+                      <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-2">
+                        <span className="rounded-md bg-brand-700 px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+                          Best seller
                         </span>
-                      )}
+
+                        {productHasDiscount && (
+                          <span className="rounded-md bg-deal px-3 py-1.5 text-xs font-bold text-white shadow-sm">
+                            {product.discountPercent}% OFF
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="home-product-card-content flex flex-1 flex-col">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {product.name}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-muted">
-                      {product.description}
-                    </p>
+                    <div className="home-product-card-content flex flex-1 flex-col">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {product.name}
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-muted">
+                        {product.description}
+                      </p>
 
-                    <ProductRating reviews={product.reviews} />
-                    <ProductStockStatus stockCount={product.stockCount} />
+                      <ProductRating reviews={product.reviews} />
+                      <ProductStockStatus stockCount={product.stockCount} />
 
-                    {productHasDiscount ? (
-                      <div className="mt-auto flex items-baseline gap-2 pt-5">
-                        <p className="text-lg font-bold text-foreground">
-                          ${discountedPrice.toFixed(2)}
-                        </p>
+                      {productHasDiscount ? (
+                        <div className="mt-auto flex items-baseline gap-2 pt-5">
+                          <p className="text-lg font-bold text-foreground">
+                            ${discountedPrice.toFixed(2)}
+                          </p>
 
-                        <p className="text-sm text-muted line-through">
+                          <p className="text-sm text-muted line-through">
+                            ${product.price.toFixed(2)}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="mt-auto pt-5 text-lg font-bold text-foreground">
                           ${product.price.toFixed(2)}
                         </p>
-                      </div>
-                    ) : (
-                      <p className="mt-auto pt-5 text-lg font-bold text-foreground">
-                        ${product.price.toFixed(2)}
-                      </p>
-                    )}
+                      )}
+                    </div>
+                  </Link>
+
+                  <div className="flex justify-end border-t border-border px-4 py-3">
+                    <WishlistButton product={product} />
                   </div>
-                </Link>
+                </article>
               );
             })}
           </div>

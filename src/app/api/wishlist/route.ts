@@ -162,3 +162,56 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 }
+
+export async function DELETE(request: Request): Promise<Response> {
+  try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return Response.json(
+        {
+          error: "You must be logged in to remove products from your wishlist.",
+        },
+        { status: 401 }
+      );
+    }
+
+    const body = await getWishlistRequestBody(request);
+    const productId =
+      body && typeof body.productId === "string" ? body.productId.trim() : "";
+
+    if (!productId) {
+      return Response.json(
+        { error: "Product ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const result = await prisma.wishlistItem.deleteMany({
+      where: {
+        productId,
+        wishlist: {
+          userId: user.id,
+        },
+      },
+    });
+
+    if (result.count === 0) {
+      return Response.json(
+        { error: "Product is not in your wishlist." },
+        { status: 404 }
+      );
+    }
+
+    return Response.json({
+      message: "Product removed from wishlist.",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return Response.json(
+      { error: "Failed to remove product from wishlist." },
+      { status: 500 }
+    );
+  }
+}

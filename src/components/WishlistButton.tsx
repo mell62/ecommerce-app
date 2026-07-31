@@ -1,98 +1,97 @@
 "use client";
 
-import type { MouseEvent } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useWishlist } from "@/components/WishlistProvider";
 
 type WishlistProduct = {
   id: string;
   name: string;
-  description: string;
-  price: number;
-  imageUrl: string;
 };
 
 type WishlistButtonProps = Readonly<{
   product: WishlistProduct;
 }>;
 
-type StoredWishlistItem = {
-  id: string;
-};
-
-function isStoredWishlistItem(value: unknown): value is StoredWishlistItem {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "id" in value &&
-    typeof value.id === "string"
-  );
-}
-
-function getStoredWishlist(): StoredWishlistItem[] {
-  const storedWishlist = localStorage.getItem("wishlist");
-
-  if (!storedWishlist) {
-    return [];
-  }
-
-  try {
-    const wishlist: unknown = JSON.parse(storedWishlist);
-
-    return Array.isArray(wishlist) ? wishlist.filter(isStoredWishlistItem) : [];
-  } catch {
-    return [];
-  }
-}
-
 export default function WishlistButton({ product }: WishlistButtonProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const { products, isAuthenticated, isLoading, addProduct, removeProduct } =
+    useWishlist();
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState("");
+  const isWishlisted = products.some((item) => item.id === product.id);
 
-  useEffect(() => {
-    const wishlist = getStoredWishlist();
+  async function toggleWishlist(): Promise<void> {
+    setError("");
 
-    const found = wishlist.some((item) => item.id === product.id);
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Initialize the button from browser storage after the component mounts.
-    setIsWishlisted(found);
-  }, [product.id]);
-
-  function toggleWishlist(event: MouseEvent<HTMLButtonElement>): void {
-    event.preventDefault();
-
-    const wishlist = getStoredWishlist();
-
-    let updatedWishlist: StoredWishlistItem[];
-
-    if (isWishlisted) {
-      updatedWishlist = wishlist.filter((item) => item.id !== product.id);
-    } else {
-      updatedWishlist = [...wishlist, product];
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
     }
 
-    localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
-    setIsWishlisted(!isWishlisted);
+    setIsUpdating(true);
+
+    try {
+      if (isWishlisted) {
+        await removeProduct(product.id);
+      } else {
+        await addProduct(product.id);
+      }
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Failed to update wishlist."
+      );
+    } finally {
+      setIsUpdating(false);
+    }
   }
 
+  const isDisabled = isAuthenticated && (isLoading || isUpdating);
+  const buttonLabel = isUpdating
+    ? isWishlisted
+      ? "Removing..."
+      : "Saving..."
+    : isWishlisted
+      ? "Wishlisted"
+      : "Wishlist";
+
   return (
-    <button
-      type="button"
-      onClick={toggleWishlist}
-      aria-pressed={isWishlisted}
-      aria-label={
-        isWishlisted
-          ? `Remove ${product.name} from wishlist`
-          : `Add ${product.name} to wishlist`
-      }
-      className="wishlist-button inline-flex min-h-11 shrink-0 items-center justify-center overflow-hidden whitespace-nowrap rounded-ui border border-border bg-surface px-3 text-sm font-semibold text-foreground hover:border-border-hover hover:text-brand-700"
-    >
-      <span
-        key={isWishlisted ? "wishlisted" : "not-wishlisted"}
-        aria-hidden="true"
-        className="wishlist-icon-feedback mr-1.5 inline-block text-base text-brand-600"
+    <div className="flex flex-col items-end">
+      <button
+        type="button"
+        onClick={toggleWishlist}
+        disabled={isDisabled}
+        aria-pressed={isWishlisted}
+        aria-label={
+          isAuthenticated
+            ? isWishlisted
+              ? `Remove ${product.name} from wishlist`
+              : `Add ${product.name} to wishlist`
+            : `Log in to add ${product.name} to wishlist`
+        }
+        className="wishlist-button inline-flex min-h-11 shrink-0 items-center justify-center overflow-hidden whitespace-nowrap rounded-ui border border-border bg-surface px-3 text-sm font-semibold text-foreground hover:border-border-hover hover:text-brand-700 disabled:cursor-wait disabled:opacity-60"
       >
-        {isWishlisted ? "♥" : "♡"}
-      </span>
-      {isWishlisted ? "Wishlisted" : "Wishlist"}
-    </button>
+        <span
+          key={isWishlisted ? "wishlisted" : "not-wishlisted"}
+          aria-hidden="true"
+          className="wishlist-icon-feedback mr-1.5 inline-block text-base text-brand-600"
+        >
+          {isWishlisted ? "♥" : "♡"}
+        </span>
+        {isLoading && isAuthenticated ? "Loading..." : buttonLabel}
+      </button>
+
+      {error && (
+        <p
+          className="mt-2 max-w-56 text-right text-xs text-danger"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

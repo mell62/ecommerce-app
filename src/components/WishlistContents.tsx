@@ -1,121 +1,149 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-
-type WishlistProduct = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  imageUrl: string;
-};
-
-function isWishlistProduct(value: unknown): value is WishlistProduct {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "id" in value &&
-    typeof value.id === "string" &&
-    "name" in value &&
-    typeof value.name === "string" &&
-    "description" in value &&
-    typeof value.description === "string" &&
-    "price" in value &&
-    typeof value.price === "number" &&
-    Number.isFinite(value.price) &&
-    "imageUrl" in value &&
-    typeof value.imageUrl === "string"
-  );
-}
-
-function getStoredWishlist(): WishlistProduct[] {
-  const storedWishlist = localStorage.getItem("wishlist");
-
-  if (!storedWishlist) {
-    return [];
-  }
-
-  try {
-    const wishlist: unknown = JSON.parse(storedWishlist);
-
-    return Array.isArray(wishlist) ? wishlist.filter(isWishlistProduct) : [];
-  } catch {
-    return [];
-  }
-}
+import { useWishlist } from "@/components/WishlistProvider";
 
 export default function WishlistContents() {
-  const [wishlist, setWishlist] = useState<WishlistProduct[]>([]);
-  const [hasLoadedWishlist, setHasLoadedWishlist] = useState(false);
+  const { products, isAuthenticated, isLoading, loadError, removeProduct } =
+    useWishlist();
+  const [removingProductId, setRemovingProductId] = useState("");
+  const [removeError, setRemoveError] = useState("");
 
-  useEffect(() => {
-    const stored = getStoredWishlist();
+  async function handleRemove(productId: string): Promise<void> {
+    setRemoveError("");
+    setRemovingProductId(productId);
 
-    /* eslint-disable react-hooks/set-state-in-effect --
-     * Load browser-only storage after the component mounts.
-     */
-    setWishlist(stored);
-    setHasLoadedWishlist(true);
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, []);
-
-  function removeFromWishlist(id: string): void {
-    const updated = wishlist.filter((item) => item.id !== id);
-
-    setWishlist(updated);
-    localStorage.setItem("wishlist", JSON.stringify(updated));
+    try {
+      await removeProduct(productId);
+    } catch (error) {
+      setRemoveError(
+        error instanceof Error
+          ? error.message
+          : "Failed to remove product from wishlist."
+      );
+    } finally {
+      setRemovingProductId("");
+    }
   }
 
-  if (!hasLoadedWishlist) {
-    return <p>Loading wishlist...</p>;
-  }
-
-  if (wishlist.length === 0) {
+  if (!isAuthenticated) {
     return (
-      <div className="space-y-4">
-        <p>Your wishlist is empty.</p>
+      <div className="rounded-ui border border-border bg-surface p-6 sm:p-8">
+        <h2 className="text-xl font-semibold text-foreground">
+          Log in to view your wishlist
+        </h2>
+        <p className="mt-2 text-muted">
+          Your saved products will be available anywhere you sign in.
+        </p>
+        <Link
+          href="/login?redirect=/wishlist"
+          className="mt-5 inline-flex min-h-11 items-center justify-center rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
+        >
+          Log in
+        </Link>
+      </div>
+    );
+  }
 
+  if (isLoading) {
+    return (
+      <p className="text-muted" role="status">
+        Loading wishlist...
+      </p>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div
+        className="rounded-ui border border-border bg-surface p-6"
+        role="alert"
+      >
+        <p className="font-semibold text-danger">{loadError}</p>
+        <p className="mt-2 text-muted">Refresh the page to try again.</p>
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="rounded-ui border border-border bg-surface p-6 sm:p-8">
+        <h2 className="text-xl font-semibold text-foreground">
+          Your wishlist is empty
+        </h2>
+        <p className="mt-2 text-muted">
+          Save products while browsing and they will appear here.
+        </p>
         <Link
           href="/products"
-          className="inline-block bg-black text-white px-4 py-2 rounded"
+          className="mt-5 inline-flex min-h-11 items-center justify-center rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
         >
-          Browse Products
+          Browse products
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {wishlist.map((product) => (
-        <div key={product.id} className="border rounded-lg p-4 shadow">
-          <Link href={`/products/${product.id}`}>
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              width={800}
-              height={600}
-              sizes="(min-width: 768px) 33vw, 100vw"
-              className="w-full h-48 object-cover rounded"
-            />
+    <>
+      <p className="mb-5 text-sm font-medium text-muted" aria-live="polite">
+        {products.length}{" "}
+        {products.length === 1 ? "saved product" : "saved products"}
+      </p>
 
-            <h2 className="text-xl font-semibold mt-4">{product.name}</h2>
+      {removeError && (
+        <p className="mb-5 text-sm text-danger" role="alert">
+          {removeError}
+        </p>
+      )}
 
-            <p className="text-gray-600">{product.description}</p>
-
-            <p className="font-bold mt-2">${product.price}</p>
-          </Link>
-
-          <button
-            onClick={() => removeFromWishlist(product.id)}
-            className="mt-4 bg-red-500 text-white px-3 py-2 rounded"
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {products.map((product) => (
+          <article
+            key={product.id}
+            className="flex flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm"
           >
-            Remove
-          </button>
-        </div>
-      ))}
-    </div>
+            <Link
+              href={`/products/${product.id}`}
+              className="flex flex-1 flex-col"
+            >
+              <Image
+                src={product.imageUrl}
+                alt={product.name}
+                width={800}
+                height={600}
+                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                className="aspect-[4/3] h-auto w-full object-cover"
+              />
+
+              <div className="flex flex-1 flex-col p-4">
+                <h2 className="text-lg font-semibold text-foreground">
+                  {product.name}
+                </h2>
+                <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">
+                  {product.description}
+                </p>
+                <p className="mt-auto pt-4 text-lg font-bold text-foreground">
+                  ${product.price.toFixed(2)}
+                </p>
+              </div>
+            </Link>
+
+            <div className="border-t border-border p-4">
+              <button
+                type="button"
+                onClick={() => handleRemove(product.id)}
+                disabled={removingProductId === product.id}
+                className="inline-flex min-h-11 items-center justify-center rounded-ui border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground hover:border-border-hover hover:text-danger disabled:cursor-wait disabled:opacity-60"
+              >
+                {removingProductId === product.id ? "Removing..." : "Remove"}
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </>
   );
 }

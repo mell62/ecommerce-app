@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import Link from "next/link";
 import SiteHeader from "@/components/SiteHeader";
+import WishlistProvider from "@/components/WishlistProvider";
 import { getCurrentUser } from "@/lib/session";
 import "./globals.css";
 
@@ -38,24 +39,29 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       className={`${manrope.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Link
-          href="#main-content"
-          className="fixed left-4 top-4 z-[100] -translate-y-24 rounded-md bg-brand-700 px-4 py-3 font-semibold text-white shadow-card focus:translate-y-0"
+        <WishlistProvider
+          key={user?.id ?? "guest"}
+          isAuthenticated={Boolean(user)}
         >
-          Skip to main content
-        </Link>
+          <Link
+            href="#main-content"
+            className="fixed left-4 top-4 z-[100] -translate-y-24 rounded-md bg-brand-700 px-4 py-3 font-semibold text-white shadow-card focus:translate-y-0"
+          >
+            Skip to main content
+          </Link>
 
-        <SiteHeader userName={user?.name ?? null} />
+          <SiteHeader userName={user?.name ?? null} />
 
-        <main id="main-content" tabIndex={-1} className="flex-1">
-          {children}
-        </main>
+          <main id="main-content" tabIndex={-1} className="flex-1">
+            {children}
+          </main>
 
-        <footer className="border-t border-border bg-surface">
-          <div className="mx-auto max-w-7xl px-4 py-6 text-sm text-muted sm:px-6 lg:px-8">
-            <p>© {new Date().getFullYear()} Zeus. Built for better setups.</p>
-          </div>
-        </footer>
+          <footer className="border-t border-border bg-surface">
+            <div className="mx-auto max-w-7xl px-4 py-6 text-sm text-muted sm:px-6 lg:px-8">
+              <p>© {new Date().getFullYear()} Zeus. Built for better setups.</p>
+            </div>
+          </footer>
+        </WishlistProvider>
       </body>
     </html>
   );

@@ -55,6 +55,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
     orderBy: {
       createdAt: "desc",
     },
+    include: {
+      reviews: {
+        select: {
+          rating: true,
+        },
+      },
+    },
   });
 
   const reviewCount = product.reviews.length;
@@ -342,13 +349,42 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         )}
       </section>
-      <div className="mt-10">
-        <h2 className="text-2xl font-bold mb-4">Related Products</h2>
+      <section
+        aria-labelledby="related-products-heading"
+        className="mt-16 border-t border-border pt-10"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-700">
+              Complete your setup
+            </p>
+            <h2
+              id="related-products-heading"
+              className="mt-1 font-display text-2xl font-semibold text-foreground sm:text-3xl"
+            >
+              Related products
+            </h2>
+          </div>
+
+          <Link
+            href={`/products?category=${encodeURIComponent(product.category)}`}
+            className="text-sm font-semibold text-brand-700 hover:text-brand-600"
+          >
+            View all {product.category.toLowerCase()}
+          </Link>
+        </div>
 
         {relatedProducts.length === 0 ? (
-          <p className="text-gray-600">No related products found.</p>
+          <div className="mt-6 rounded-ui border border-dashed border-border bg-surface p-6 text-center">
+            <p className="font-semibold text-foreground">
+              No related products available
+            </p>
+            <p className="mt-1 text-sm text-muted">
+              Explore the full catalog to find something that fits your setup.
+            </p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {relatedProducts.map((relatedProduct) => {
               const relatedProductHasDiscount = hasDiscount(
                 relatedProduct.discountPercent
@@ -358,56 +394,111 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 relatedProduct.price,
                 relatedProduct.discountPercent
               );
+              const relatedReviewCount = relatedProduct.reviews.length;
+              const relatedAverageRating =
+                relatedReviewCount === 0
+                  ? 0
+                  : relatedProduct.reviews.reduce(
+                      (sum, review) => sum + review.rating,
+                      0
+                    ) / relatedReviewCount;
 
               return (
-                <Link
+                <article
                   key={relatedProduct.id}
-                  href={`/products/${relatedProduct.id}`}
-                  className="border rounded-lg p-4 shadow hover:shadow-lg transition block"
+                  className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card focus-within:border-brand-500 focus-within:shadow-card"
                 >
-                  {relatedProductHasDiscount && (
-                    <div className="mb-2">
-                      <span className="rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-                        {relatedProduct.discountPercent}% OFF
-                      </span>
+                  <Link
+                    href={`/products/${relatedProduct.id}`}
+                    className="flex flex-1 flex-col"
+                  >
+                    <div className="relative overflow-hidden bg-brand-50">
+                      <Image
+                        src={relatedProduct.imageUrl}
+                        alt={relatedProduct.name}
+                        width={800}
+                        height={600}
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        className="aspect-[4/3] h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                      />
+
+                      {relatedProductHasDiscount && (
+                        <span className="absolute left-3 top-3 rounded-ui bg-deal px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                          {relatedProduct.discountPercent}% off
+                        </span>
+                      )}
                     </div>
-                  )}
-                  <Image
-                    src={relatedProduct.imageUrl}
-                    alt={relatedProduct.name}
-                    width={800}
-                    height={600}
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                    className="w-full h-40 object-cover rounded"
-                  />
 
-                  <h3 className="font-semibold mt-4">{relatedProduct.name}</h3>
-
-                  {relatedProductHasDiscount ? (
-                    <div className="mt-2">
-                      <p className="font-bold">
-                        ${relatedProductDiscountedPrice.toFixed(2)}
+                    <div className="flex flex-1 flex-col p-4">
+                      <h3 className="font-display text-lg font-semibold text-foreground">
+                        {relatedProduct.name}
+                      </h3>
+                      <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">
+                        {relatedProduct.description}
                       </p>
 
-                      <p className="text-sm text-gray-500 line-through">
-                        ${relatedProduct.price.toFixed(2)}
-                      </p>
+                      {relatedReviewCount > 0 ? (
+                        <p className="mt-3 flex items-center gap-2 text-sm font-medium text-foreground">
+                          <span aria-hidden="true" className="text-warning">
+                            ★
+                          </span>
+                          <span>
+                            {relatedAverageRating.toFixed(1)}
+                            <span className="text-muted">
+                              {" "}
+                              · {relatedReviewCount}{" "}
+                              {relatedReviewCount === 1 ? "review" : "reviews"}
+                            </span>
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="mt-3 text-sm text-muted">
+                          No reviews yet
+                        </p>
+                      )}
 
-                      <p className="text-sm text-green-700">
-                        {relatedProduct.discountPercent}% off
-                      </p>
+                      {relatedProductHasDiscount ? (
+                        <div className="mt-auto flex items-baseline gap-2 pt-4">
+                          <p className="text-lg font-bold text-foreground">
+                            ${relatedProductDiscountedPrice.toFixed(2)}
+                          </p>
+                          <p className="text-sm text-muted line-through">
+                            ${relatedProduct.price.toFixed(2)}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className="mt-auto pt-4 text-lg font-bold text-foreground">
+                          ${relatedProduct.price.toFixed(2)}
+                        </p>
+                      )}
                     </div>
-                  ) : (
-                    <p className="font-bold mt-2">
-                      ${relatedProduct.price.toFixed(2)}
-                    </p>
-                  )}
-                </Link>
+                  </Link>
+
+                  <div className="border-t border-border px-4 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      {relatedProduct.stockCount === 0 ? (
+                        <p className="text-sm font-semibold text-danger">
+                          Out of stock
+                        </p>
+                      ) : relatedProduct.stockCount <= 10 ? (
+                        <p className="text-sm font-semibold text-warning">
+                          Only {relatedProduct.stockCount} left
+                        </p>
+                      ) : (
+                        <p className="text-sm font-semibold text-success">
+                          In stock
+                        </p>
+                      )}
+
+                      <WishlistButton product={relatedProduct} />
+                    </div>
+                  </div>
+                </article>
               );
             })}
           </div>
         )}
-      </div>
+      </section>
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
+import { MAX_REVIEW_LENGTH } from "@/lib/review-validation";
 
 type ReviewRequestBody = {
   productId?: unknown;
@@ -56,6 +57,13 @@ export async function POST(request: Request): Promise<Response> {
     if (!productId || !comment || !Number.isFinite(rating)) {
       return Response.json(
         { error: "Missing required review fields" },
+        { status: 400 }
+      );
+    }
+
+    if (comment.length > MAX_REVIEW_LENGTH) {
+      return Response.json(
+        { error: `Review must be ${MAX_REVIEW_LENGTH} characters or fewer.` },
         { status: 400 }
       );
     }
@@ -185,6 +193,13 @@ export async function PATCH(request: Request): Promise<Response> {
     if (!reviewId || !comment || !Number.isFinite(rating)) {
       return Response.json(
         { error: "Review ID, rating, and comment are required." },
+        { status: 400 }
+      );
+    }
+
+    if (comment.length > MAX_REVIEW_LENGTH) {
+      return Response.json(
+        { error: `Review must be ${MAX_REVIEW_LENGTH} characters or fewer.` },
         { status: 400 }
       );
     }

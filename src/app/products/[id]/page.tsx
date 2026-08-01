@@ -10,6 +10,7 @@ import DeleteReviewButton from "@/components/DeleteReviewButton";
 import EditReviewButton from "@/components/EditReviewButton";
 import WishlistButton from "@/components/WishlistButton";
 import ProductImageZoom from "@/components/ProductImageZoom";
+import { getRandomReviewPlaceholder } from "@/lib/review-prompts";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -73,6 +74,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const hasReviewed = product.reviews.some(
     (review) => review.userId === user?.id
   );
+  const reviewPlaceholder = getRandomReviewPlaceholder();
 
   return (
     <main className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-8 sm:py-10 lg:py-12">
@@ -202,7 +204,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
             You have already reviewed this product.
           </p>
         ) : (
-          <ReviewForm productId={product.id} />
+          <ReviewForm
+            productId={product.id}
+            reviewPlaceholder={reviewPlaceholder}
+          />
         )
       ) : (
         <div className="rounded border p-4">

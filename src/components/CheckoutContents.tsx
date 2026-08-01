@@ -1,53 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-type CartItem = {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice: number;
-  stockCount: number;
-  quantity: number;
-};
-
-function isCartItem(value: unknown): value is CartItem {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "id" in value &&
-    typeof value.id === "string" &&
-    "name" in value &&
-    typeof value.name === "string" &&
-    "price" in value &&
-    typeof value.price === "number" &&
-    Number.isFinite(value.price) &&
-    "originalPrice" in value &&
-    typeof value.originalPrice === "number" &&
-    Number.isFinite(value.originalPrice) &&
-    "stockCount" in value &&
-    typeof value.stockCount === "number" &&
-    Number.isInteger(value.stockCount) &&
-    "quantity" in value &&
-    typeof value.quantity === "number" &&
-    Number.isInteger(value.quantity) &&
-    value.quantity > 0
-  );
-}
-
-function parseCart(value: string | null): CartItem[] {
-  if (!value) {
-    return [];
-  }
-
-  try {
-    const cart: unknown = JSON.parse(value);
-
-    return Array.isArray(cart) ? cart.filter(isCartItem) : [];
-  } catch {
-    return [];
-  }
-}
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCart } from "@/components/CartProvider";
 
 function getOrderError(data: unknown): string {
   if (
@@ -59,105 +15,34 @@ function getOrderError(data: unknown): string {
     return data.error;
   }
 
-  return "Failed to place order";
+  return "Failed to place order.";
 }
 
 export default function CheckoutContents() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const router = useRouter();
+  const { items, isLoading, loadError, clearCart } = useCart();
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const [hasLoadedCart, setHasLoadedCart] = useState(false);
-
-  useEffect(() => {
-    async function loadCart(): Promise<void> {
-      try {
-        const stored = parseCart(localStorage.getItem("cart"));
-
-        if (stored.length === 0) {
-          setCart([]);
-          setHasLoadedCart(true);
-          return;
-        }
-
-        const response = await fetch("/api/cart/validate", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            items: stored.map((item) => ({
-              id: item.id,
-              quantity: item.quantity,
-            })),
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to load checkout cart");
-        }
-
-        const data: unknown = await response.json();
-        const validatedItems = Array.isArray(data)
-          ? data.filter(isCartItem)
-          : [];
-
-        setCart(validatedItems);
-        localStorage.setItem("cart", JSON.stringify(validatedItems));
-      } catch (error) {
-        console.error(error);
-
-        setCart(parseCart(localStorage.getItem("cart")));
-      } finally {
-        setHasLoadedCart(true);
-      }
-    }
-
-    void loadCart();
-  }, []);
-
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  const hasStockIssue = cart.some(
+  const [orderError, setOrderError] = useState("");
+  const total = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const hasStockIssue = items.some(
     (item) => item.stockCount === 0 || item.quantity > item.stockCount
   );
 
-  if (!hasLoadedCart) {
-    return (
-      <div className="max-w-4xl mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-6">Checkout</h1>
-
-        <p>Loading checkout...</p>
-      </div>
-    );
-  }
-
-  if (cart.length === 0) {
-    return (
-      <div className="max-w-4xl mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-6">Checkout</h1>
-
-        <p>Your cart is empty.</p>
-      </div>
-    );
-  }
-
   async function placeOrder(): Promise<void> {
-    if (isPlacingOrder) {
+    if (isPlacingOrder || hasStockIssue) {
       return;
     }
 
-    try {
-      setIsPlacingOrder(true);
+    setOrderError("");
+    setIsPlacingOrder(true);
 
+    try {
       const response = await fetch("/api/orders", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          items: cart,
-        }),
       });
-
       const contentType = response.headers.get("content-type");
       const data: unknown = contentType?.includes("application/json")
         ? await response.json()
@@ -167,49 +52,129 @@ export default function CheckoutContents() {
         throw new Error(getOrderError(data));
       }
 
-      localStorage.removeItem("cart");
-
-      alert("Order placed successfully!");
-
-      window.location.href = "/orders?success=true";
+      clearCart();
+      router.push("/orders?success=true");
+      router.refresh();
     } catch (error) {
-      console.error(error);
-      alert(error instanceof Error ? error.message : "Failed to place order");
+      setOrderError(
+        error instanceof Error ? error.message : "Failed to place order."
+      );
     } finally {
       setIsPlacingOrder(false);
     }
   }
 
-  return (
-    <div className="max-w-4xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-6">Checkout</h1>
-
-      <div className="space-y-2 mb-8">
-        {cart.map((item) => (
-          <div key={item.id} className="flex justify-between">
-            <span>
-              {item.name} × {item.quantity}
-            </span>
-
-            <span>${(item.price * item.quantity).toFixed(2)}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="text-xl font-bold">Total: ${total.toFixed(2)}</div>
-      {hasStockIssue && (
-        <p className="mt-4 text-sm text-red-600">
-          Some items in your cart are no longer available in the requested
-          quantity. Please update your cart before placing the order.
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
+        <h1 className="mb-6 font-display text-4xl font-bold tracking-tight text-foreground">
+          Checkout
+        </h1>
+        <p className="text-muted" role="status">
+          Loading checkout...
         </p>
-      )}
-      <button
-        onClick={placeOrder}
-        disabled={isPlacingOrder || hasStockIssue}
-        className="mt-6 px-4 py-2 bg-black text-white disabled:opacity-50"
-      >
-        {isPlacingOrder ? "Placing Order..." : "Place Order"}
-      </button>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
+        <h1 className="mb-6 font-display text-4xl font-bold tracking-tight text-foreground">
+          Checkout
+        </h1>
+        <div
+          className="rounded-ui border border-border bg-surface p-6"
+          role="alert"
+        >
+          <p className="font-semibold text-danger">{loadError}</p>
+          <p className="mt-2 text-muted">Refresh the page to try again.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
+        <h1 className="mb-6 font-display text-4xl font-bold tracking-tight text-foreground">
+          Checkout
+        </h1>
+        <div className="rounded-ui border border-border bg-surface p-6 sm:p-8">
+          <h2 className="text-xl font-semibold text-foreground">
+            Your cart is empty
+          </h2>
+          <p className="mt-2 text-muted">
+            Add a product before continuing to checkout.
+          </p>
+          <Link
+            href="/products"
+            className="mt-5 inline-flex min-h-11 items-center justify-center rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
+          >
+            Browse products
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
+      <h1 className="mb-8 font-display text-4xl font-bold tracking-tight text-foreground">
+        Checkout
+      </h1>
+
+      <div className="rounded-ui border border-border bg-surface p-5 shadow-sm sm:p-6">
+        <h2 className="font-display text-xl font-semibold text-foreground">
+          Order summary
+        </h2>
+
+        <div className="mt-5 divide-y divide-border">
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-start justify-between gap-4 py-4 first:pt-0"
+            >
+              <div>
+                <p className="font-medium text-foreground">{item.name}</p>
+                <p className="mt-1 text-sm text-muted">
+                  ${item.price.toFixed(2)} × {item.quantity}
+                </p>
+              </div>
+              <p className="font-semibold text-foreground">
+                ${(item.price * item.quantity).toFixed(2)}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between gap-4 border-t border-border pt-5 text-xl font-bold text-foreground">
+          <span>Total</span>
+          <span>${total.toFixed(2)}</span>
+        </div>
+
+        {hasStockIssue && (
+          <p className="mt-4 text-sm text-danger" role="alert">
+            Some products are no longer available in the requested quantity.
+            Return to your cart to update them.
+          </p>
+        )}
+
+        {orderError && (
+          <p className="mt-4 text-sm text-danger" role="alert">
+            {orderError}
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={placeOrder}
+          disabled={isPlacingOrder || hasStockIssue}
+          className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isPlacingOrder ? "Placing order..." : "Place order"}
+        </button>
+      </div>
     </div>
   );
 }

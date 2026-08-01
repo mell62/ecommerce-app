@@ -1,84 +1,87 @@
 "use client";
 
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import type { Product } from "@prisma/client";
-import { getDiscountedPrice } from "@/lib/pricing";
+import { useCart } from "@/components/CartProvider";
 
-type AddToCartButtonProps = {
+type AddToCartButtonProps = Readonly<{
   product: Product;
-};
+}>;
 
-type StoredCartItem = {
-  id: string;
-  quantity: number;
-  [key: string]: unknown;
-};
-
-function isStoredCartItem(value: unknown): value is StoredCartItem {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "id" in value &&
-    typeof value.id === "string" &&
-    "quantity" in value &&
-    typeof value.quantity === "number" &&
-    Number.isInteger(value.quantity) &&
-    value.quantity > 0
-  );
-}
-
-function getStoredCart(): StoredCartItem[] {
-  const storedCart = localStorage.getItem("cart");
-
-  if (!storedCart) {
-    return [];
-  }
-
-  try {
-    const cart: unknown = JSON.parse(storedCart);
-
-    return Array.isArray(cart) ? cart.filter(isStoredCartItem) : [];
-  } catch {
-    return [];
-  }
-}
-
-export default function AddToCartButton({
-  product,
-}: AddToCartButtonProps) {
+export default function AddToCartButton({ product }: AddToCartButtonProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { items, isAuthenticated, isLoading, addProduct } = useCart();
+  const [isAdding, setIsAdding] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const cartItem = items.find((item) => item.id === product.id);
   const isOutOfStock = product.stockCount === 0;
+  const isAtStockLimit = (cartItem?.quantity ?? 0) >= product.stockCount;
+  const isDisabled =
+    isOutOfStock ||
+    isAtStockLimit ||
+    isAdding ||
+    (isAuthenticated && isLoading);
 
-  const finalPrice = getDiscountedPrice(product.price, product.discountPercent);
+  async function handleClick(): Promise<void> {
+    setMessage("");
+    setError("");
 
-  function handleClick(): void {
-    const existing = getStoredCart();
-
-    const found = existing.find((item) => item.id === product.id);
-
-    if (found) {
-      found.quantity += 1;
-    } else {
-      existing.push({
-        ...product,
-        price: finalPrice,
-        originalPrice: product.price,
-        quantity: 1,
-      });
+    if (!isAuthenticated) {
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
     }
 
-    localStorage.setItem("cart", JSON.stringify(existing));
+    setIsAdding(true);
 
-    window.dispatchEvent(new Event("cartUpdated"));
-
-    alert("Added to cart!");
+    try {
+      await addProduct(product.id);
+      setMessage("Added to cart.");
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Failed to add product to cart."
+      );
+    } finally {
+      setIsAdding(false);
+    }
   }
 
+  const label = isOutOfStock
+    ? "Out of stock"
+    : isAtStockLimit
+      ? "Maximum quantity in cart"
+      : isAdding
+        ? "Adding..."
+        : isLoading && isAuthenticated
+          ? "Loading cart..."
+          : "Add to cart";
+
   return (
-    <button
-      onClick={handleClick}
-      disabled={isOutOfStock}
-      className="mt-6 bg-black text-white px-6 py-3 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {isOutOfStock ? "Out of Stock" : "Add to Cart"}
-    </button>
+    <div className="mt-6">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={isDisabled}
+        className="inline-flex min-h-11 items-center justify-center rounded-ui bg-brand-600 px-6 py-3 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {label}
+      </button>
+
+      {message && (
+        <p className="mt-3 text-sm font-medium text-success" role="status">
+          {message}
+        </p>
+      )}
+
+      {error && (
+        <p className="mt-3 text-sm text-danger" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

@@ -11,6 +11,7 @@ import EditReviewButton from "@/components/EditReviewButton";
 import WishlistButton from "@/components/WishlistButton";
 import ProductImageZoom from "@/components/ProductImageZoom";
 import { getRandomReviewPlaceholder } from "@/lib/review-prompts";
+import StarRatingDisplay from "@/components/StarRatingDisplay";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -200,9 +201,38 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </section>
       {user ? (
         hasReviewed ? (
-          <p className="rounded border p-4 text-gray-700">
-            You have already reviewed this product.
-          </p>
+          <div className="mt-10 flex max-w-3xl items-start gap-4 rounded-ui border border-brand-100 bg-brand-50/60 p-5 sm:p-6">
+            <span
+              aria-hidden="true"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface text-brand-700 shadow-sm"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5">
+                <path
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="m5 12.5 4.2 4.2L19 7"
+                />
+              </svg>
+            </span>
+            <div>
+              <p className="font-display text-lg font-semibold text-foreground">
+                Your review is published
+              </p>
+              <p className="mt-1 text-sm leading-6 text-muted">
+                You can edit or delete it from the customer feedback below.
+              </p>
+              <Link
+                href="#reviews"
+                className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:text-brand-600"
+              >
+                View your review
+                <span aria-hidden="true">↓</span>
+              </Link>
+            </div>
+          </div>
         ) : (
           <ReviewForm
             productId={product.id}
@@ -221,38 +251,97 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </Link>
         </div>
       )}
-      <div className="mt-10">
-        <h2 id="reviews" className="mb-4 text-2xl font-bold">
-          Reviews
-        </h2>
+      <section
+        id="reviews"
+        aria-labelledby="reviews-heading"
+        className="mt-12 max-w-3xl border-t border-border pt-10"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-700">
+              Customer feedback
+            </p>
+            <h2
+              id="reviews-heading"
+              className="mt-1 font-display text-2xl font-semibold text-foreground sm:text-3xl"
+            >
+              Reviews
+            </h2>
+          </div>
+
+          <p className="text-sm text-muted">
+            {reviewCount} {reviewCount === 1 ? "review" : "reviews"}
+          </p>
+        </div>
 
         {product.reviews.length === 0 ? (
-          <p className="text-gray-600">No reviews yet.</p>
+          <div className="mt-6 rounded-ui border border-dashed border-border bg-surface p-6 text-center">
+            <p className="font-semibold text-foreground">No reviews yet</p>
+            <p className="mt-1 text-sm text-muted">
+              Be the first customer to share an experience with this product.
+            </p>
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div className="mt-6 space-y-4">
             {product.reviews.map((review) => (
-              <div key={review.id} className="border rounded p-4">
-                <div className="flex justify-between">
-                  <p className="font-semibold">{review.name}</p>
-                  <p>{"⭐".repeat(review.rating)}</p>
+              <article
+                key={review.id}
+                className="rounded-ui border border-border bg-surface p-5 shadow-sm sm:p-6"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 font-display font-semibold uppercase text-brand-700"
+                    >
+                      {review.name.charAt(0)}
+                    </span>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-foreground">
+                          {review.name}
+                        </p>
+                        {user?.id === review.userId && (
+                          <span className="rounded-ui bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700">
+                            Your review
+                          </span>
+                        )}
+                      </div>
+                      <time
+                        dateTime={review.createdAt.toISOString()}
+                        className="text-xs text-muted"
+                      >
+                        {new Intl.DateTimeFormat("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        }).format(review.createdAt)}
+                      </time>
+                    </div>
+                  </div>
+
+                  <StarRatingDisplay rating={review.rating} />
                 </div>
 
-                <p className="mt-2 text-gray-700">{review.comment}</p>
+                <p className="mt-4 break-words whitespace-pre-wrap leading-7 text-muted">
+                  {review.comment}
+                </p>
+
                 {user?.id === review.userId && (
-                  <EditReviewButton
-                    reviewId={review.id}
-                    initialRating={review.rating}
-                    initialComment={review.comment}
-                  />
+                  <div className="mt-5 flex flex-wrap gap-3 border-t border-border pt-4">
+                    <EditReviewButton
+                      reviewId={review.id}
+                      initialRating={review.rating}
+                      initialComment={review.comment}
+                    />
+                    <DeleteReviewButton reviewId={review.id} />
+                  </div>
                 )}
-                {user?.id === review.userId && (
-                  <DeleteReviewButton reviewId={review.id} />
-                )}
-              </div>
+              </article>
             ))}
           </div>
         )}
-      </div>
+      </section>
       <div className="mt-10">
         <h2 className="text-2xl font-bold mb-4">Related Products</h2>
 

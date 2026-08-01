@@ -36,13 +36,15 @@ export default function EditReviewButton({
 
   if (isEditing) {
     return (
-      <ReviewForm
-        reviewId={reviewId}
-        initialRating={initialRating}
-        initialComment={initialComment}
-        onCancel={() => setIsEditing(false)}
-        onSuccess={handleSuccess}
-      />
+      <div className="w-full shrink-0">
+        <ReviewForm
+          reviewId={reviewId}
+          initialRating={initialRating}
+          initialComment={initialComment}
+          onCancel={() => setIsEditing(false)}
+          onSuccess={handleSuccess}
+        />
+      </div>
     );
   }
 
@@ -54,9 +56,9 @@ export default function EditReviewButton({
           setSuccessMessage("");
           setIsEditing(true);
         }}
-        className="rounded border px-3 py-1"
+        className="inline-flex min-h-10 items-center justify-center rounded-ui border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:border-border-hover hover:text-brand-700"
       >
-        Edit Review
+        Edit review
       </button>
 
       {successMessage && (

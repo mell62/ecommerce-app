@@ -243,3 +243,146 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 }
+
+export async function PATCH(request: Request): Promise<Response> {
+  try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return Response.json(
+        { error: "You must be logged in to update your cart." },
+        { status: 401 }
+      );
+    }
+
+    const body = await getCartRequestBody(request);
+    const productId =
+      body && typeof body.productId === "string" ? body.productId.trim() : "";
+    const quantity = body?.quantity;
+
+    if (!productId) {
+      return Response.json(
+        { error: "Product ID is required." },
+        { status: 400 }
+      );
+    }
+
+    if (
+      typeof quantity !== "number" ||
+      !Number.isInteger(quantity) ||
+      quantity < 1
+    ) {
+      return Response.json(
+        { error: "Quantity must be a positive whole number." },
+        { status: 400 }
+      );
+    }
+
+    const result = await prisma.$transaction(
+      async (transaction) => {
+        const existingItem = await transaction.cartItem.findFirst({
+          where: {
+            productId,
+            cart: {
+              userId: user.id,
+            },
+          },
+          select: {
+            id: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                price: true,
+                imageUrl: true,
+                stockCount: true,
+                discountPercent: true,
+              },
+            },
+          },
+        });
+
+        if (!existingItem) {
+          return { outcome: "not-found" } as const;
+        }
+
+        if (quantity > existingItem.product.stockCount) {
+          return {
+            outcome: "insufficient-stock",
+            stockCount: existingItem.product.stockCount,
+          } as const;
+        }
+
+        const updatedItem = await transaction.cartItem.update({
+          where: {
+            id: existingItem.id,
+          },
+          data: {
+            quantity,
+          },
+          select: {
+            quantity: true,
+          },
+        });
+
+        return {
+          outcome: "success",
+          item: {
+            ...existingItem.product,
+            originalPrice: existingItem.product.price,
+            price: getDiscountedPrice(
+              existingItem.product.price,
+              existingItem.product.discountPercent
+            ),
+            quantity: updatedItem.quantity,
+          },
+        } as const;
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      }
+    );
+
+    if (result.outcome === "not-found") {
+      return Response.json(
+        { error: "Product is not in your cart." },
+        { status: 404 }
+      );
+    }
+
+    if (result.outcome === "insufficient-stock") {
+      return Response.json(
+        {
+          error:
+            result.stockCount === 0
+              ? "This product is out of stock."
+              : `Only ${result.stockCount} available.`,
+        },
+        { status: 409 }
+      );
+    }
+
+    return Response.json({
+      message: "Cart quantity updated.",
+      item: result.item,
+    });
+  } catch (error) {
+    console.error(error);
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2034"
+    ) {
+      return Response.json(
+        { error: "Your cart changed during this request. Please try again." },
+        { status: 409 }
+      );
+    }
+
+    return Response.json(
+      { error: "Failed to update cart quantity." },
+      { status: 500 }
+    );
+  }
+}

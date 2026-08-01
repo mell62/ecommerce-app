@@ -8,6 +8,7 @@ import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 import { getCurrentUser } from "@/lib/session";
 import DeleteReviewButton from "@/components/DeleteReviewButton";
 import EditReviewButton from "@/components/EditReviewButton";
+import WishlistButton from "@/components/WishlistButton";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -73,23 +74,69 @@ export default async function ProductPage({ params }: ProductPageProps) {
   );
 
   return (
-    <div className="max-w-4xl mx-auto p-8">
-      <div className="grid md:grid-cols-2 gap-8">
-        <Image
-          src={product.imageUrl}
-          alt={product.name}
-          width={800}
-          height={600}
-          sizes="(min-width: 768px) 50vw, 100vw"
-          className="w-full rounded-lg"
-        />
+    <main className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-8 sm:py-10 lg:py-12">
+      <nav aria-label="Breadcrumb" className="mb-6 text-sm text-muted">
+        <ol className="flex flex-wrap items-center gap-2">
+          <li>
+            <Link className="hover:text-brand-700" href="/products">
+              Products
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li>
+            <Link
+              className="hover:text-brand-700"
+              href={`/products?category=${encodeURIComponent(product.category)}`}
+            >
+              {product.category}
+            </Link>
+          </li>
+          <li aria-hidden="true">/</li>
+          <li aria-current="page" className="text-foreground">
+            {product.name}
+          </li>
+        </ol>
+      </nav>
 
-        <div>
-          <h1 className="text-3xl font-bold">{product.name}</h1>
+      <section
+        aria-labelledby="product-title"
+        className="grid gap-8 min-[75rem]:grid-cols-[minmax(0,1.08fr)_minmax(22rem,0.92fr)] min-[75rem]:items-center min-[75rem]:gap-12"
+      >
+        <div className="relative isolate mx-auto flex aspect-[4/3] w-full max-w-[36rem] items-center justify-center">
+          <div
+            aria-hidden="true"
+            className="absolute left-1/2 top-1/2 -z-10 h-full w-full -translate-x-1/2 -translate-y-1/2 rounded-[50%] bg-brand-100/90 blur-3xl"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute bottom-[5%] left-1/2 -z-10 h-8 w-2/3 -translate-x-1/2 rounded-[50%] bg-foreground/15 blur-2xl"
+          />
+
+          <Image
+            src={product.imageUrl}
+            alt={product.name}
+            width={800}
+            height={600}
+            priority
+            sizes="(min-width: 1200px) 55vw, (min-width: 640px) 576px, 100vw"
+            className="relative z-10 h-[90%] w-[90%] object-contain drop-shadow-xl"
+          />
+        </div>
+
+        <div className="max-w-xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand-700">
+            {product.category}
+          </p>
+          <h1
+            id="product-title"
+            className="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl"
+          >
+            {product.name}
+          </h1>
 
           {productHasDiscount && (
-            <span className="inline-block mt-3 rounded bg-green-100 px-3 py-1 text-sm font-medium text-green-700">
-              {product.discountPercent}% OFF
+            <span className="mt-4 inline-block rounded-ui bg-deal/10 px-3 py-1 text-sm font-semibold text-deal">
+              {product.discountPercent}% off · Deal price
             </span>
           )}
 
@@ -104,41 +151,58 @@ export default async function ProductPage({ params }: ProductPageProps) {
             )}
           </div>
 
-          <p className="mt-4 text-gray-600">{product.description}</p>
+          <p className="mt-5 text-base leading-7 text-muted sm:text-lg">
+            {product.description}
+          </p>
 
           {productHasDiscount ? (
-            <div className="mt-6">
-              <p className="text-2xl font-bold">
+            <div className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <p className="text-3xl font-bold tracking-tight text-foreground">
                 ${discountedPrice.toFixed(2)}
               </p>
 
-              <p className="text-gray-500 line-through">
+              <p className="text-base text-muted line-through">
                 ${product.price.toFixed(2)}
               </p>
 
-              <p className="text-sm text-green-700">
-                {product.discountPercent}% off
+              <p className="w-full text-sm font-semibold text-deal">
+                Save ${(product.price - discountedPrice).toFixed(2)}
               </p>
             </div>
           ) : (
-            <p className="mt-6 text-2xl font-bold">
+            <p className="mt-7 text-3xl font-bold tracking-tight text-foreground">
               ${product.price.toFixed(2)}
             </p>
           )}
 
-          {product.stockCount === 0 ? (
-            <p className="mt-2 text-red-600 font-medium">Out of stock</p>
-          ) : product.stockCount <= 10 ? (
-            <p className="mt-2 text-orange-600 font-medium">
-              Only {product.stockCount} left
-            </p>
-          ) : (
-            <p className="mt-2 text-green-600 font-medium">In stock</p>
-          )}
+          <div className="mt-5 flex items-center gap-2 border-y border-border py-3 text-sm font-semibold">
+            <span
+              aria-hidden="true"
+              className={`h-2.5 w-2.5 rounded-full ${
+                product.stockCount === 0
+                  ? "bg-danger"
+                  : product.stockCount <= 10
+                    ? "bg-warning"
+                    : "bg-success"
+              }`}
+            />
+            {product.stockCount === 0 ? (
+              <p className="text-danger">Out of stock</p>
+            ) : product.stockCount <= 10 ? (
+              <p className="text-warning">Only {product.stockCount} left</p>
+            ) : (
+              <p className="text-success">In stock</p>
+            )}
+          </div>
 
-          <AddToCartButton product={product} />
+          <div className="mt-1 flex flex-wrap items-start gap-3">
+            <AddToCartButton product={product} />
+            <div className="mt-6">
+              <WishlistButton product={product} />
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
       {user ? (
         hasReviewed ? (
           <p className="rounded border p-4 text-gray-700">
@@ -160,7 +224,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
       )}
       <div className="mt-10">
-        <h2 className="text-2xl font-bold mb-4">Reviews</h2>
+        <h2 id="reviews" className="mb-4 text-2xl font-bold">
+          Reviews
+        </h2>
 
         {product.reviews.length === 0 ? (
           <p className="text-gray-600">No reviews yet.</p>
@@ -255,6 +321,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 }

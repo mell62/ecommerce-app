@@ -1,36 +1,20 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getDiscountedPrice } from "@/lib/pricing";
 import { getCurrentUser } from "@/lib/session";
 
-type OrderRequestItem = {
-  id: string;
-  quantity: number;
-};
+class StockConflictError extends Error {
+  productName: string;
 
-type ValidatedOrderItem = {
-  productId: string;
-  quantity: number;
-  price: number;
-};
-
-function isOrderRequestItem(value: unknown): value is OrderRequestItem {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "id" in value &&
-    typeof value.id === "string" &&
-    value.id.length > 0 &&
-    "quantity" in value &&
-    typeof value.quantity === "number" &&
-    Number.isInteger(value.quantity) &&
-    value.quantity > 0
-  );
+  constructor(productName: string) {
+    super(`${productName} does not have enough stock available.`);
+    this.name = "StockConflictError";
+    this.productName = productName;
+  }
 }
 
-export async function POST(request: Request): Promise<Response> {
+export async function POST(): Promise<Response> {
   try {
-    const body: unknown = await request.json();
-
     const user = await getCurrentUser();
 
     if (!user) {
@@ -40,117 +24,151 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    if (
-      typeof body !== "object" ||
-      body === null ||
-      !("items" in body) ||
-      !Array.isArray(body.items)
-    ) {
-      return Response.json(
-        { error: "Order items are required." },
-        { status: 400 }
-      );
-    }
-
-    if (body.items.length === 0) {
-      return Response.json(
-        { error: "Order must contain at least one item" },
-        { status: 400 }
-      );
-    }
-
-    const validatedItems: ValidatedOrderItem[] = [];
-
-    for (const item of body.items) {
-      if (!isOrderRequestItem(item)) {
-        return Response.json(
-          { error: "Each order item needs a valid product ID and quantity." },
-          { status: 400 }
-        );
-      }
-
-      const product = await prisma.product.findUnique({
-        where: {
-          id: item.id,
-        },
-      });
-
-      if (!product) {
-        return Response.json(
-          { error: `Product not found: ${item.id}` },
-          { status: 404 }
-        );
-      }
-
-      if (product.stockCount < item.quantity) {
-        return Response.json(
-          {
-            error: `${product.name} does not have enough stock available.`,
-          },
-          { status: 400 }
-        );
-      }
-
-      const finalPrice = getDiscountedPrice(
-        product.price,
-        product.discountPercent
-      );
-
-      validatedItems.push({
-        productId: product.id,
-        quantity: item.quantity,
-        price: finalPrice,
-      });
-    }
-
-    const validatedTotalPrice = validatedItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-
-    const order = await prisma.$transaction(async (tx) => {
-      const createdOrder = await tx.order.create({
-        data: {
-          status: "PENDING",
-          totalPrice: validatedTotalPrice,
-          userId: user.id,
-          items: {
-            create: validatedItems.map((item) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              price: item.price,
-            })),
-          },
-        },
-        include: {
-          items: {
-            include: {
-              product: true,
-            },
-          },
-        },
-      });
-
-      for (const item of validatedItems) {
-        await tx.product.update({
+    const result = await prisma.$transaction(
+      async (transaction) => {
+        const cart = await transaction.cart.findUnique({
           where: {
-            id: item.productId,
+            userId: user.id,
           },
-          data: {
-            stockCount: {
-              decrement: item.quantity,
+          select: {
+            id: true,
+            items: {
+              select: {
+                quantity: true,
+                product: {
+                  select: {
+                    id: true,
+                    name: true,
+                    price: true,
+                    stockCount: true,
+                    discountPercent: true,
+                  },
+                },
+              },
             },
           },
         });
+
+        if (!cart || cart.items.length === 0) {
+          return { outcome: "empty-cart" } as const;
+        }
+
+        const unavailableItem = cart.items.find(
+          (item) => item.quantity > item.product.stockCount
+        );
+
+        if (unavailableItem) {
+          return {
+            outcome: "insufficient-stock",
+            productName: unavailableItem.product.name,
+            stockCount: unavailableItem.product.stockCount,
+          } as const;
+        }
+
+        const orderItems = cart.items.map(({ product, quantity }) => ({
+          productId: product.id,
+          quantity,
+          price: getDiscountedPrice(product.price, product.discountPercent),
+        }));
+
+        const totalPrice = orderItems.reduce(
+          (total, item) => total + item.price * item.quantity,
+          0
+        );
+
+        const order = await transaction.order.create({
+          data: {
+            status: "PENDING",
+            totalPrice,
+            userId: user.id,
+            items: {
+              create: orderItems,
+            },
+          },
+          include: {
+            items: {
+              include: {
+                product: true,
+              },
+            },
+          },
+        });
+
+        for (const item of orderItems) {
+          const updateResult = await transaction.product.updateMany({
+            where: {
+              id: item.productId,
+              stockCount: {
+                gte: item.quantity,
+              },
+            },
+            data: {
+              stockCount: {
+                decrement: item.quantity,
+              },
+            },
+          });
+
+          if (updateResult.count === 0) {
+            const productName =
+              cart.items.find(
+                (cartItem) => cartItem.product.id === item.productId
+              )?.product.name ?? "A product";
+
+            throw new StockConflictError(productName);
+          }
+        }
+
+        await transaction.cartItem.deleteMany({
+          where: {
+            cartId: cart.id,
+          },
+        });
+
+        return {
+          outcome: "success",
+          order,
+        } as const;
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
       }
+    );
 
-      return createdOrder;
-    });
+    if (result.outcome === "empty-cart") {
+      return Response.json({ error: "Your cart is empty." }, { status: 400 });
+    }
 
-    return Response.json(order);
+    if (result.outcome === "insufficient-stock") {
+      return Response.json(
+        {
+          error:
+            result.stockCount === 0
+              ? `${result.productName} is out of stock.`
+              : `${result.productName} only has ${result.stockCount} available.`,
+        },
+        { status: 409 }
+      );
+    }
+
+    return Response.json(result.order, { status: 201 });
   } catch (error) {
     console.error(error);
 
-    return Response.json({ error: "Failed to create order" }, { status: 500 });
+    if (error instanceof StockConflictError) {
+      return Response.json({ error: error.message }, { status: 409 });
+    }
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2034"
+    ) {
+      return Response.json(
+        { error: "Stock changed during checkout. Please try again." },
+        { status: 409 }
+      );
+    }
+
+    return Response.json({ error: "Failed to create order." }, { status: 500 });
   }
 }

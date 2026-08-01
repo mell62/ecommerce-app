@@ -247,14 +247,45 @@ export default async function ProductPage({ params }: ProductPageProps) {
           />
         )
       ) : (
-        <div className="rounded border p-4">
-          <p className="mb-3 text-gray-700">Log in to leave a review.</p>
+        <div className="mt-10 flex max-w-3xl flex-col gap-5 rounded-ui border border-border bg-surface p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div className="flex items-start gap-4">
+            <span
+              aria-hidden="true"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5">
+                <path
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.8"
+                  d="M7.5 18.5 4 20l1.1-3.9A7.5 7.5 0 1 1 7.5 18.5Z"
+                />
+                <path
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeWidth="1.8"
+                  d="M8.5 11.5h7M8.5 8.5h4.5"
+                />
+              </svg>
+            </span>
+            <div>
+              <p className="font-display text-lg font-semibold text-foreground">
+                Share your experience
+              </p>
+              <p className="mt-1 text-sm leading-6 text-muted">
+                Log in to rate this product and help other customers decide.
+              </p>
+            </div>
+          </div>
 
           <Link
             href={`/login?redirect=/products/${product.id}`}
-            className="inline-block rounded bg-black px-4 py-2 text-white"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
           >
-            Log In to Review
+            Log in to review
           </Link>
         </div>
       )}

@@ -386,3 +386,54 @@ export async function PATCH(request: Request): Promise<Response> {
     );
   }
 }
+
+export async function DELETE(request: Request): Promise<Response> {
+  try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return Response.json(
+        { error: "You must be logged in to remove products from your cart." },
+        { status: 401 }
+      );
+    }
+
+    const body = await getCartRequestBody(request);
+    const productId =
+      body && typeof body.productId === "string" ? body.productId.trim() : "";
+
+    if (!productId) {
+      return Response.json(
+        { error: "Product ID is required." },
+        { status: 400 }
+      );
+    }
+
+    const result = await prisma.cartItem.deleteMany({
+      where: {
+        productId,
+        cart: {
+          userId: user.id,
+        },
+      },
+    });
+
+    if (result.count === 0) {
+      return Response.json(
+        { error: "Product is not in your cart." },
+        { status: 404 }
+      );
+    }
+
+    return Response.json({
+      message: "Product removed from cart.",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return Response.json(
+      { error: "Failed to remove product from cart." },
+      { status: 500 }
+    );
+  }
+}

@@ -72,7 +72,7 @@ model Cart {
   id     String @id @default(cuid())
   userId String @unique
 
-  user  User       @relation(fields: [userId], references: [id])
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   items CartItem[]
 }
 
@@ -82,8 +82,10 @@ model CartItem {
   productId String
   quantity  Int
 
-  cart    Cart    @relation(fields: [cartId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
 }
 
 model Wishlist {

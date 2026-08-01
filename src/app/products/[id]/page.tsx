@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/lib/session";
 import DeleteReviewButton from "@/components/DeleteReviewButton";
 import EditReviewButton from "@/components/EditReviewButton";
 import WishlistButton from "@/components/WishlistButton";
+import ProductImageZoom from "@/components/ProductImageZoom";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -112,15 +113,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             className="absolute bottom-[5%] left-1/2 -z-10 h-8 w-2/3 -translate-x-1/2 rounded-[50%] bg-foreground/15 blur-2xl"
           />
 
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            width={800}
-            height={600}
-            priority
-            sizes="(min-width: 1200px) 55vw, (min-width: 640px) 576px, 100vw"
-            className="relative z-10 h-[90%] w-[90%] object-contain drop-shadow-xl"
-          />
+          <ProductImageZoom src={product.imageUrl} alt={product.name} />
         </div>
 
         <div className="max-w-xl">

@@ -5,6 +5,46 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
 
+function CartLoadingSkeleton() {
+  return (
+    <div
+      className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start"
+      role="status"
+      aria-label="Loading cart"
+    >
+      <span className="sr-only">Loading cart...</span>
+
+      <div className="space-y-4" aria-hidden="true">
+        {[1, 2].map((skeletonItem) => (
+          <div
+            key={skeletonItem}
+            className="flex animate-pulse flex-col gap-4 rounded-ui border border-border bg-surface p-4 sm:flex-row"
+          >
+            <div className="aspect-[4/3] w-full rounded-ui bg-surface-muted sm:w-40 sm:shrink-0" />
+            <div className="flex flex-1 flex-col py-1">
+              <div className="h-5 w-2/3 rounded bg-surface-muted" />
+              <div className="mt-4 h-11 w-36 rounded-ui bg-surface-muted" />
+              <div className="mt-auto flex items-end justify-between gap-4 pt-5">
+                <div className="h-5 w-20 rounded bg-surface-muted" />
+                <div className="h-10 w-20 rounded-ui bg-surface-muted" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div
+        aria-hidden="true"
+        className="animate-pulse rounded-ui border border-border bg-surface p-5"
+      >
+        <div className="h-5 w-28 rounded bg-surface-muted" />
+        <div className="mt-5 h-px bg-border" />
+        <div className="mt-5 h-12 w-full rounded-ui bg-surface-muted" />
+      </div>
+    </div>
+  );
+}
+
 export default function CartContents() {
   const {
     items,
@@ -78,11 +118,7 @@ export default function CartContents() {
   }
 
   if (isLoading) {
-    return (
-      <p className="text-muted" role="status">
-        Loading cart...
-      </p>
-    );
+    return <CartLoadingSkeleton />;
   }
 
   if (loadError) {

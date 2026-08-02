@@ -2,12 +2,20 @@ import CartContents from "@/components/CartContents";
 
 export default function CartPage() {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
-      <h1 className="mb-8 font-display text-4xl font-bold tracking-tight text-foreground">
-        Cart
-      </h1>
+    <main className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-8 sm:py-10 lg:py-12">
+      <header className="mb-8 max-w-2xl sm:mb-10">
+        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand-700">
+          Review your setup
+        </p>
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+          Shopping cart
+        </h1>
+        <p className="mt-3 text-base leading-7 text-muted sm:text-lg">
+          Check quantities and availability before continuing to checkout.
+        </p>
+      </header>
 
       <CartContents />
-    </div>
+    </main>
   );
 }

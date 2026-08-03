@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import { calculateOrderPricing, ESTIMATED_TAX_RATE } from "@/lib/pricing";
+import CheckoutSummarySkeleton from "@/components/CheckoutSummarySkeleton";
 
 function getOrderError(data: unknown): string {
   if (
@@ -67,24 +68,12 @@ export default function CheckoutContents() {
   }
 
   if (isLoading) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
-        <h1 className="mb-6 font-display text-4xl font-bold tracking-tight text-foreground">
-          Checkout
-        </h1>
-        <p className="text-muted" role="status">
-          Loading checkout...
-        </p>
-      </div>
-    );
+    return <CheckoutSummarySkeleton />;
   }
 
   if (loadError) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
-        <h1 className="mb-6 font-display text-4xl font-bold tracking-tight text-foreground">
-          Checkout
-        </h1>
+      <div className="max-w-3xl">
         <div
           className="rounded-ui border border-border bg-surface p-6"
           role="alert"
@@ -98,10 +87,7 @@ export default function CheckoutContents() {
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
-        <h1 className="mb-6 font-display text-4xl font-bold tracking-tight text-foreground">
-          Checkout
-        </h1>
+      <div className="max-w-3xl">
         <div className="rounded-ui border border-border bg-surface p-6 sm:p-8">
           <h2 className="text-xl font-semibold text-foreground">
             Your cart is empty
@@ -121,11 +107,7 @@ export default function CheckoutContents() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
-      <h1 className="mb-8 font-display text-4xl font-bold tracking-tight text-foreground">
-        Checkout
-      </h1>
-
+    <div className="max-w-3xl">
       <div className="rounded-ui border border-border bg-surface p-5 shadow-sm sm:p-6">
         <h2 className="font-display text-xl font-semibold text-foreground">
           Order summary

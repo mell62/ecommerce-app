@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
+import { calculateOrderPricing, ESTIMATED_TAX_RATE } from "@/lib/pricing";
 
 function CartLoadingSkeleton() {
   return (
@@ -152,10 +153,11 @@ export default function CartContents() {
     );
   }
 
-  const total = items.reduce(
+  const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+  const pricing = calculateOrderPricing(subtotal);
   const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   const hasStockIssue = items.some(
     (item) => item.stockCount === 0 || item.quantity > item.stockCount
@@ -303,13 +305,49 @@ export default function CartContents() {
             </div>
             <div className="flex items-center justify-between gap-4 border-t border-border pt-4 text-lg font-bold text-foreground">
               <dt>Subtotal</dt>
-              <dd>${total.toFixed(2)}</dd>
+              <dd>${pricing.subtotal.toFixed(2)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 text-muted">
+              <dt>Shipping</dt>
+              <dd>
+                {pricing.shippingCost === 0
+                  ? "Free"
+                  : `$${pricing.shippingCost.toFixed(2)}`}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 text-muted">
+              <dt>Estimated tax ({ESTIMATED_TAX_RATE * 100}%)</dt>
+              <dd>${pricing.estimatedTax.toFixed(2)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 border-t border-border pt-4 text-lg font-bold text-foreground">
+              <dt>Estimated total</dt>
+              <dd>${pricing.total.toFixed(2)}</dd>
             </div>
           </dl>
 
-          <p className="mt-3 text-xs leading-5 text-muted">
-            Shipping and taxes are calculated during checkout.
-          </p>
+          <div className="mt-4 rounded-ui bg-brand-50 p-3">
+            <p className="text-sm font-semibold text-brand-700">
+              {pricing.qualifiesForFreeShipping
+                ? "Free shipping unlocked."
+                : `Add $${pricing.amountUntilFreeShipping.toFixed(2)} more for free shipping.`}
+            </p>
+            <div
+              aria-hidden="true"
+              className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-100"
+            >
+              <div
+                className="h-full rounded-full bg-brand-600 transition-[width] duration-300 ease-[var(--store-ease-emphasized)]"
+                style={{
+                  width: `${Math.min(
+                    100,
+                    (pricing.subtotal /
+                      (pricing.subtotal + pricing.amountUntilFreeShipping)) *
+                      100
+                  )}%`,
+                }}
+              />
+            </div>
+          </div>
 
           {hasStockIssue ? (
             <>

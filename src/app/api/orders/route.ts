@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { getDiscountedPrice } from "@/lib/pricing";
+import { calculateOrderPricing, getDiscountedPrice } from "@/lib/pricing";
 import { getCurrentUser } from "@/lib/session";
 
 class StockConflictError extends Error {
@@ -71,15 +71,19 @@ export async function POST(): Promise<Response> {
           price: getDiscountedPrice(product.price, product.discountPercent),
         }));
 
-        const totalPrice = orderItems.reduce(
+        const subtotal = orderItems.reduce(
           (total, item) => total + item.price * item.quantity,
           0
         );
+        const pricing = calculateOrderPricing(subtotal);
 
         const order = await transaction.order.create({
           data: {
             status: "PENDING",
-            totalPrice,
+            subtotal: pricing.subtotal,
+            shippingCost: pricing.shippingCost,
+            estimatedTax: pricing.estimatedTax,
+            totalPrice: pricing.total,
             userId: user.id,
             items: {
               create: orderItems,

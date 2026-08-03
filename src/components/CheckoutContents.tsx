@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
+import { calculateOrderPricing, ESTIMATED_TAX_RATE } from "@/lib/pricing";
 
 function getOrderError(data: unknown): string {
   if (
@@ -23,10 +24,11 @@ export default function CheckoutContents() {
   const { items, isLoading, loadError, clearCart } = useCart();
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderError, setOrderError] = useState("");
-  const total = items.reduce(
+  const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+  const pricing = calculateOrderPricing(subtotal);
   const hasStockIssue = items.some(
     (item) => item.stockCount === 0 || item.quantity > item.stockCount
   );
@@ -148,10 +150,28 @@ export default function CheckoutContents() {
           ))}
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-t border-border pt-5 text-xl font-bold text-foreground">
-          <span>Total</span>
-          <span>${total.toFixed(2)}</span>
-        </div>
+        <dl className="space-y-3 border-t border-border pt-5 text-sm">
+          <div className="flex items-center justify-between gap-4 text-muted">
+            <dt>Subtotal</dt>
+            <dd>${pricing.subtotal.toFixed(2)}</dd>
+          </div>
+          <div className="flex items-center justify-between gap-4 text-muted">
+            <dt>Shipping</dt>
+            <dd>
+              {pricing.shippingCost === 0
+                ? "Free"
+                : `$${pricing.shippingCost.toFixed(2)}`}
+            </dd>
+          </div>
+          <div className="flex items-center justify-between gap-4 text-muted">
+            <dt>Estimated tax ({ESTIMATED_TAX_RATE * 100}%)</dt>
+            <dd>${pricing.estimatedTax.toFixed(2)}</dd>
+          </div>
+          <div className="flex items-center justify-between gap-4 border-t border-border pt-4 text-xl font-bold text-foreground">
+            <dt>Total</dt>
+            <dd>${pricing.total.toFixed(2)}</dd>
+          </div>
+        </dl>
 
         {hasStockIssue && (
           <p className="mt-4 text-sm text-danger" role="alert">

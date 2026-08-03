@@ -47,11 +47,14 @@ model Product {
 }
 
 model Order {
-  id         String   @id @default(cuid())
-  userId     String
-  status     String
-  totalPrice Float
-  createdAt  DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  status       String
+  subtotal     Float    @default(0)
+  shippingCost Float    @default(0)
+  estimatedTax Float    @default(0)
+  totalPrice   Float
+  createdAt    DateTime @default(now())
 
   user  User        @relation(fields: [userId], references: [id])
   items OrderItem[]

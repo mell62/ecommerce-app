@@ -191,7 +191,7 @@ export default function CartContents() {
               >
                 <Link
                   href={`/products/${item.id}`}
-                  className="flex aspect-[4/3] w-full shrink-0 items-center justify-center overflow-hidden rounded-ui bg-brand-50 p-2 sm:w-40"
+                  className="group relative isolate flex aspect-[4/3] w-full shrink-0 items-center justify-center overflow-hidden rounded-ui border border-border/70 bg-surface p-1.5 before:absolute before:inset-[18%] before:rounded-full before:bg-brand-100/65 before:blur-xl sm:w-40"
                 >
                   <Image
                     src={item.imageUrl}
@@ -199,7 +199,7 @@ export default function CartContents() {
                     width={160}
                     height={120}
                     sizes="(min-width: 640px) 160px, 100vw"
-                    className="h-full w-full object-contain transition-transform duration-300 hover:scale-[1.03]"
+                    className="relative z-10 h-full w-full object-contain drop-shadow-lg transition-transform duration-300 ease-[var(--store-ease-emphasized)] group-hover:scale-[1.03]"
                   />
                 </Link>
 

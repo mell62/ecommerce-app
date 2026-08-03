@@ -137,7 +137,7 @@ export default function CheckoutContents() {
             >
               <Link
                 href={`/products/${item.id}`}
-                className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-ui bg-brand-50 p-2 sm:size-24"
+                className="group relative isolate flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-ui border border-border/70 bg-surface p-1 before:absolute before:inset-[16%] before:rounded-full before:bg-brand-100/65 before:blur-lg sm:size-24 sm:p-1.5"
               >
                 <Image
                   src={item.imageUrl}
@@ -145,7 +145,7 @@ export default function CheckoutContents() {
                   width={96}
                   height={96}
                   sizes="(min-width: 640px) 96px, 80px"
-                  className="h-full w-full object-contain transition-transform duration-300 hover:scale-[1.03]"
+                  className="relative z-10 h-full w-full object-contain drop-shadow-lg transition-transform duration-300 ease-[var(--store-ease-emphasized)] group-hover:scale-[1.03]"
                 />
               </Link>
 

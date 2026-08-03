@@ -10,6 +10,28 @@ type OrdersPageProps = Readonly<{
   }>;
 }>;
 
+function formatOrderStatus(status: string): string {
+  return status
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getOrderStatusClassName(status: string): string {
+  switch (status.toUpperCase()) {
+    case "DELIVERED":
+      return "border-success/25 bg-success/5 text-success";
+    case "CANCELLED":
+      return "border-danger/25 bg-danger/5 text-danger";
+    case "PROCESSING":
+    case "SHIPPED":
+      return "border-brand-500/25 bg-brand-50 text-brand-700";
+    default:
+      return "border-warning/25 bg-warning/5 text-warning";
+  }
+}
+
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const user = await getCurrentUser();
 
@@ -113,47 +135,121 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
               month: "long",
               day: "numeric",
             });
+            const totalQuantity = order.items.reduce(
+              (total, item) => total + item.quantity,
+              0
+            );
+            const hasPricingBreakdown =
+              order.subtotal > 0 || order.totalPrice === 0;
 
             return (
-              <div key={order.id} className="border rounded-lg p-4">
-                <h2 className="font-bold">Order #{order.id.slice(-6)}</h2>
+              <article
+                key={order.id}
+                className="overflow-hidden rounded-ui border border-border bg-surface shadow-sm"
+              >
+                <header className="flex flex-col gap-4 border-b border-border bg-surface-muted/35 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <h2 className="font-display text-lg font-semibold text-foreground">
+                        Order #{order.id.slice(-8).toUpperCase()}
+                      </h2>
+                      <span className="text-sm text-muted">
+                        {totalQuantity} {totalQuantity === 1 ? "item" : "items"}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-muted">
+                      Placed on {orderDate}
+                    </p>
+                  </div>
 
-                <p className="text-sm text-gray-600">Placed on {orderDate}</p>
+                  <span
+                    className={`inline-flex w-fit items-center rounded-full border px-3 py-1 text-xs font-semibold ${getOrderStatusClassName(order.status)}`}
+                  >
+                    {formatOrderStatus(order.status)}
+                  </span>
+                </header>
 
-                <span className="inline-block mt-2 rounded bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700">
-                  {order.status}
-                </span>
-
-                <p>Total: ${order.totalPrice.toFixed(2)}</p>
-
-                <ul className="mt-4 space-y-2">
+                <ul className="divide-y divide-border px-4 sm:px-6">
                   {order.items.map((item) => (
                     <li
                       key={item.id}
-                      className="flex items-center justify-between gap-4 py-3"
+                      className="flex items-center gap-4 py-4 sm:py-5"
                     >
-                      <div className="flex items-center gap-3">
+                      <Link
+                        href={`/products/${item.product.id}`}
+                        className="group relative isolate flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-ui border border-border/70 bg-surface p-1 before:absolute before:inset-[16%] before:rounded-full before:bg-brand-100/65 before:blur-lg sm:size-20 sm:p-1.5"
+                      >
                         <Image
                           src={item.product.imageUrl}
                           alt={item.product.name}
-                          width={56}
-                          height={56}
-                          sizes="56px"
-                          className="h-14 w-14 rounded object-cover"
+                          width={80}
+                          height={80}
+                          sizes="(min-width: 640px) 80px, 64px"
+                          className="relative z-10 h-full w-full object-contain drop-shadow-lg transition-transform duration-300 ease-[var(--store-ease-emphasized)] group-hover:scale-[1.03]"
                         />
+                      </Link>
 
-                        <span>
-                          {item.product.name} &times; {item.quantity}
-                        </span>
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          href={`/products/${item.product.id}`}
+                          className="font-display font-semibold text-foreground hover:text-brand-700"
+                        >
+                          {item.product.name}
+                        </Link>
+                        <p className="mt-1 text-sm text-muted">
+                          Quantity {item.quantity}{" "}
+                          <span aria-hidden="true">·</span> $
+                          {item.price.toFixed(2)} each
+                        </p>
                       </div>
 
-                      <span className="font-medium">
+                      <span className="shrink-0 self-start pt-1 font-semibold text-foreground">
                         ${(item.price * item.quantity).toFixed(2)}
                       </span>
                     </li>
                   ))}
                 </ul>
-              </div>
+
+                <footer className="border-t border-border bg-surface-muted/20 px-4 py-4 sm:px-6">
+                  {hasPricingBreakdown ? (
+                    <dl className="grid gap-3 text-sm sm:grid-cols-4">
+                      <div>
+                        <dt className="text-muted">Subtotal</dt>
+                        <dd className="mt-1 font-semibold text-foreground">
+                          ${order.subtotal.toFixed(2)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted">Shipping</dt>
+                        <dd className="mt-1 font-semibold text-foreground">
+                          {order.shippingCost === 0
+                            ? "Free"
+                            : `$${order.shippingCost.toFixed(2)}`}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted">Estimated tax</dt>
+                        <dd className="mt-1 font-semibold text-foreground">
+                          ${order.estimatedTax.toFixed(2)}
+                        </dd>
+                      </div>
+                      <div className="border-t border-border pt-3 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+                        <dt className="text-muted">Total</dt>
+                        <dd className="mt-1 text-lg font-bold text-foreground">
+                          ${order.totalPrice.toFixed(2)}
+                        </dd>
+                      </div>
+                    </dl>
+                  ) : (
+                    <dl className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-muted">Order total</dt>
+                      <dd className="text-lg font-bold text-foreground">
+                        ${order.totalPrice.toFixed(2)}
+                      </dd>
+                    </dl>
+                  )}
+                </footer>
+              </article>
             );
           })}
         </div>

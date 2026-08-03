@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
@@ -30,6 +31,7 @@ export default function CheckoutContents() {
     0
   );
   const pricing = calculateOrderPricing(subtotal);
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   const hasStockIssue = items.some(
     (item) => item.stockCount === 0 || item.quantity > item.stockCount
   );
@@ -107,32 +109,82 @@ export default function CheckoutContents() {
   }
 
   return (
-    <div className="max-w-3xl">
-      <div className="rounded-ui border border-border bg-surface p-5 shadow-sm sm:p-6">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+      <section className="rounded-ui border border-border bg-surface p-4 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+          <div>
+            <h2 className="font-display text-xl font-semibold text-foreground">
+              Your products
+            </h2>
+            <p className="mt-1 text-sm text-muted">
+              {totalQuantity} {totalQuantity === 1 ? "item" : "items"} ready to
+              order
+            </p>
+          </div>
+          <Link
+            href="/cart"
+            className="inline-flex min-h-10 items-center justify-center rounded-ui px-3 text-sm font-semibold text-brand-700 hover:bg-brand-50"
+          >
+            Edit cart
+          </Link>
+        </div>
+
+        <div className="divide-y divide-border">
+          {items.map((item) => (
+            <article
+              key={item.id}
+              className="flex items-center gap-4 py-5 last:pb-1"
+            >
+              <Link
+                href={`/products/${item.id}`}
+                className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-ui bg-brand-50 p-2 sm:size-24"
+              >
+                <Image
+                  src={item.imageUrl}
+                  alt={item.name}
+                  width={96}
+                  height={96}
+                  sizes="(min-width: 640px) 96px, 80px"
+                  className="h-full w-full object-contain transition-transform duration-300 hover:scale-[1.03]"
+                />
+              </Link>
+
+              <div className="min-w-0 flex-1">
+                <Link
+                  href={`/products/${item.id}`}
+                  className="font-display font-semibold text-foreground hover:text-brand-700"
+                >
+                  {item.name}
+                </Link>
+                <p className="mt-1 text-sm text-muted">
+                  Quantity {item.quantity} <span aria-hidden="true">·</span> $
+                  {item.price.toFixed(2)} each
+                </p>
+                {item.price !== item.originalPrice && (
+                  <p className="mt-1 text-xs font-medium text-brand-700">
+                    {item.discountPercent}% discount applied
+                  </p>
+                )}
+              </div>
+
+              <p className="shrink-0 self-start pt-1 font-semibold text-foreground">
+                ${(item.price * item.quantity).toFixed(2)}
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <aside className="rounded-ui border border-border bg-surface p-5 shadow-sm lg:sticky lg:top-24">
         <h2 className="font-display text-xl font-semibold text-foreground">
           Order summary
         </h2>
 
-        <div className="mt-5 divide-y divide-border">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-start justify-between gap-4 py-4 first:pt-0"
-            >
-              <div>
-                <p className="font-medium text-foreground">{item.name}</p>
-                <p className="mt-1 text-sm text-muted">
-                  ${item.price.toFixed(2)} × {item.quantity}
-                </p>
-              </div>
-              <p className="font-semibold text-foreground">
-                ${(item.price * item.quantity).toFixed(2)}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <dl className="space-y-3 border-t border-border pt-5 text-sm">
+        <dl className="mt-5 space-y-3 text-sm">
+          <div className="flex items-center justify-between gap-4 text-muted">
+            <dt>Items</dt>
+            <dd>{totalQuantity}</dd>
+          </div>
           <div className="flex items-center justify-between gap-4 text-muted">
             <dt>Subtotal</dt>
             <dd>${pricing.subtotal.toFixed(2)}</dd>
@@ -149,21 +201,29 @@ export default function CheckoutContents() {
             <dt>Estimated tax ({ESTIMATED_TAX_RATE * 100}%)</dt>
             <dd>${pricing.estimatedTax.toFixed(2)}</dd>
           </div>
-          <div className="flex items-center justify-between gap-4 border-t border-border pt-4 text-xl font-bold text-foreground">
-            <dt>Total</dt>
+          <div className="flex items-center justify-between gap-4 border-t border-border pt-4 text-lg font-bold text-foreground">
+            <dt>Estimated total</dt>
             <dd>${pricing.total.toFixed(2)}</dd>
           </div>
         </dl>
 
         {hasStockIssue && (
-          <p className="mt-4 text-sm text-danger" role="alert">
-            Some products are no longer available in the requested quantity.
-            Return to your cart to update them.
-          </p>
+          <div
+            className="mt-5 rounded-ui border border-danger/25 bg-danger/5 p-3 text-sm text-danger"
+            role="alert"
+          >
+            <p>Some quantities are no longer available.</p>
+            <Link href="/cart" className="mt-1 inline-block font-semibold">
+              Return to cart
+            </Link>
+          </div>
         )}
 
         {orderError && (
-          <p className="mt-4 text-sm text-danger" role="alert">
+          <p
+            className="mt-5 rounded-ui border border-danger/25 bg-danger/5 p-3 text-sm text-danger"
+            role="alert"
+          >
             {orderError}
           </p>
         )}
@@ -172,11 +232,22 @@ export default function CheckoutContents() {
           type="button"
           onClick={placeOrder}
           disabled={isPlacingOrder || hasStockIssue}
-          className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+          aria-busy={isPlacingOrder}
+          className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         >
+          {isPlacingOrder && (
+            <span
+              aria-hidden="true"
+              className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none"
+            />
+          )}
           {isPlacingOrder ? "Placing order..." : "Place order"}
         </button>
-      </div>
+
+        <p className="mt-3 text-center text-xs leading-5 text-muted">
+          Pricing is recalculated securely when you place the order.
+        </p>
+      </aside>
     </div>
   );
 }

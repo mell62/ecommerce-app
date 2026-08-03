@@ -156,6 +156,7 @@ export default function CartContents() {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   const hasStockIssue = items.some(
     (item) => item.stockCount === 0 || item.quantity > item.stockCount
   );
@@ -168,134 +169,170 @@ export default function CartContents() {
       </p>
 
       {error && (
-        <p className="mb-5 text-sm text-danger" role="alert">
+        <p
+          className="mb-5 rounded-ui border border-danger/25 bg-danger/5 px-4 py-3 text-sm text-danger"
+          role="alert"
+        >
           {error}
         </p>
       )}
 
-      <div className="space-y-4">
-        {items.map((item) => {
-          const isUpdating = updatingProductId === item.id;
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+        <div className="space-y-4">
+          {items.map((item) => {
+            const isUpdating = updatingProductId === item.id;
 
-          return (
-            <article
-              key={item.id}
-              className="flex flex-col gap-4 rounded-ui border border-border bg-surface p-4 shadow-sm sm:flex-row"
-            >
-              <Link href={`/products/${item.id}`} className="shrink-0">
-                <Image
-                  src={item.imageUrl}
-                  alt={item.name}
-                  width={160}
-                  height={120}
-                  sizes="(min-width: 640px) 160px, 100vw"
-                  className="aspect-[4/3] w-full rounded-ui object-cover sm:w-40"
-                />
-              </Link>
-
-              <div className="flex flex-1 flex-col">
+            return (
+              <article
+                key={item.id}
+                className="flex flex-col gap-4 rounded-ui border border-border bg-surface p-4 shadow-sm sm:flex-row sm:p-5"
+              >
                 <Link
                   href={`/products/${item.id}`}
-                  className="w-fit font-display text-lg font-semibold text-foreground hover:text-brand-700"
+                  className="flex aspect-[4/3] w-full shrink-0 items-center justify-center overflow-hidden rounded-ui bg-brand-50 p-2 sm:w-40"
                 >
-                  {item.name}
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.name}
+                    width={160}
+                    height={120}
+                    sizes="(min-width: 640px) 160px, 100vw"
+                    className="h-full w-full object-contain transition-transform duration-300 hover:scale-[1.03]"
+                  />
                 </Link>
 
-                <div className="mt-3 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => changeQuantity(item.id, item.quantity - 1)}
-                    disabled={isUpdating}
-                    aria-label={`Decrease ${item.name} quantity`}
-                    className="inline-flex size-11 items-center justify-center rounded-ui border border-border bg-surface font-semibold hover:border-border-hover hover:text-brand-700 disabled:cursor-wait disabled:opacity-60"
-                  >
-                    −
-                  </button>
-                  <span
-                    className="min-w-8 text-center font-semibold"
-                    aria-live="polite"
-                  >
-                    {item.quantity}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => changeQuantity(item.id, item.quantity + 1)}
-                    disabled={isUpdating || item.quantity >= item.stockCount}
-                    aria-label={`Increase ${item.name} quantity`}
-                    className="inline-flex size-11 items-center justify-center rounded-ui border border-border bg-surface font-semibold hover:border-border-hover hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    +
-                  </button>
-                </div>
-
-                {item.stockCount === 0 ? (
-                  <p className="mt-2 text-sm font-medium text-danger">
-                    This product is out of stock.
-                  </p>
-                ) : item.quantity > item.stockCount ? (
-                  <p className="mt-2 text-sm font-medium text-danger">
-                    Only {item.stockCount} available.
-                  </p>
-                ) : item.quantity === item.stockCount ? (
-                  <p className="mt-2 text-sm font-medium text-warning">
-                    Maximum available quantity reached.
-                  </p>
-                ) : null}
-
-                <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-4">
-                  <div>
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <Link
+                      href={`/products/${item.id}`}
+                      className="w-fit font-display text-lg font-semibold text-foreground hover:text-brand-700"
+                    >
+                      {item.name}
+                    </Link>
                     <p className="font-bold text-foreground">
                       ${(item.price * item.quantity).toFixed(2)}
                     </p>
-                    {item.price !== item.originalPrice && (
-                      <p className="text-sm text-muted">
-                        ${item.price.toFixed(2)} each
-                      </p>
-                    )}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => removeItem(item.id)}
-                    disabled={isUpdating}
-                    className="inline-flex min-h-11 items-center justify-center rounded-ui px-3 text-sm font-semibold text-muted hover:bg-danger/5 hover:text-danger disabled:cursor-wait disabled:opacity-60"
-                  >
-                    {isUpdating ? "Updating..." : "Remove"}
-                  </button>
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+                  <p className="mt-1 text-sm text-muted">
+                    ${item.price.toFixed(2)} each
+                    {item.price !== item.originalPrice && (
+                      <span className="ml-2 line-through">
+                        ${item.originalPrice.toFixed(2)}
+                      </span>
+                    )}
+                  </p>
 
-      <div className="mt-6 rounded-ui border border-border bg-surface p-5 sm:ml-auto sm:max-w-sm">
-        <div className="flex items-center justify-between gap-4 text-lg font-bold text-foreground">
-          <span>Total</span>
-          <span>${total.toFixed(2)}</span>
+                  <div className="mt-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+                      Quantity
+                    </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          changeQuantity(item.id, item.quantity - 1)
+                        }
+                        disabled={isUpdating || item.quantity <= 1}
+                        aria-label={`Decrease ${item.name} quantity`}
+                        className="inline-flex size-11 items-center justify-center rounded-ui border border-border bg-surface font-semibold hover:border-border-hover hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        −
+                      </button>
+                      <span
+                        className="min-w-8 text-center font-semibold"
+                        aria-live="polite"
+                      >
+                        {item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          changeQuantity(item.id, item.quantity + 1)
+                        }
+                        disabled={
+                          isUpdating || item.quantity >= item.stockCount
+                        }
+                        aria-label={`Increase ${item.name} quantity`}
+                        className="inline-flex size-11 items-center justify-center rounded-ui border border-border bg-surface font-semibold hover:border-border-hover hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {item.stockCount === 0 ? (
+                    <p className="mt-2 text-sm font-medium text-danger">
+                      This product is out of stock.
+                    </p>
+                  ) : item.quantity > item.stockCount ? (
+                    <p className="mt-2 text-sm font-medium text-danger">
+                      Only {item.stockCount} available.
+                    </p>
+                  ) : item.quantity === item.stockCount ? (
+                    <p className="mt-2 text-sm font-medium text-warning">
+                      Maximum available quantity reached.
+                    </p>
+                  ) : null}
+
+                  <div className="mt-auto pt-4">
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.id)}
+                      disabled={isUpdating}
+                      className="inline-flex min-h-10 items-center justify-center rounded-ui px-2 text-sm font-semibold text-muted hover:bg-danger/5 hover:text-danger disabled:cursor-wait disabled:opacity-60"
+                    >
+                      {isUpdating ? "Updating..." : "Remove"}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
 
-        {hasStockIssue ? (
-          <>
-            <p className="mt-4 text-sm text-danger">
-              Update unavailable quantities before checkout.
-            </p>
-            <button
-              type="button"
-              disabled
-              className="mt-4 inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center rounded-ui bg-muted px-5 py-2.5 font-semibold text-white"
+        <aside className="rounded-ui border border-border bg-surface p-5 shadow-sm lg:sticky lg:top-24">
+          <h2 className="font-display text-xl font-semibold text-foreground">
+            Order summary
+          </h2>
+
+          <dl className="mt-5 space-y-3 text-sm">
+            <div className="flex items-center justify-between gap-4 text-muted">
+              <dt>Items</dt>
+              <dd>{totalQuantity}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-4 border-t border-border pt-4 text-lg font-bold text-foreground">
+              <dt>Subtotal</dt>
+              <dd>${total.toFixed(2)}</dd>
+            </div>
+          </dl>
+
+          <p className="mt-3 text-xs leading-5 text-muted">
+            Shipping and taxes are calculated during checkout.
+          </p>
+
+          {hasStockIssue ? (
+            <>
+              <p className="mt-4 text-sm text-danger">
+                Update unavailable quantities before checkout.
+              </p>
+              <button
+                type="button"
+                disabled
+                className="mt-4 inline-flex min-h-11 w-full cursor-not-allowed items-center justify-center rounded-ui bg-muted px-5 py-2.5 font-semibold text-white"
+              >
+                Checkout unavailable
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/checkout"
+              className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
             >
-              Checkout unavailable
-            </button>
-          </>
-        ) : (
-          <Link
-            href="/checkout"
-            className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
-          >
-            Continue to checkout
-          </Link>
-        )}
+              Continue to checkout
+            </Link>
+          )}
+        </aside>
       </div>
     </div>
   );

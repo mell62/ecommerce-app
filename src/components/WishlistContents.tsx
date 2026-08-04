@@ -4,11 +4,12 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useWishlist } from "@/components/WishlistProvider";
+import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 
 function WishlistLoadingSkeleton() {
   return (
     <div
-      className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+      className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),21rem))] justify-start gap-5"
       role="status"
       aria-label="Loading wishlist"
     >
@@ -133,55 +134,107 @@ export default function WishlistContents() {
       </p>
 
       {removeError && (
-        <p className="mb-5 text-sm text-danger" role="alert">
+        <p
+          className="mb-5 rounded-ui border border-danger/25 bg-danger/5 px-4 py-3 text-sm text-danger"
+          role="alert"
+        >
           {removeError}
         </p>
       )}
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((product) => (
-          <article
-            key={product.id}
-            className="flex flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm"
-          >
-            <Link
-              href={`/products/${product.id}`}
-              className="flex flex-1 flex-col"
-            >
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                width={800}
-                height={600}
-                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                className="aspect-[4/3] h-auto w-full object-cover"
-              />
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),21rem))] justify-start gap-5">
+        {products.map((product) => {
+          const productHasDiscount = hasDiscount(product.discountPercent);
+          const displayedPrice = getDiscountedPrice(
+            product.price,
+            product.discountPercent
+          );
+          const isRemoving = removingProductId === product.id;
 
-              <div className="flex flex-1 flex-col p-4">
-                <h2 className="text-lg font-semibold text-foreground">
+          return (
+            <article
+              key={product.id}
+              className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card focus-within:border-brand-500 focus-within:shadow-card"
+            >
+              <Link
+                href={`/products/${product.id}`}
+                className="relative isolate flex aspect-[4/3] items-center justify-center overflow-hidden border-b border-border bg-surface p-4 before:absolute before:inset-[24%] before:rounded-full before:bg-brand-100/65 before:blur-2xl sm:p-5"
+              >
+                <Image
+                  src={product.imageUrl}
+                  alt={product.name}
+                  width={800}
+                  height={600}
+                  sizes="(min-width: 640px) 336px, calc(100vw - 2rem)"
+                  className="relative z-10 h-full w-full object-contain drop-shadow-xl transition-transform duration-300 ease-[var(--store-ease-emphasized)] group-hover:scale-[1.025]"
+                />
+
+                {productHasDiscount && (
+                  <span className="absolute left-3 top-3 z-20 rounded-ui bg-deal px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                    {product.discountPercent}% off
+                  </span>
+                )}
+              </Link>
+
+              <div className="flex flex-1 flex-col p-5">
+                <Link
+                  href={`/products/${product.id}`}
+                  className="w-fit font-display text-lg font-semibold text-foreground hover:text-brand-700"
+                >
                   {product.name}
-                </h2>
+                </Link>
                 <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">
                   {product.description}
                 </p>
-                <p className="mt-auto pt-4 text-lg font-bold text-foreground">
-                  ${product.price.toFixed(2)}
-                </p>
-              </div>
-            </Link>
 
-            <div className="border-t border-border p-4">
-              <button
-                type="button"
-                onClick={() => handleRemove(product.id)}
-                disabled={removingProductId === product.id}
-                className="inline-flex min-h-11 items-center justify-center rounded-ui border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground hover:border-border-hover hover:text-danger disabled:cursor-wait disabled:opacity-60"
-              >
-                {removingProductId === product.id ? "Removing..." : "Remove"}
-              </button>
-            </div>
-          </article>
-        ))}
+                <div className="mt-auto pt-5">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <p className="text-xl font-bold text-foreground">
+                      ${displayedPrice.toFixed(2)}
+                    </p>
+                    {productHasDiscount && (
+                      <p className="text-sm text-muted line-through">
+                        ${product.price.toFixed(2)}
+                      </p>
+                    )}
+                  </div>
+
+                  {product.stockCount === 0 ? (
+                    <p className="mt-2 text-sm font-medium text-danger">
+                      Out of stock
+                    </p>
+                  ) : product.stockCount <= 5 ? (
+                    <p className="mt-2 text-sm font-medium text-warning">
+                      Only {product.stockCount} left
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-sm font-medium text-success">
+                      In stock
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t border-border p-4">
+                <button
+                  type="button"
+                  onClick={() => handleRemove(product.id)}
+                  disabled={isRemoving}
+                  aria-label={`Remove ${product.name} from wishlist`}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-ui border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground hover:border-danger/40 hover:bg-danger/5 hover:text-danger disabled:cursor-wait disabled:opacity-60"
+                >
+                  {isRemoving && (
+                    <span
+                      aria-hidden="true"
+                      className="size-4 animate-spin rounded-full border-2 border-muted/35 border-t-current motion-reduce:animate-none"
+                    />
+                  )}
+                  {isRemoving ? "Removing..." : "Remove"}
+                </button>
+              </div>
+            </article>
+          );
+        })}
       </div>
     </>
   );

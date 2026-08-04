@@ -5,6 +5,37 @@ import Image from "next/image";
 import Link from "next/link";
 import { useWishlist } from "@/components/WishlistProvider";
 
+function WishlistLoadingSkeleton() {
+  return (
+    <div
+      className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+      role="status"
+      aria-label="Loading wishlist"
+    >
+      <span className="sr-only">Loading wishlist...</span>
+
+      {[1, 2, 3].map((product) => (
+        <div
+          key={product}
+          aria-hidden="true"
+          className="animate-pulse overflow-hidden rounded-ui border border-border bg-surface shadow-sm"
+        >
+          <div className="aspect-[4/3] bg-surface-muted" />
+          <div className="p-5">
+            <div className="h-5 w-2/3 rounded bg-surface-muted" />
+            <div className="mt-3 h-4 w-full rounded bg-surface-muted" />
+            <div className="mt-2 h-4 w-4/5 rounded bg-surface-muted" />
+            <div className="mt-5 h-6 w-24 rounded bg-surface-muted" />
+          </div>
+          <div className="border-t border-border p-4">
+            <div className="h-11 w-24 rounded-ui bg-surface-muted" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function WishlistContents() {
   const { products, isAuthenticated, isLoading, loadError, removeProduct } =
     useWishlist();
@@ -30,11 +61,11 @@ export default function WishlistContents() {
 
   if (!isAuthenticated) {
     return (
-      <div className="rounded-ui border border-border bg-surface p-6 sm:p-8">
-        <h2 className="text-xl font-semibold text-foreground">
+      <section className="rounded-ui border border-border bg-surface p-6 shadow-sm sm:p-8">
+        <h2 className="font-display text-2xl font-semibold text-foreground">
           Log in to view your wishlist
         </h2>
-        <p className="mt-2 text-muted">
+        <p className="mt-2 max-w-xl leading-7 text-muted">
           Your saved products will be available anywhere you sign in.
         </p>
         <Link
@@ -43,37 +74,45 @@ export default function WishlistContents() {
         >
           Log in
         </Link>
-      </div>
+      </section>
     );
   }
 
   if (isLoading) {
-    return (
-      <p className="text-muted" role="status">
-        Loading wishlist...
-      </p>
-    );
+    return <WishlistLoadingSkeleton />;
   }
 
   if (loadError) {
     return (
-      <div
-        className="rounded-ui border border-border bg-surface p-6"
+      <section
+        className="rounded-ui border border-border bg-surface p-6 shadow-sm sm:p-8"
         role="alert"
       >
-        <p className="font-semibold text-danger">{loadError}</p>
-        <p className="mt-2 text-muted">Refresh the page to try again.</p>
-      </div>
+        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-danger">
+          Wishlist unavailable
+        </p>
+        <h2 className="mt-2 font-display text-2xl font-semibold text-foreground">
+          We couldn&apos;t load your saved products
+        </h2>
+        <p className="mt-2 max-w-xl leading-7 text-muted">{loadError}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-6 inline-flex min-h-11 items-center justify-center rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
+        >
+          Try again
+        </button>
+      </section>
     );
   }
 
   if (products.length === 0) {
     return (
-      <div className="rounded-ui border border-border bg-surface p-6 sm:p-8">
-        <h2 className="text-xl font-semibold text-foreground">
+      <section className="rounded-ui border border-border bg-surface p-6 shadow-sm sm:p-8">
+        <h2 className="font-display text-2xl font-semibold text-foreground">
           Your wishlist is empty
         </h2>
-        <p className="mt-2 text-muted">
+        <p className="mt-2 max-w-xl leading-7 text-muted">
           Save products while browsing and they will appear here.
         </p>
         <Link
@@ -82,7 +121,7 @@ export default function WishlistContents() {
         >
           Browse products
         </Link>
-      </div>
+      </section>
     );
   }
 

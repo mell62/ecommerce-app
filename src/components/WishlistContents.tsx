@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useCart } from "@/components/CartProvider";
 import { useWishlist } from "@/components/WishlistProvider";
 import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 
@@ -40,17 +41,60 @@ function WishlistLoadingSkeleton() {
 export default function WishlistContents() {
   const { products, isAuthenticated, isLoading, loadError, removeProduct } =
     useWishlist();
+  const {
+    items: cartItems,
+    isLoading: isCartLoading,
+    addProduct: addProductToCart,
+  } = useCart();
   const [removingProductId, setRemovingProductId] = useState("");
-  const [removeError, setRemoveError] = useState("");
+  const [addingProductId, setAddingProductId] = useState("");
+  const [addedProductId, setAddedProductId] = useState("");
+  const [actionError, setActionError] = useState("");
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimer.current) {
+        clearTimeout(feedbackTimer.current);
+      }
+    };
+  }, []);
+
+  async function handleAddToCart(productId: string): Promise<void> {
+    setActionError("");
+    setAddedProductId("");
+    setAddingProductId(productId);
+
+    try {
+      await addProductToCart(productId);
+      setAddedProductId(productId);
+
+      if (feedbackTimer.current) {
+        clearTimeout(feedbackTimer.current);
+      }
+
+      feedbackTimer.current = setTimeout(() => {
+        setAddedProductId("");
+      }, 2500);
+    } catch (error) {
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Failed to add product to cart."
+      );
+    } finally {
+      setAddingProductId("");
+    }
+  }
 
   async function handleRemove(productId: string): Promise<void> {
-    setRemoveError("");
+    setActionError("");
     setRemovingProductId(productId);
 
     try {
       await removeProduct(productId);
     } catch (error) {
-      setRemoveError(
+      setActionError(
         error instanceof Error
           ? error.message
           : "Failed to remove product from wishlist."
@@ -126,6 +170,10 @@ export default function WishlistContents() {
     );
   }
 
+  const addedProductName = products.find(
+    (product) => product.id === addedProductId
+  )?.name;
+
   return (
     <>
       <p className="mb-5 text-sm font-medium text-muted" aria-live="polite">
@@ -133,12 +181,18 @@ export default function WishlistContents() {
         {products.length === 1 ? "saved product" : "saved products"}
       </p>
 
-      {removeError && (
+      {actionError && (
         <p
           className="mb-5 rounded-ui border border-danger/25 bg-danger/5 px-4 py-3 text-sm text-danger"
           role="alert"
         >
-          {removeError}
+          {actionError}
+        </p>
+      )}
+
+      {addedProductName && (
+        <p className="sr-only" role="status">
+          {addedProductName} added to cart.
         </p>
       )}
 
@@ -150,6 +204,29 @@ export default function WishlistContents() {
             product.discountPercent
           );
           const isRemoving = removingProductId === product.id;
+          const isAdding = addingProductId === product.id;
+          const wasAdded = addedProductId === product.id;
+          const cartItem = cartItems.find((item) => item.id === product.id);
+          const isAtCartLimit = (cartItem?.quantity ?? 0) >= product.stockCount;
+          const isAddDisabled =
+            product.stockCount === 0 ||
+            isAtCartLimit ||
+            isCartLoading ||
+            isAdding ||
+            isRemoving ||
+            wasAdded;
+          const addLabel =
+            product.stockCount === 0
+              ? "Out of stock"
+              : isCartLoading
+                ? "Loading cart..."
+                : isAdding
+                  ? "Adding..."
+                  : wasAdded
+                    ? "Added to cart"
+                    : isAtCartLimit
+                      ? "Cart limit reached"
+                      : "Add to cart";
 
           return (
             <article
@@ -215,13 +292,39 @@ export default function WishlistContents() {
                 </div>
               </div>
 
-              <div className="border-t border-border p-4">
+              <div className="flex gap-2 border-t border-border p-4">
+                <button
+                  type="button"
+                  onClick={() => handleAddToCart(product.id)}
+                  disabled={isAddDisabled}
+                  className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-ui bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+                >
+                  {isAdding && (
+                    <span
+                      aria-hidden="true"
+                      className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none"
+                    />
+                  )}
+                  {wasAdded && (
+                    <svg
+                      aria-hidden="true"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="size-4"
+                    >
+                      <path d="m5.5 10 3 3 6-6" />
+                    </svg>
+                  )}
+                  {addLabel}
+                </button>
                 <button
                   type="button"
                   onClick={() => handleRemove(product.id)}
-                  disabled={isRemoving}
+                  disabled={isRemoving || isAdding}
                   aria-label={`Remove ${product.name} from wishlist`}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-ui border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground hover:border-danger/40 hover:bg-danger/5 hover:text-danger disabled:cursor-wait disabled:opacity-60"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-ui border border-border bg-surface px-3 py-2 text-sm font-semibold text-foreground hover:border-danger/40 hover:bg-danger/5 hover:text-danger disabled:cursor-wait disabled:opacity-60"
                 >
                   {isRemoving && (
                     <span

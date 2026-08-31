@@ -138,7 +138,7 @@ export default function RegisterPage() {
               required
               disabled={isSubmitting}
               placeholder="Your name"
-              className="min-h-12 w-full rounded-ui border border-border bg-surface px-3.5 py-2.5 text-foreground shadow-sm placeholder:text-muted/70 hover:border-border-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-70"
+              className="store-field min-h-12 w-full rounded-ui border border-border bg-surface px-3.5 py-2.5 text-foreground shadow-sm placeholder:text-muted/70 hover:border-border-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-70"
             />
           </div>
 
@@ -164,7 +164,7 @@ export default function RegisterPage() {
               required
               disabled={isSubmitting}
               placeholder="you@example.com"
-              className="min-h-12 w-full rounded-ui border border-border bg-surface px-3.5 py-2.5 text-foreground shadow-sm placeholder:text-muted/70 hover:border-border-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-70"
+              className="store-field min-h-12 w-full rounded-ui border border-border bg-surface px-3.5 py-2.5 text-foreground shadow-sm placeholder:text-muted/70 hover:border-border-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-70"
             />
           </div>
 
@@ -191,7 +191,7 @@ export default function RegisterPage() {
                 required
                 disabled={isSubmitting}
                 aria-describedby="password-help"
-                className="min-h-12 w-full rounded-ui border border-border bg-surface py-2.5 pl-3.5 pr-16 text-foreground shadow-sm hover:border-border-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-70"
+                className="store-field min-h-12 w-full rounded-ui border border-border bg-surface py-2.5 pl-3.5 pr-16 text-foreground shadow-sm hover:border-border-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-70"
               />
               <button
                 type="button"

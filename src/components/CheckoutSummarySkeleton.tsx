@@ -23,14 +23,14 @@ export default function CheckoutSummarySkeleton() {
           {[1, 2].map((skeletonItem) => (
             <div
               key={skeletonItem}
-              className="flex items-center gap-4 border-b border-border py-5 last:border-0 last:pb-1"
+              className="flex items-center gap-3 border-b border-border py-5 last:border-0 last:pb-1 sm:gap-4"
             >
               <div className="size-20 shrink-0 rounded-ui bg-surface-muted sm:size-24" />
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <div className="h-5 w-2/3 rounded bg-surface-muted" />
-                <div className="mt-2 h-4 w-32 rounded bg-surface-muted" />
+                <div className="mt-2 h-4 w-full max-w-32 rounded bg-surface-muted" />
               </div>
-              <div className="h-5 w-20 rounded bg-surface-muted" />
+              <div className="h-5 w-14 shrink-0 rounded bg-surface-muted sm:w-20" />
             </div>
           ))}
         </div>

@@ -137,6 +137,8 @@ export default function RegisterPage() {
               }}
               required
               disabled={isSubmitting}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "registration-error" : undefined}
               placeholder="Your name"
               className="store-field min-h-12 w-full rounded-ui border border-border bg-surface px-3.5 py-2.5 text-foreground shadow-sm placeholder:text-muted/70 hover:border-border-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-70"
             />
@@ -163,6 +165,8 @@ export default function RegisterPage() {
               }}
               required
               disabled={isSubmitting}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "registration-error" : undefined}
               placeholder="you@example.com"
               className="store-field min-h-12 w-full rounded-ui border border-border bg-surface px-3.5 py-2.5 text-foreground shadow-sm placeholder:text-muted/70 hover:border-border-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-70"
             />
@@ -190,7 +194,10 @@ export default function RegisterPage() {
                 minLength={8}
                 required
                 disabled={isSubmitting}
-                aria-describedby="password-help"
+                aria-invalid={Boolean(error)}
+                aria-describedby={`password-help${
+                  error ? " registration-error" : ""
+                }`}
                 className="store-field min-h-12 w-full rounded-ui border border-border bg-surface py-2.5 pl-3.5 pr-16 text-foreground shadow-sm hover:border-border-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-70"
               />
               <button
@@ -212,6 +219,7 @@ export default function RegisterPage() {
 
           {error && (
             <p
+              id="registration-error"
               className="rounded-ui border border-danger/25 bg-danger/5 px-4 py-3 text-sm leading-6 text-danger"
               role="alert"
             >

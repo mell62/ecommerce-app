@@ -179,7 +179,7 @@ export default function LoginPage() {
                 disabled={isSubmitting}
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 aria-pressed={showPassword}
-                className="absolute inset-y-1 right-1 inline-flex min-w-12 items-center justify-center rounded-ui px-2 text-xs font-semibold text-muted hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="absolute inset-y-0.5 right-1 inline-flex min-w-12 items-center justify-center rounded-ui px-2 text-xs font-semibold text-muted hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {showPassword ? "Hide" : "Show"}
               </button>

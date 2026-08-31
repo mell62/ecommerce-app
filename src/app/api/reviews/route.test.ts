@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Prisma } from "@prisma/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MAX_REVIEW_LENGTH } from "@/lib/review-validation";
 import { DELETE, PATCH, POST } from "./route";
 
@@ -42,6 +43,10 @@ describe("reviews API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getCurrentUserMock.mockResolvedValue(currentUser);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("rejects malformed JSON without calling the database", async () => {
@@ -139,6 +144,29 @@ describe("reviews API", () => {
       },
     });
     expect(await response.json()).toEqual(createdReview);
+  });
+
+  it("returns a conflict when the database rejects a duplicate review", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    reviewCreateMock.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "test",
+      })
+    );
+
+    const response = await POST(
+      createRequest("POST", {
+        productId: "product-1",
+        rating: 5,
+        comment: "A second review.",
+      })
+    );
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: "You have already reviewed this product.",
+    });
   });
 
   it("prevents a user from editing another customer's review", async () => {

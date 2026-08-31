@@ -2,7 +2,7 @@ import OrdersPageHeader from "@/components/OrdersPageHeader";
 
 export default function OrdersLoading() {
   return (
-    <main className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-8 sm:py-10 lg:py-12">
+    <div className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-8 sm:py-10 lg:py-12">
       <OrdersPageHeader />
 
       <div className="space-y-6" role="status" aria-label="Loading orders">
@@ -42,6 +42,6 @@ export default function OrdersLoading() {
           </div>
         ))}
       </div>
-    </main>
+    </div>
   );
 }

@@ -2,7 +2,7 @@ import CartContents from "@/components/CartContents";
 
 export default function CartPage() {
   return (
-    <main className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-8 sm:py-10 lg:py-12">
+    <div className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-8 sm:py-10 lg:py-12">
       <header className="mb-8 max-w-2xl sm:mb-10">
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand-700">
           Review your setup
@@ -16,6 +16,6 @@ export default function CartPage() {
       </header>
 
       <CartContents />
-    </main>
+    </div>
   );
 }

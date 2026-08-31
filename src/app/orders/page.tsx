@@ -62,7 +62,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   });
 
   return (
-    <main className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-8 sm:py-10 lg:py-12">
+    <div className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-8 sm:py-10 lg:py-12">
       <OrdersPageHeader />
 
       {orderWasPlaced && (
@@ -237,6 +237,6 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
           })}
         </div>
       )}
-    </main>
+    </div>
   );
 }

@@ -14,7 +14,7 @@ export default function CartError({ error, reset }: CartErrorProps) {
   }, [error]);
 
   return (
-    <main className="mx-auto flex min-h-[60vh] w-full max-w-[var(--store-container)] items-center px-[var(--store-page-gutter)] py-10 sm:py-12 lg:py-16">
+    <div className="mx-auto flex min-h-[60vh] w-full max-w-[var(--store-container)] items-center px-[var(--store-page-gutter)] py-10 sm:py-12 lg:py-16">
       <div
         className="w-full rounded-ui border border-border bg-surface p-6 shadow-sm sm:p-8"
         role="alert"
@@ -46,6 +46,6 @@ export default function CartError({ error, reset }: CartErrorProps) {
           </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

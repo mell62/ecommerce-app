@@ -23,7 +23,7 @@ export async function registerAndLogin(
   await page.goto("/register");
   await page.getByLabel("Name").fill(credentials.name);
   await page.getByLabel("Email address").fill(credentials.email);
-  await page.getByLabel("Password").fill(credentials.password);
+  await page.locator('input[name="password"]').fill(credentials.password);
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText(`Hello, ${credentials.name}`)).toBeVisible();

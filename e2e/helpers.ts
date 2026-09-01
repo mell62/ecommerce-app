@@ -26,5 +26,5 @@ export async function registerAndLogin(
   await page.locator('input[name="password"]').fill(credentials.password);
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByText(`Hello, ${credentials.name}`)).toBeVisible();
+  await expect(page.getByText(`Hello, ${credentials.name}`).first()).toBeVisible();
 }

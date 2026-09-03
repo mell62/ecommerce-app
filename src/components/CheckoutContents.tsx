@@ -7,6 +7,28 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import { calculateOrderPricing, ESTIMATED_TAX_RATE } from "@/lib/pricing";
 import CheckoutSummarySkeleton from "@/components/CheckoutSummarySkeleton";
+import ShippingAddressFields from "@/components/ShippingAddressFields";
+import {
+  validateShippingAddress,
+  type ShippingAddress,
+  type ShippingAddressErrors,
+  type ShippingAddressField,
+} from "@/lib/shipping-address";
+
+type CheckoutContentsProps = Readonly<{
+  initialFullName?: string;
+}>;
+
+type EditableShippingAddressField = Exclude<ShippingAddressField, "country">;
+
+const addressFieldIds: Record<EditableShippingAddressField, string> = {
+  fullName: "shipping-full-name",
+  addressLine1: "shipping-address-line-1",
+  addressLine2: "shipping-address-line-2",
+  city: "shipping-city",
+  state: "shipping-state",
+  postalCode: "shipping-postal-code",
+};
 
 function getOrderError(data: unknown): string {
   if (
@@ -21,11 +43,23 @@ function getOrderError(data: unknown): string {
   return "Failed to place order.";
 }
 
-export default function CheckoutContents() {
+export default function CheckoutContents({
+  initialFullName = "",
+}: CheckoutContentsProps) {
   const router = useRouter();
   const { items, isLoading, loadError, clearCart } = useCart();
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderError, setOrderError] = useState("");
+  const [addressErrors, setAddressErrors] = useState<ShippingAddressErrors>({});
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
+    fullName: initialFullName,
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "US",
+  });
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -36,17 +70,62 @@ export default function CheckoutContents() {
     (item) => item.stockCount === 0 || item.quantity > item.stockCount
   );
 
+  function updateShippingAddress(
+    field: EditableShippingAddressField,
+    value: string
+  ): void {
+    setShippingAddress((currentAddress) => ({
+      ...currentAddress,
+      [field]: value,
+    }));
+    setAddressErrors((currentErrors) => {
+      if (!currentErrors[field]) {
+        return currentErrors;
+      }
+
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[field];
+      return nextErrors;
+    });
+  }
+
+  function focusFirstAddressError(errors: ShippingAddressErrors): void {
+    const firstInvalidField = Object.keys(addressFieldIds).find(
+      (field) => errors[field as EditableShippingAddressField]
+    ) as EditableShippingAddressField | undefined;
+
+    if (firstInvalidField) {
+      document.getElementById(addressFieldIds[firstInvalidField])?.focus();
+    }
+  }
+
   async function placeOrder(): Promise<void> {
     if (isPlacingOrder || hasStockIssue) {
       return;
     }
 
+    const addressResult = validateShippingAddress(shippingAddress);
+
+    if (!addressResult.success) {
+      setAddressErrors(addressResult.errors);
+      setOrderError("Check the highlighted shipping details.");
+      focusFirstAddressError(addressResult.errors);
+      return;
+    }
+
     setOrderError("");
+    setAddressErrors({});
     setIsPlacingOrder(true);
 
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          shippingAddress: addressResult.data,
+        }),
       });
       const contentType = response.headers.get("content-type");
       const data: unknown = contentType?.includes("application/json")
@@ -110,70 +189,79 @@ export default function CheckoutContents() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
-      <section className="rounded-ui border border-border bg-surface p-4 shadow-sm sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-          <div>
-            <h2 className="font-display text-xl font-semibold text-foreground">
-              Your products
-            </h2>
-            <p className="mt-1 text-sm text-muted">
-              {totalQuantity} {totalQuantity === 1 ? "item" : "items"} ready to
-              order
-            </p>
-          </div>
-          <Link
-            href="/cart"
-            className="inline-flex min-h-10 items-center justify-center rounded-ui px-3 text-sm font-semibold text-brand-700 hover:bg-brand-50"
-          >
-            Edit cart
-          </Link>
-        </div>
-
-        <div className="divide-y divide-border">
-          {items.map((item) => (
-            <article
-              key={item.id}
-              className="flex items-center gap-4 py-5 last:pb-1"
+      <div className="grid gap-6">
+        <section className="rounded-ui border border-border bg-surface p-4 shadow-sm sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+            <div>
+              <h2 className="font-display text-xl font-semibold text-foreground">
+                Your products
+              </h2>
+              <p className="mt-1 text-sm text-muted">
+                {totalQuantity} {totalQuantity === 1 ? "item" : "items"} ready
+                to order
+              </p>
+            </div>
+            <Link
+              href="/cart"
+              className="inline-flex min-h-10 items-center justify-center rounded-ui px-3 text-sm font-semibold text-brand-700 hover:bg-brand-50"
             >
-              <Link
-                href={`/products/${item.id}`}
-                className="group relative isolate flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-ui border border-border/70 bg-surface p-1 before:absolute before:inset-[16%] before:rounded-full before:bg-brand-100/65 before:blur-lg sm:size-24 sm:p-1.5"
-              >
-                <Image
-                  src={item.imageUrl}
-                  alt={item.name}
-                  width={96}
-                  height={96}
-                  sizes="(min-width: 640px) 96px, 80px"
-                  className="relative z-10 h-full w-full object-contain drop-shadow-lg transition-transform duration-300 ease-[var(--store-ease-emphasized)] group-hover:scale-[1.03]"
-                />
-              </Link>
+              Edit cart
+            </Link>
+          </div>
 
-              <div className="min-w-0 flex-1">
+          <div className="divide-y divide-border">
+            {items.map((item) => (
+              <article
+                key={item.id}
+                className="flex items-center gap-4 py-5 last:pb-1"
+              >
                 <Link
                   href={`/products/${item.id}`}
-                  className="font-display font-semibold text-foreground hover:text-brand-700"
+                  className="group relative isolate flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-ui border border-border/70 bg-surface p-1 before:absolute before:inset-[16%] before:rounded-full before:bg-brand-100/65 before:blur-lg sm:size-24 sm:p-1.5"
                 >
-                  {item.name}
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.name}
+                    width={96}
+                    height={96}
+                    sizes="(min-width: 640px) 96px, 80px"
+                    className="relative z-10 h-full w-full object-contain drop-shadow-lg transition-transform duration-300 ease-[var(--store-ease-emphasized)] group-hover:scale-[1.03]"
+                  />
                 </Link>
-                <p className="mt-1 text-sm text-muted">
-                  Quantity {item.quantity} <span aria-hidden="true">·</span> $
-                  {item.price.toFixed(2)} each
-                </p>
-                {item.price !== item.originalPrice && (
-                  <p className="mt-1 text-xs font-medium text-brand-700">
-                    {item.discountPercent}% discount applied
-                  </p>
-                )}
-              </div>
 
-              <p className="shrink-0 self-start pt-1 font-semibold text-foreground">
-                ${(item.price * item.quantity).toFixed(2)}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/products/${item.id}`}
+                    className="font-display font-semibold text-foreground hover:text-brand-700"
+                  >
+                    {item.name}
+                  </Link>
+                  <p className="mt-1 text-sm text-muted">
+                    Quantity {item.quantity} <span aria-hidden="true">·</span> $
+                    {item.price.toFixed(2)} each
+                  </p>
+                  {item.price !== item.originalPrice && (
+                    <p className="mt-1 text-xs font-medium text-brand-700">
+                      {item.discountPercent}% discount applied
+                    </p>
+                  )}
+                </div>
+
+                <p className="shrink-0 self-start pt-1 font-semibold text-foreground">
+                  ${(item.price * item.quantity).toFixed(2)}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <ShippingAddressFields
+          address={shippingAddress}
+          errors={addressErrors}
+          disabled={isPlacingOrder}
+          onChange={updateShippingAddress}
+        />
+      </div>
 
       <aside className="rounded-ui border border-border bg-surface p-5 shadow-sm lg:sticky lg:top-24">
         <h2 className="font-display text-xl font-semibold text-foreground">

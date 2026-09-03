@@ -26,6 +26,10 @@ test("customer can place an order and see it in order history", async ({
     page.getByRole("heading", { level: 1, name: "Checkout" }),
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: "Order summary" })).toBeVisible();
+  await page.getByLabel("Street address").fill("123 Technology Avenue");
+  await page.getByLabel("City").fill("Austin");
+  await page.getByLabel("State").fill("Texas");
+  await page.getByLabel("ZIP code").fill("78701");
   await page.getByRole("button", { name: "Place order" }).click();
 
   await expect(page).toHaveURL(/\/orders\?success=true$/);

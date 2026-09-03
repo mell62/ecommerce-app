@@ -34,6 +34,30 @@ const currentUser = {
   name: "Alex",
 };
 
+const validShippingAddress = {
+  fullName: "Alex Morgan",
+  addressLine1: "123 Technology Avenue",
+  addressLine2: "Apartment 4B",
+  city: "Austin",
+  state: "Texas",
+  postalCode: "78701",
+  country: "US",
+};
+
+function createOrderRequest(
+  body: unknown = {
+    shippingAddress: validShippingAddress,
+  }
+): Request {
+  return new Request("http://localhost/api/orders", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+}
+
 const cart = {
   id: "cart-1",
   items: [
@@ -78,9 +102,29 @@ describe("orders API", () => {
   it("requires authentication before placing an order", async () => {
     getCurrentUserMock.mockResolvedValue(null);
 
-    const response = await POST();
+    const response = await POST(createOrderRequest());
 
     expect(response.status).toBe(401);
+    expect(transactionMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid shipping address before opening a transaction", async () => {
+    const response = await POST(
+      createOrderRequest({
+        shippingAddress: {
+          ...validShippingAddress,
+          postalCode: "invalid",
+        },
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "Enter a valid shipping address.",
+      fieldErrors: {
+        postalCode: "Enter a valid 5-digit or ZIP+4 code.",
+      },
+    });
     expect(transactionMock).not.toHaveBeenCalled();
   });
 
@@ -90,7 +134,7 @@ describe("orders API", () => {
       items: [],
     });
 
-    const response = await POST();
+    const response = await POST(createOrderRequest());
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: "Your cart is empty." });
@@ -114,7 +158,7 @@ describe("orders API", () => {
       ],
     });
 
-    const response = await POST();
+    const response = await POST(createOrderRequest());
 
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({
@@ -135,7 +179,7 @@ describe("orders API", () => {
     transactionClient.product.updateMany.mockResolvedValue({ count: 1 });
     transactionClient.cartItem.deleteMany.mockResolvedValue({ count: 2 });
 
-    const response = await POST();
+    const response = await POST(createOrderRequest());
 
     expect(response.status).toBe(201);
     expect(transactionClient.order.create).toHaveBeenCalledWith({
@@ -146,6 +190,13 @@ describe("orders API", () => {
         estimatedTax: 5.68,
         totalPrice: 76.67,
         userId: currentUser.id,
+        shippingFullName: "Alex Morgan",
+        shippingAddressLine1: "123 Technology Avenue",
+        shippingAddressLine2: "Apartment 4B",
+        shippingCity: "Austin",
+        shippingState: "Texas",
+        shippingPostalCode: "78701",
+        shippingCountry: "US",
         items: {
           create: [
             {
@@ -196,7 +247,7 @@ describe("orders API", () => {
     transactionClient.order.create.mockResolvedValue({ id: "order-1" });
     transactionClient.product.updateMany.mockResolvedValueOnce({ count: 0 });
 
-    const response = await POST();
+    const response = await POST(createOrderRequest());
 
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({
@@ -214,7 +265,7 @@ describe("orders API", () => {
       })
     );
 
-    const response = await POST();
+    const response = await POST(createOrderRequest());
 
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({

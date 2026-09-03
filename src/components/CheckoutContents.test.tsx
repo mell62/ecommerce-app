@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CartProvider from "@/components/CartProvider";
@@ -56,5 +56,24 @@ describe("CheckoutContents accessibility", () => {
     const results = await axe(container);
 
     expect(results.violations).toHaveLength(0);
+  });
+
+  it("shows field-specific errors and focuses the first invalid address field", async () => {
+    render(
+      <CartProvider isAuthenticated>
+        <CheckoutContents initialFullName="Alex Morgan" />
+      </CartProvider>
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Place order" }));
+
+    expect(screen.getByText("Enter a complete street address.")).toBeVisible();
+    expect(screen.getByText("Enter a city.")).toBeVisible();
+    expect(screen.getByText("Enter a state.")).toBeVisible();
+    expect(
+      screen.getByText("Enter a valid 5-digit or ZIP+4 code.")
+    ).toBeVisible();
+    expect(screen.getByLabelText("Street address")).toHaveFocus();
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

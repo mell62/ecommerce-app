@@ -13,7 +13,7 @@ export default async function CheckoutPage() {
   return (
     <div className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-8 sm:py-10 lg:py-12">
       <CheckoutPageHeader />
-      <CheckoutContents />
+      <CheckoutContents initialFullName={user.name} />
     </div>
   );
 }

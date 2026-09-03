@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { calculateOrderPricing, getDiscountedPrice } from "@/lib/pricing";
 import { getCurrentUser } from "@/lib/session";
+import { validateShippingAddress } from "@/lib/shipping-address";
 
 class StockConflictError extends Error {
   productName: string;
@@ -13,7 +14,23 @@ class StockConflictError extends Error {
   }
 }
 
-export async function POST(): Promise<Response> {
+async function getRequestBody(request: Request): Promise<unknown> {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
+
+function getShippingAddress(value: unknown): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  return "shippingAddress" in value ? value.shippingAddress : undefined;
+}
+
+export async function POST(request: Request): Promise<Response> {
   try {
     const user = await getCurrentUser();
 
@@ -23,6 +40,21 @@ export async function POST(): Promise<Response> {
         { status: 401 }
       );
     }
+
+    const body = await getRequestBody(request);
+    const addressResult = validateShippingAddress(getShippingAddress(body));
+
+    if (!addressResult.success) {
+      return Response.json(
+        {
+          error: "Enter a valid shipping address.",
+          fieldErrors: addressResult.errors,
+        },
+        { status: 400 }
+      );
+    }
+
+    const shippingAddress = addressResult.data;
 
     const result = await prisma.$transaction(
       async (transaction) => {
@@ -85,6 +117,13 @@ export async function POST(): Promise<Response> {
             estimatedTax: pricing.estimatedTax,
             totalPrice: pricing.total,
             userId: user.id,
+            shippingFullName: shippingAddress.fullName,
+            shippingAddressLine1: shippingAddress.addressLine1,
+            shippingAddressLine2: shippingAddress.addressLine2 || null,
+            shippingCity: shippingAddress.city,
+            shippingState: shippingAddress.state,
+            shippingPostalCode: shippingAddress.postalCode,
+            shippingCountry: shippingAddress.country,
             items: {
               create: orderItems,
             },

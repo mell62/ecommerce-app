@@ -8,7 +8,7 @@ export default defineConfig({
   workers: 1,
   reporter: "html",
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL: "http://127.0.0.1:3100",
     screenshot: "only-on-failure",
     trace: "on-first-retry",
   },
@@ -22,9 +22,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run start",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
+    command: "npm run start -- --hostname 127.0.0.1 --port 3100",
+    url: "http://127.0.0.1:3100",
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });

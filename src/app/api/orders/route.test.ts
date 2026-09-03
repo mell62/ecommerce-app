@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { PaymentStatus, Prisma } from "@prisma/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
 
@@ -185,6 +185,7 @@ describe("orders API", () => {
     expect(transactionClient.order.create).toHaveBeenCalledWith({
       data: {
         status: "PENDING",
+        paymentStatus: PaymentStatus.PENDING,
         subtotal: 70.99,
         shippingCost: 0,
         estimatedTax: 5.68,

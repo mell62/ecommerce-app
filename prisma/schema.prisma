@@ -11,6 +11,17 @@ datasource db {
   provider = "postgresql"
 }
 
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  STRIPE
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -47,21 +58,26 @@ model Product {
 }
 
 model Order {
-  id                   String   @id @default(cuid())
-  userId               String
-  status               String
-  subtotal             Float    @default(0)
-  shippingCost         Float    @default(0)
-  estimatedTax         Float    @default(0)
-  totalPrice           Float
-  shippingFullName     String?
-  shippingAddressLine1 String?
-  shippingAddressLine2 String?
-  shippingCity         String?
-  shippingState        String?
-  shippingPostalCode   String?
-  shippingCountry      String?
-  createdAt            DateTime @default(now())
+  id                      String           @id @default(cuid())
+  userId                  String
+  status                  String
+  subtotal                Float            @default(0)
+  shippingCost            Float            @default(0)
+  estimatedTax            Float            @default(0)
+  totalPrice              Float
+  shippingFullName        String?
+  shippingAddressLine1    String?
+  shippingAddressLine2    String?
+  shippingCity            String?
+  shippingState           String?
+  shippingPostalCode      String?
+  shippingCountry         String?
+  paymentStatus           PaymentStatus    @default(PENDING)
+  paymentProvider         PaymentProvider?
+  stripeCheckoutSessionId String?          @unique
+  stripePaymentIntentId   String?          @unique
+  paidAt                  DateTime?
+  createdAt               DateTime         @default(now())
 
   user  User        @relation(fields: [userId], references: [id])
   items OrderItem[]

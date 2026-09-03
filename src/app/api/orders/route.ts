@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { calculateOrderPricing, getDiscountedPrice } from "@/lib/pricing";
 import { getCurrentUser } from "@/lib/session";
@@ -112,6 +112,7 @@ export async function POST(request: Request): Promise<Response> {
         const order = await transaction.order.create({
           data: {
             status: "PENDING",
+            paymentStatus: PaymentStatus.PENDING,
             subtotal: pricing.subtotal,
             shippingCost: pricing.shippingCost,
             estimatedTax: pricing.estimatedTax,

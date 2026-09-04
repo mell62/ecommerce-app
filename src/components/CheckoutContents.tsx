@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import { calculateOrderPricing, ESTIMATED_TAX_RATE } from "@/lib/pricing";
+import { redirectToStripeCheckout } from "@/lib/checkout-navigation";
 import CheckoutSummarySkeleton from "@/components/CheckoutSummarySkeleton";
 import ShippingAddressFields from "@/components/ShippingAddressFields";
 import {
@@ -30,7 +30,7 @@ const addressFieldIds: Record<EditableShippingAddressField, string> = {
   postalCode: "shipping-postal-code",
 };
 
-function getOrderError(data: unknown): string {
+function getApiError(data: unknown, fallback: string): string {
   if (
     typeof data === "object" &&
     data !== null &&
@@ -40,15 +40,36 @@ function getOrderError(data: unknown): string {
     return data.error;
   }
 
-  return "Failed to place order.";
+  return fallback;
+}
+
+function getStringProperty(data: unknown, property: string): string | null {
+  if (
+    typeof data === "object" &&
+    data !== null &&
+    property in data &&
+    typeof data[property as keyof typeof data] === "string"
+  ) {
+    return data[property as keyof typeof data] as string;
+  }
+
+  return null;
+}
+
+async function getResponseData(response: Response): Promise<unknown> {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
 }
 
 export default function CheckoutContents({
   initialFullName = "",
 }: CheckoutContentsProps) {
-  const router = useRouter();
   const { items, isLoading, loadError, clearCart } = useCart();
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [orderError, setOrderError] = useState("");
   const [addressErrors, setAddressErrors] = useState<ShippingAddressErrors>({});
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress>({
@@ -104,41 +125,71 @@ export default function CheckoutContents({
       return;
     }
 
-    const addressResult = validateShippingAddress(shippingAddress);
-
-    if (!addressResult.success) {
-      setAddressErrors(addressResult.errors);
-      setOrderError("Check the highlighted shipping details.");
-      focusFirstAddressError(addressResult.errors);
-      return;
-    }
+    let orderId = pendingOrderId;
 
     setOrderError("");
-    setAddressErrors({});
     setIsPlacingOrder(true);
 
     try {
-      const response = await fetch("/api/orders", {
+      if (!orderId) {
+        const addressResult = validateShippingAddress(shippingAddress);
+
+        if (!addressResult.success) {
+          setAddressErrors(addressResult.errors);
+          setOrderError("Check the highlighted shipping details.");
+          focusFirstAddressError(addressResult.errors);
+          return;
+        }
+
+        setAddressErrors({});
+
+        const response = await fetch("/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            shippingAddress: addressResult.data,
+          }),
+        });
+        const data = await getResponseData(response);
+
+        if (!response.ok) {
+          throw new Error(getApiError(data, "Failed to place order."));
+        }
+
+        orderId = getStringProperty(data, "id");
+
+        if (!orderId) {
+          throw new Error("The server did not return a valid order ID.");
+        }
+
+        setPendingOrderId(orderId);
+        clearCart();
+      }
+
+      const checkoutResponse = await fetch("/api/checkout/session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          shippingAddress: addressResult.data,
-        }),
+        body: JSON.stringify({ orderId }),
       });
-      const contentType = response.headers.get("content-type");
-      const data: unknown = contentType?.includes("application/json")
-        ? await response.json()
-        : null;
+      const checkoutData = await getResponseData(checkoutResponse);
 
-      if (!response.ok) {
-        throw new Error(getOrderError(data));
+      if (!checkoutResponse.ok) {
+        throw new Error(
+          getApiError(checkoutData, "Failed to start secure payment.")
+        );
       }
 
-      clearCart();
-      router.push("/orders?success=true");
-      router.refresh();
+      const checkoutUrl = getStringProperty(checkoutData, "checkoutUrl");
+
+      if (!checkoutUrl) {
+        throw new Error("The server did not return a payment URL.");
+      }
+
+      redirectToStripeCheckout(checkoutUrl);
     } catch (error) {
       setOrderError(
         error instanceof Error ? error.message : "Failed to place order."
@@ -161,6 +212,60 @@ export default function CheckoutContents({
         >
           <p className="font-semibold text-danger">{loadError}</p>
           <p className="mt-2 text-muted">Refresh the page to try again.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (pendingOrderId && items.length === 0) {
+    return (
+      <div className="max-w-3xl">
+        <div className="rounded-ui border border-border bg-surface p-6 shadow-sm sm:p-8">
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-700">
+            Order created
+          </p>
+          <h2 className="mt-2 font-display text-2xl font-semibold text-foreground">
+            Your order is ready for payment
+          </h2>
+          <p className="mt-2 max-w-xl leading-7 text-muted">
+            Your products have been reserved. Continue to Stripe to complete
+            the payment for this order.
+          </p>
+
+          {orderError && (
+            <p
+              className="mt-5 rounded-ui border border-danger/25 bg-danger/5 p-3 text-sm text-danger"
+              role="alert"
+            >
+              {orderError}
+            </p>
+          )}
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={placeOrder}
+              disabled={isPlacingOrder}
+              aria-busy={isPlacingOrder}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+            >
+              {isPlacingOrder && (
+                <span
+                  aria-hidden="true"
+                  className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none"
+                />
+              )}
+              {isPlacingOrder
+                ? "Preparing secure payment..."
+                : "Try payment again"}
+            </button>
+            <Link
+              href="/orders"
+              className="inline-flex min-h-11 items-center justify-center rounded-ui border border-border px-5 py-2.5 font-semibold text-foreground hover:border-brand-300 hover:bg-brand-50/60"
+            >
+              View orders
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -329,11 +434,11 @@ export default function CheckoutContents({
               className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none"
             />
           )}
-          {isPlacingOrder ? "Placing order..." : "Place order"}
+          {isPlacingOrder ? "Preparing secure payment..." : "Continue to payment"}
         </button>
 
         <p className="mt-3 text-center text-xs leading-5 text-muted">
-          Pricing is recalculated securely when you place the order.
+          You will complete your payment securely through Stripe.
         </p>
       </aside>
     </div>

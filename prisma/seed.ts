@@ -2,6 +2,7 @@ import "dotenv/config";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+import { reviewFixturesByProductName } from "./review-fixtures.ts";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -35,18 +36,7 @@ async function main(): Promise<void> {
       isBestSeller: true,
       isFeatured: false,
       reviews: {
-        create: [
-          {
-            name: "Watson",
-            rating: 5,
-            comment: "Excellent typing feel and great RGB lighting.",
-          },
-          {
-            name: "Lestrade",
-            rating: 4,
-            comment: "Solid keyboard for the price.",
-          },
-        ],
+        create: [...reviewFixturesByProductName["Mechanical Keyboard"]],
       },
     },
   });
@@ -64,14 +54,7 @@ async function main(): Promise<void> {
       isBestSeller: false,
       isFeatured: true,
       reviews: {
-        create: [
-          {
-            name: "Sherlock",
-            rating: 5,
-            comment:
-              "Very responsive and comfortable for long gaming sessions.",
-          },
-        ],
+        create: [...reviewFixturesByProductName["Gaming Mouse"]],
       },
     },
   });
@@ -89,18 +72,7 @@ async function main(): Promise<void> {
       isBestSeller: false,
       isFeatured: false,
       reviews: {
-        create: [
-          {
-            name: "Irene",
-            rating: 4,
-            comment: "Great refresh rate and good colors.",
-          },
-          {
-            name: "James",
-            rating: 5,
-            comment: "Perfect monitor for gaming and work.",
-          },
-        ],
+        create: [...reviewFixturesByProductName["27-inch Monitor"]],
       },
     },
   });

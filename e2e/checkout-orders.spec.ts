@@ -17,6 +17,13 @@ test("customer can create an order and continue to payment", async ({
       }),
     });
   });
+  await page.route("**/api/checkout/session/status", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ paymentStatus: "PENDING" }),
+    });
+  });
 
   await page.goto("/products");
   await page.getByRole("link", { name: /Mechanical Keyboard/ }).first().click();

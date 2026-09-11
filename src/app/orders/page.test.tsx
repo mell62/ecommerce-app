@@ -23,6 +23,12 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
 }));
 
+vi.mock("@/components/PaymentStatusReconciler", () => ({
+  default: ({ sessionId }: { sessionId: string }) => (
+    <span>Checking Session {sessionId}</span>
+  ),
+}));
+
 const order = {
   id: "order-12345678",
   userId: "customer-1",
@@ -96,6 +102,7 @@ describe("OrdersPage accessibility", () => {
     render(page);
 
     expect(screen.getByText("Confirming your payment")).toBeInTheDocument();
+    expect(screen.getByText("Checking Session cs_test_paid")).toBeInTheDocument();
     expect(screen.queryByText("Payment received")).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Complete payment" })

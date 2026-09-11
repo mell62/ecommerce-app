@@ -1,44 +1,12 @@
 import type Stripe from "stripe";
 import { failPendingOrder, markOrderPaid } from "@/lib/payment-service";
 import { getStripeClient, getStripeWebhookSecret } from "@/lib/stripe";
+import {
+  getStripeOrderReference,
+  getStripePaymentIntentId,
+} from "@/lib/stripe-session";
 
 export const runtime = "nodejs";
-
-function getOrderReference(session: Stripe.Checkout.Session) {
-  const orderId = session.metadata?.orderId;
-  const userId = session.metadata?.userId;
-
-  if (
-    !orderId ||
-    !userId ||
-    session.amount_total === null ||
-    !session.currency
-  ) {
-    throw new Error("Stripe Checkout Session metadata is incomplete.");
-  }
-
-  return {
-    orderId,
-    userId,
-    sessionId: session.id,
-    amountTotal: session.amount_total,
-    currency: session.currency,
-  };
-}
-
-function getPaymentIntentId(session: Stripe.Checkout.Session): string {
-  const paymentIntent = session.payment_intent;
-
-  if (typeof paymentIntent === "string") {
-    return paymentIntent;
-  }
-
-  if (paymentIntent?.id) {
-    return paymentIntent.id;
-  }
-
-  throw new Error("Stripe Checkout Session is missing a Payment Intent.");
-}
 
 export async function POST(request: Request): Promise<Response> {
   const signature = request.headers.get("stripe-signature");
@@ -76,23 +44,23 @@ export async function POST(request: Request): Promise<Response> {
         }
 
         await markOrderPaid({
-          ...getOrderReference(session),
-          paymentIntentId: getPaymentIntentId(session),
+          ...getStripeOrderReference(session),
+          paymentIntentId: getStripePaymentIntentId(session),
           paidAt: new Date(event.created * 1000),
         });
         break;
 
       case "checkout.session.async_payment_succeeded":
         await markOrderPaid({
-          ...getOrderReference(session),
-          paymentIntentId: getPaymentIntentId(session),
+          ...getStripeOrderReference(session),
+          paymentIntentId: getStripePaymentIntentId(session),
           paidAt: new Date(event.created * 1000),
         });
         break;
 
       case "checkout.session.async_payment_failed":
       case "checkout.session.expired":
-        await failPendingOrder(getOrderReference(session));
+        await failPendingOrder(getStripeOrderReference(session));
         break;
     }
 

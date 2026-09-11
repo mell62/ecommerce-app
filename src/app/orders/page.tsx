@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import CompletePaymentButton from "@/components/CompletePaymentButton";
 import OrdersPageHeader from "@/components/OrdersPageHeader";
+import PaymentStatusReconciler from "@/components/PaymentStatusReconciler";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
@@ -19,6 +20,7 @@ type PaymentNotice = Readonly<{
   tone: "success" | "pending" | "cancelled";
   title: string;
   message: string;
+  sessionId?: string;
 }>;
 
 function getSingleSearchParam(
@@ -59,6 +61,7 @@ function getPaymentNotice(
       title: "Confirming your payment",
       message:
         "Stripe returned you to Zeus, but payment confirmation is still processing. Refresh this page in a moment.",
+      sessionId,
     };
   }
 
@@ -180,6 +183,12 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
             <p className="mt-1 text-sm leading-6">
               {paymentNotice.message}
             </p>
+            {paymentNotice.tone === "pending" &&
+              paymentNotice.sessionId && (
+                <PaymentStatusReconciler
+                  sessionId={paymentNotice.sessionId}
+                />
+              )}
           </div>
         </div>
       )}

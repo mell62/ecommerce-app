@@ -2,6 +2,7 @@ import { PaymentStatus } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import CompletePaymentButton from "@/components/CompletePaymentButton";
 import OrdersPageHeader from "@/components/OrdersPageHeader";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
@@ -319,6 +320,20 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
                         ${order.totalPrice.toFixed(2)}
                       </dd>
                     </dl>
+                  )}
+
+                  {order.paymentStatus === PaymentStatus.PENDING && (
+                    <div className="mt-4 flex flex-col gap-4 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="font-semibold text-foreground">
+                          Payment pending
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-muted">
+                          Complete this order securely through Stripe.
+                        </p>
+                      </div>
+                      <CompletePaymentButton orderId={order.id} />
+                    </div>
                   )}
                 </footer>
               </article>

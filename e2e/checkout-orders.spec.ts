@@ -57,4 +57,9 @@ test("customer can create an order and continue to payment", async ({
       exact: true,
     }),
   ).toBeVisible();
+  await expect(
+    page.locator("article").first().getByRole("button", {
+      name: "Complete payment",
+    }),
+  ).toBeVisible();
 });

@@ -97,6 +97,9 @@ describe("OrdersPage accessibility", () => {
 
     expect(screen.getByText("Confirming your payment")).toBeInTheDocument();
     expect(screen.queryByText("Payment received")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Complete payment" })
+    ).toBeInTheDocument();
   });
 
   it("explains when the customer cancels Stripe Checkout", async () => {
@@ -119,6 +122,9 @@ describe("OrdersPage accessibility", () => {
     expect(screen.getByText("Payment not completed")).toBeInTheDocument();
     expect(
       screen.getByText(/Your order is saved so you can complete it later/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Complete payment" })
     ).toBeInTheDocument();
   });
 });

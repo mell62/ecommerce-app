@@ -11,10 +11,10 @@ describe("AdminPage", () => {
       screen.getByRole("heading", { level: 1, name: "Admin dashboard" })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { level: 2, name: "Products" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { level: 2, name: "Inventory" })
+      screen.getByRole("heading", {
+        level: 2,
+        name: "Products & Inventory",
+      })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { level: 2, name: "Orders" })

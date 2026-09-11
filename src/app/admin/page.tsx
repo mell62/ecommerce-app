@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Admin dashboard",
@@ -7,16 +8,17 @@ export const metadata: Metadata = {
 
 const adminAreas = [
   {
-    title: "Products",
-    description: "Create and maintain the products shown in the Zeus catalog.",
-  },
-  {
-    title: "Inventory",
-    description: "Monitor stock levels and keep product availability accurate.",
+    title: "Products & Inventory",
+    description:
+      "Maintain the Zeus catalog, review pricing, and monitor stock levels.",
+    href: "/admin/products",
+    action: "Manage catalog",
   },
   {
     title: "Orders",
     description: "Review customer orders and update their fulfillment status.",
+    href: null,
+    action: null,
   },
 ] as const;
 
@@ -34,7 +36,7 @@ export default function AdminPage() {
         workspace.
       </p>
 
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
+      <div className="mt-8 grid gap-4 md:grid-cols-2">
         {adminAreas.map((area) => (
           <section
             key={area.title}
@@ -46,9 +48,18 @@ export default function AdminPage() {
             <p className="mt-2 text-sm leading-6 text-muted">
               {area.description}
             </p>
-            <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
-              Coming next
-            </p>
+            {area.href && area.action ? (
+              <Link
+                href={area.href}
+                className="mt-5 inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
+              >
+                {area.action}
+              </Link>
+            ) : (
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
+                Coming next
+              </p>
+            )}
           </section>
         ))}
       </div>

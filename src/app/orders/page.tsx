@@ -1,3 +1,4 @@
+import { PaymentStatus } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -7,9 +8,95 @@ import { getCurrentUser } from "@/lib/session";
 
 type OrdersPageProps = Readonly<{
   searchParams: Promise<{
-    success?: string | string[];
+    payment?: string | string[];
+    session_id?: string | string[];
+    order_id?: string | string[];
   }>;
 }>;
+
+type PaymentNotice = Readonly<{
+  tone: "success" | "pending" | "cancelled";
+  title: string;
+  message: string;
+}>;
+
+function getSingleSearchParam(
+  value: string | string[] | undefined
+): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getPaymentNotice(
+  searchParams: Awaited<OrdersPageProps["searchParams"]>,
+  orders: ReadonlyArray<{
+    id: string;
+    paymentStatus: PaymentStatus;
+    stripeCheckoutSessionId: string | null;
+  }>
+): PaymentNotice | null {
+  const payment = getSingleSearchParam(searchParams.payment);
+
+  if (payment === "success") {
+    const sessionId = getSingleSearchParam(searchParams.session_id);
+    const returnedOrder = sessionId
+      ? orders.find(
+          (order) => order.stripeCheckoutSessionId === sessionId
+        )
+      : undefined;
+
+    if (returnedOrder?.paymentStatus === PaymentStatus.PAID) {
+      return {
+        tone: "success",
+        title: "Payment received",
+        message:
+          "Your payment is confirmed and your order is now being processed.",
+      };
+    }
+
+    return {
+      tone: "pending",
+      title: "Confirming your payment",
+      message:
+        "Stripe returned you to Zeus, but payment confirmation is still processing. Refresh this page in a moment.",
+    };
+  }
+
+  if (payment === "cancelled") {
+    const orderId = getSingleSearchParam(searchParams.order_id);
+    const returnedOrder = orderId
+      ? orders.find((order) => order.id === orderId)
+      : undefined;
+
+    if (returnedOrder?.paymentStatus === PaymentStatus.PAID) {
+      return {
+        tone: "success",
+        title: "Payment already received",
+        message:
+          "This order was paid successfully and is now being processed.",
+      };
+    }
+
+    return {
+      tone: "cancelled",
+      title: "Payment not completed",
+      message:
+        "No payment was confirmed. Your order is saved so you can complete it later.",
+    };
+  }
+
+  return null;
+}
+
+function getPaymentNoticeClassName(tone: PaymentNotice["tone"]): string {
+  switch (tone) {
+    case "success":
+      return "border-success/25 bg-success/5 text-success";
+    case "pending":
+      return "border-brand-500/25 bg-brand-50 text-brand-700";
+    case "cancelled":
+      return "border-warning/30 bg-warning/5 text-warning";
+  }
+}
 
 function formatOrderStatus(status: string): string {
   return status
@@ -40,10 +127,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
     redirect("/login");
   }
 
-  const { success } = await searchParams;
-  const orderWasPlaced = Array.isArray(success)
-    ? success.includes("true")
-    : success === "true";
+  const resolvedSearchParams = await searchParams;
 
   const orders = await prisma.order.findMany({
     where: {
@@ -60,35 +144,40 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       createdAt: "desc",
     },
   });
+  const paymentNotice = getPaymentNotice(resolvedSearchParams, orders);
 
   return (
     <div className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-8 sm:py-10 lg:py-12">
       <OrdersPageHeader />
 
-      {orderWasPlaced && (
+      {paymentNotice && (
         <div
-          className="mb-6 flex items-start gap-3 rounded-ui border border-success/25 bg-success/5 p-4 text-success"
+          className={`mb-6 flex items-start gap-3 rounded-ui border p-4 ${getPaymentNoticeClassName(paymentNotice.tone)}`}
           role="status"
           aria-live="polite"
         >
           <span
             aria-hidden="true"
-            className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-success text-sm font-bold text-white"
+            className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-current text-sm font-bold"
           >
-            <svg
-              viewBox="0 0 20 20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="size-4"
-            >
-              <path d="m5.5 10 3 3 6-6" />
-            </svg>
+            {paymentNotice.tone === "success" ? (
+              <svg
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="size-4"
+              >
+                <path d="m5.5 10 3 3 6-6" />
+              </svg>
+            ) : (
+              <span>i</span>
+            )}
           </span>
           <div>
-            <p className="font-semibold">Order placed successfully</p>
+            <p className="font-semibold">{paymentNotice.title}</p>
             <p className="mt-1 text-sm leading-6">
-              Your order has been saved and appears first in your history.
+              {paymentNotice.message}
             </p>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { POST } from "./route";
 
 const getCurrentUserMock = vi.hoisted(() => vi.fn());
 const transactionMock = vi.hoisted(() => vi.fn());
+const existingOrderFindUniqueMock = vi.hoisted(() => vi.fn());
 const transactionClient = vi.hoisted(() => ({
   cart: {
     findUnique: vi.fn(),
@@ -12,6 +13,7 @@ const transactionClient = vi.hoisted(() => ({
     deleteMany: vi.fn(),
   },
   order: {
+    findUnique: vi.fn(),
     create: vi.fn(),
   },
   product: {
@@ -22,6 +24,9 @@ const transactionClient = vi.hoisted(() => ({
 vi.mock("@/lib/db", () => ({
   prisma: {
     $transaction: transactionMock,
+    order: {
+      findUnique: existingOrderFindUniqueMock,
+    },
   },
 }));
 
@@ -43,10 +48,12 @@ const validShippingAddress = {
   postalCode: "78701",
   country: "US",
 };
+const checkoutIdempotencyKey = "123e4567-e89b-42d3-a456-426614174000";
 
 function createOrderRequest(
   body: unknown = {
     shippingAddress: validShippingAddress,
+    checkoutIdempotencyKey,
   }
 ): Request {
   return new Request("http://localhost/api/orders", {
@@ -93,6 +100,8 @@ describe("orders API", () => {
         callback: (client: typeof transactionClient) => Promise<unknown>
       ) => callback(transactionClient)
     );
+    transactionClient.order.findUnique.mockResolvedValue(null);
+    existingOrderFindUniqueMock.mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -115,6 +124,7 @@ describe("orders API", () => {
           ...validShippingAddress,
           postalCode: "invalid",
         },
+        checkoutIdempotencyKey,
       })
     );
 
@@ -124,6 +134,22 @@ describe("orders API", () => {
       fieldErrors: {
         postalCode: "Enter a valid 5-digit or ZIP+4 code.",
       },
+    });
+    expect(transactionMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { shippingAddress: validShippingAddress },
+    {
+      shippingAddress: validShippingAddress,
+      checkoutIdempotencyKey: "not-a-uuid",
+    },
+  ])("rejects a missing or invalid idempotency key %#", async (body) => {
+    const response = await POST(createOrderRequest(body));
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "A valid checkout idempotency key is required.",
     });
     expect(transactionMock).not.toHaveBeenCalled();
   });
@@ -191,6 +217,7 @@ describe("orders API", () => {
         estimatedTax: 5.68,
         totalPrice: 76.67,
         userId: currentUser.id,
+        checkoutIdempotencyKey,
         shippingFullName: "Alex Morgan",
         shippingAddressLine1: "123 Technology Avenue",
         shippingAddressLine2: "Apartment 4B",
@@ -240,6 +267,55 @@ describe("orders API", () => {
         cartId: cart.id,
       },
     });
+  });
+
+  it("returns the original order when the same checkout is retried", async () => {
+    const existingOrder = {
+      id: "order-existing",
+      userId: currentUser.id,
+      checkoutIdempotencyKey,
+      items: [],
+    };
+    transactionClient.order.findUnique.mockResolvedValue(existingOrder);
+
+    const response = await POST(createOrderRequest());
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(existingOrder);
+    expect(transactionClient.cart.findUnique).not.toHaveBeenCalled();
+    expect(transactionClient.order.create).not.toHaveBeenCalled();
+    expect(transactionClient.product.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("recovers the original order when concurrent creation hits the unique constraint", async () => {
+    const existingOrder = {
+      id: "order-concurrent",
+      userId: currentUser.id,
+      checkoutIdempotencyKey,
+      items: [],
+    };
+    transactionMock.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint", {
+        code: "P2002",
+        clientVersion: "test",
+      })
+    );
+    existingOrderFindUniqueMock.mockResolvedValue(existingOrder);
+
+    const response = await POST(createOrderRequest());
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(existingOrder);
+    expect(existingOrderFindUniqueMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          userId_checkoutIdempotencyKey: {
+            userId: currentUser.id,
+            checkoutIdempotencyKey,
+          },
+        },
+      })
+    );
   });
 
   it("returns a stock conflict when an atomic decrement loses a race", async () => {

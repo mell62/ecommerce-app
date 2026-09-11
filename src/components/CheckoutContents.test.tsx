@@ -47,10 +47,7 @@ describe("CheckoutContents accessibility", () => {
 
   beforeEach(() => {
     redirectToStripeCheckoutMock.mockReset();
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(cartResponse.clone())
-    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(cartResponse.clone()));
   });
 
   afterEach(() => {
@@ -95,7 +92,8 @@ describe("CheckoutContents accessibility", () => {
   });
 
   it("creates an order and redirects the customer to Stripe Checkout", async () => {
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockResolvedValueOnce(cartResponse.clone())
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ id: "order-1" }), {
@@ -141,6 +139,7 @@ describe("CheckoutContents accessibility", () => {
       "/api/orders",
       expect.objectContaining({
         method: "POST",
+        body: expect.stringContaining('"checkoutIdempotencyKey"'),
       })
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -154,7 +153,8 @@ describe("CheckoutContents accessibility", () => {
   });
 
   it("shows the API error instead of redirecting when payment cannot start", async () => {
-    const fetchMock = vi.fn()
+    const fetchMock = vi
+      .fn()
       .mockResolvedValueOnce(cartResponse.clone())
       .mockResolvedValueOnce(
         new Response(JSON.stringify({ id: "order-1" }), {
@@ -206,9 +206,7 @@ describe("CheckoutContents accessibility", () => {
       screen.getByRole("heading", { name: "Your order is ready for payment" })
     ).toBeVisible();
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Try payment again" })
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Try payment again" }));
 
     await waitFor(() => {
       expect(redirectToStripeCheckoutMock).toHaveBeenCalledWith(

@@ -76,11 +76,14 @@ model Order {
   paymentProvider         PaymentProvider?
   stripeCheckoutSessionId String?          @unique
   stripePaymentIntentId   String?          @unique
+  checkoutIdempotencyKey  String?
   paidAt                  DateTime?
   createdAt               DateTime         @default(now())
 
   user  User        @relation(fields: [userId], references: [id])
   items OrderItem[]
+
+  @@unique([userId, checkoutIdempotencyKey])
 }
 
 model OrderItem {

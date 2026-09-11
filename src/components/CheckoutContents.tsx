@@ -68,6 +68,7 @@ export default function CheckoutContents({
   initialFullName = "",
 }: CheckoutContentsProps) {
   const { items, isLoading, loadError, clearCart } = useCart();
+  const [checkoutIdempotencyKey] = useState(() => crypto.randomUUID());
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [orderError, setOrderError] = useState("");
@@ -150,6 +151,7 @@ export default function CheckoutContents({
           },
           body: JSON.stringify({
             shippingAddress: addressResult.data,
+            checkoutIdempotencyKey,
           }),
         });
         const data = await getResponseData(response);
@@ -228,8 +230,8 @@ export default function CheckoutContents({
             Your order is ready for payment
           </h2>
           <p className="mt-2 max-w-xl leading-7 text-muted">
-            Your products have been reserved. Continue to Stripe to complete
-            the payment for this order.
+            Your products have been reserved. Continue to Stripe to complete the
+            payment for this order.
           </p>
 
           {orderError && (
@@ -434,7 +436,9 @@ export default function CheckoutContents({
               className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none"
             />
           )}
-          {isPlacingOrder ? "Preparing secure payment..." : "Continue to payment"}
+          {isPlacingOrder
+            ? "Preparing secure payment..."
+            : "Continue to payment"}
         </button>
 
         <p className="mt-3 text-center text-xs leading-5 text-muted">

@@ -114,6 +114,18 @@ describe("Stripe webhook API", () => {
     expect(failPendingOrderMock).not.toHaveBeenCalled();
   });
 
+  it("acknowledges a duplicate successful webhook", async () => {
+    constructEventMock.mockReturnValue(
+      createCheckoutEvent("checkout.session.completed")
+    );
+    markOrderPaidMock.mockResolvedValue("already-processed");
+
+    const response = await POST(createRequest("payload", "sig_test"));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ received: true });
+  });
+
   it("waits for a delayed payment when Checkout first completes unpaid", async () => {
     constructEventMock.mockReturnValue(
       createCheckoutEvent("checkout.session.completed", {

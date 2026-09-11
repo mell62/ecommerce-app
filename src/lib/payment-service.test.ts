@@ -153,6 +153,44 @@ describe("payment service", () => {
     expect(productUpdateMock).not.toHaveBeenCalled();
   });
 
+  it("does not restore stock when a late failure event follows payment", async () => {
+    orderFindUniqueMock.mockResolvedValue({
+      ...pendingOrder,
+      paymentStatus: PaymentStatus.PAID,
+    });
+
+    await expect(failPendingOrder(reference)).resolves.toBe(
+      "already-processed"
+    );
+
+    expect(orderUpdateManyMock).not.toHaveBeenCalled();
+    expect(productUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it("does not restore stock if the order status changes concurrently", async () => {
+    orderUpdateManyMock.mockResolvedValue({ count: 0 });
+
+    await expect(failPendingOrder(reference)).rejects.toThrow(
+      "status changed concurrently"
+    );
+
+    expect(productUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a different Stripe Session for the same order", async () => {
+    orderFindUniqueMock.mockResolvedValue({
+      ...pendingOrder,
+      stripeCheckoutSessionId: "cs_original_checkout",
+    });
+
+    await expect(failPendingOrder(reference)).rejects.toThrow(
+      "Session does not match"
+    );
+
+    expect(orderUpdateManyMock).not.toHaveBeenCalled();
+    expect(productUpdateMock).not.toHaveBeenCalled();
+  });
+
   it("rejects a session belonging to a different customer", async () => {
     orderFindUniqueMock.mockResolvedValue({
       ...pendingOrder,

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CartProvider from "@/components/CartProvider";
 import WishlistProvider from "@/components/WishlistProvider";
 import ProductPage from "./page";
@@ -52,6 +52,14 @@ const product = {
       comment: "Comfortable to use throughout the workday.",
       createdAt: new Date("2026-08-20T12:00:00.000Z"),
     },
+    {
+      id: "review-2",
+      userId: "customer-3",
+      name: "Taylor",
+      rating: 4,
+      comment: "Responsive tracking with a comfortable shape.",
+      createdAt: new Date("2026-08-18T12:00:00.000Z"),
+    },
   ],
 };
 
@@ -74,6 +82,21 @@ describe("ProductPage accessibility", () => {
       id: "customer-1",
       name: "Alex",
     });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json({
+          status: "ready",
+          summary: "Customers praise its comfort and responsive tracking.",
+          reviewCount: 2,
+          generatedAt: "2026-09-12T10:00:00.000Z",
+        })
+      )
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it("has no detectable accessibility violations with reviews", async () => {
@@ -92,6 +115,11 @@ describe("ProductPage accessibility", () => {
     expect(
       screen.getByRole("heading", { level: 2, name: "Leave a review" })
     ).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "Customers praise its comfort and responsive tracking."
+      )
+    ).toBeVisible();
 
     const results = await axe(container);
 

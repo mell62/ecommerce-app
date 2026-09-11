@@ -31,7 +31,7 @@ function getDeepSeekApiKey(): string {
   return apiKey;
 }
 
-function getDeepSeekModel(): string {
+export function getReviewSummaryModel(): string {
   return process.env.DEEPSEEK_MODEL?.trim() || DEFAULT_DEEPSEEK_MODEL;
 }
 
@@ -58,7 +58,7 @@ export async function summarizeProductReviews(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: getDeepSeekModel(),
+      model: getReviewSummaryModel(),
       messages: [
         {
           role: "system",

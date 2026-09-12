@@ -50,12 +50,10 @@ test("customer can create an order and continue to payment", async ({
   await page.getByLabel("ZIP code").fill("78701");
   await page.getByRole("button", { name: "Continue to payment" }).click();
 
-  await expect(page).toHaveURL(
-    /\/orders\?payment=success&session_id=cs_e2e_checkout$/,
-  );
   await expect(page.getByRole("status")).toContainText(
     "Confirming your payment",
   );
+  await expect(page).toHaveURL(/\/orders$/);
   await expect(
     page.getByRole("heading", { level: 1, name: "Your orders" }),
   ).toBeVisible();

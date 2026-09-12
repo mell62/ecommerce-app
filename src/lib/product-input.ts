@@ -2,6 +2,7 @@ export const PRODUCT_NAME_MAX_LENGTH = 120;
 export const PRODUCT_DESCRIPTION_MAX_LENGTH = 2_000;
 export const PRODUCT_CATEGORY_MAX_LENGTH = 80;
 export const PRODUCT_IMAGE_URL_MAX_LENGTH = 2_048;
+export const PRODUCT_IMAGE_BUCKET = "product-images";
 
 export type ProductInput = Readonly<{
   name: string;
@@ -41,7 +42,28 @@ export function isSupportedProductImageUrl(imageUrl: string): boolean {
   try {
     const url = new URL(imageUrl);
 
-    return url.protocol === "https:" && url.hostname === "images.unsplash.com";
+    if (url.protocol !== "https:") {
+      return false;
+    }
+
+    if (url.hostname === "images.unsplash.com") {
+      return true;
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+    if (!supabaseUrl) {
+      return false;
+    }
+
+    const configuredSupabaseUrl = new URL(supabaseUrl);
+
+    return (
+      url.origin === configuredSupabaseUrl.origin &&
+      url.pathname.startsWith(
+        `/storage/v1/object/public/${PRODUCT_IMAGE_BUCKET}/`
+      )
+    );
   } catch {
     return false;
   }

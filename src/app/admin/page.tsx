@@ -25,8 +25,13 @@ const adminAreas = [
 export default function AdminPage() {
   return (
     <div className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-10 sm:py-12 lg:py-16">
-      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-brand-700">
-        Zeus operations
+      <p className="flex items-baseline gap-1">
+        <span className="font-display text-base font-bold tracking-tight text-foreground">
+          Zeus
+        </span>
+        <span className="text-sm font-semibold uppercase tracking-wider text-brand-700">
+          Operations
+        </span>
       </p>
       <h1 className="mt-2 font-display text-[var(--store-text-page-title)] font-semibold tracking-tight text-foreground">
         Admin dashboard

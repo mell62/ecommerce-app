@@ -57,6 +57,10 @@ describe("AdminPage", () => {
     expect(screen.getByText("12")).toBeInTheDocument();
     expect(screen.getByText("Low stock")).toBeInTheDocument();
     expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View low stock" })).toHaveAttribute(
+      "href",
+      "/admin/products?stock=low"
+    );
     expect(screen.getByText("Awaiting fulfillment")).toBeInTheDocument();
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.getByText("Paid revenue")).toBeInTheDocument();

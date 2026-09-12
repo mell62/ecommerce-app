@@ -45,6 +45,7 @@ type AdminProductsPageProps = Readonly<{
   searchParams: Promise<{
     created?: string | string[];
     deleted?: string | string[];
+    stock?: string | string[];
     updated?: string | string[];
   }>;
 }>;
@@ -65,7 +66,20 @@ export default async function AdminProductsPage({
     (Array.isArray(resolvedSearchParams.deleted)
       ? resolvedSearchParams.deleted[0]
       : resolvedSearchParams.deleted) === "true";
+  const stockFilter = Array.isArray(resolvedSearchParams.stock)
+    ? resolvedSearchParams.stock[0]
+    : resolvedSearchParams.stock;
+  const isLowStockView = stockFilter === "low";
   const products = await prisma.product.findMany({
+    ...(isLowStockView
+      ? {
+          where: {
+            stockCount: {
+              lte: 10,
+            },
+          },
+        }
+      : {}),
     select: {
       id: true,
       name: true,
@@ -103,18 +117,29 @@ export default async function AdminProductsPage({
             Catalog management
           </p>
           <h1 className="mt-2 font-display text-[var(--store-text-page-title)] font-semibold tracking-tight text-foreground">
-            Products and inventory
+            {isLowStockView ? "Low-stock inventory" : "Products and inventory"}
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted">
-            Review product information and spot stock levels that need
-            attention.
+            {isLowStockView
+              ? "Review products with 10 or fewer units remaining and prioritize replenishment."
+              : "Review product information and spot stock levels that need attention."}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <p className="rounded-ui border border-border bg-surface px-4 py-2 text-sm font-semibold text-muted">
-            {products.length} {products.length === 1 ? "product" : "products"}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="rounded-ui border border-border bg-surface px-4 py-2 text-sm font-semibold text-muted">
+              {products.length} {products.length === 1 ? "product" : "products"}
+            </p>
+            {isLowStockView && products.length > 0 && (
+              <Link
+                href="/admin/products"
+                className="inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
+              >
+                View all products
+              </Link>
+            )}
+          </div>
           <Link
             href="/admin/products/new"
             className="inline-flex min-h-[var(--store-touch-target)] items-center justify-center rounded-ui bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
@@ -140,12 +165,21 @@ export default async function AdminProductsPage({
       {products.length === 0 ? (
         <section className="mt-8 rounded-ui border border-dashed border-border bg-surface px-5 py-10 text-center">
           <h2 className="font-display text-xl font-semibold text-foreground">
-            No products yet
+            {isLowStockView ? "No low-stock products" : "No products yet"}
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
-            Products added to the catalog will appear here with their current
-            inventory.
+            {isLowStockView
+              ? "Every catalog product currently has more than 10 units available."
+              : "Products added to the catalog will appear here with their current inventory."}
           </p>
+          {isLowStockView && (
+            <Link
+              href="/admin/products"
+              className="mt-4 inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
+            >
+              View all products
+            </Link>
+          )}
         </section>
       ) : (
         <ul className="mt-8 grid gap-4" aria-label="Product inventory">

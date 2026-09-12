@@ -69,7 +69,7 @@ export default async function AdminPage() {
       label: "Low stock",
       value: lowStockCount.toLocaleString("en-US"),
       detail: "Products with 10 or fewer units",
-      href: "/admin/products",
+      href: "/admin/products?stock=low",
     },
     {
       label: "Awaiting fulfillment",

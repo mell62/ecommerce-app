@@ -48,7 +48,9 @@ describe("AdminProductsPage", () => {
   it("shows catalog and inventory details accessibly", async () => {
     productFindManyMock.mockResolvedValue(products);
 
-    const page = await AdminProductsPage();
+    const page = await AdminProductsPage({
+      searchParams: Promise.resolve({}),
+    });
     const { container } = render(page);
 
     expect(
@@ -87,11 +89,29 @@ describe("AdminProductsPage", () => {
   it("shows an empty state when the catalog has no products", async () => {
     productFindManyMock.mockResolvedValue([]);
 
-    render(await AdminProductsPage());
+    render(
+      await AdminProductsPage({
+        searchParams: Promise.resolve({}),
+      })
+    );
 
     expect(
       screen.getByRole("heading", { level: 2, name: "No products yet" })
     ).toBeInTheDocument();
     expect(screen.getByText("0 products")).toBeInTheDocument();
+  });
+
+  it("confirms that a product was created", async () => {
+    productFindManyMock.mockResolvedValue(products);
+
+    render(
+      await AdminProductsPage({
+        searchParams: Promise.resolve({ created: "true" }),
+      })
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Product created successfully."
+    );
   });
 });

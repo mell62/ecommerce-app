@@ -37,7 +37,20 @@ function getStockDetails(stockCount: number): {
   };
 }
 
-export default async function AdminProductsPage() {
+type AdminProductsPageProps = Readonly<{
+  searchParams: Promise<{
+    created?: string | string[];
+  }>;
+}>;
+
+export default async function AdminProductsPage({
+  searchParams,
+}: AdminProductsPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const wasCreated =
+    (Array.isArray(resolvedSearchParams.created)
+      ? resolvedSearchParams.created[0]
+      : resolvedSearchParams.created) === "true";
   const products = await prisma.product.findMany({
     select: {
       id: true,
@@ -79,10 +92,27 @@ export default async function AdminProductsPage() {
           </p>
         </div>
 
-        <p className="rounded-ui border border-border bg-surface px-4 py-2 text-sm font-semibold text-muted">
-          {products.length} {products.length === 1 ? "product" : "products"}
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="rounded-ui border border-border bg-surface px-4 py-2 text-sm font-semibold text-muted">
+            {products.length} {products.length === 1 ? "product" : "products"}
+          </p>
+          <Link
+            href="/admin/products/new"
+            className="inline-flex min-h-[var(--store-touch-target)] items-center justify-center rounded-ui bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card"
+          >
+            Add product
+          </Link>
+        </div>
       </div>
+
+      {wasCreated && (
+        <p
+          className="mt-6 rounded-ui border border-success/25 bg-success/5 px-4 py-3 text-sm font-medium text-success"
+          role="status"
+        >
+          Product created successfully.
+        </p>
+      )}
 
       {products.length === 0 ? (
         <section className="mt-8 rounded-ui border border-dashed border-border bg-surface px-5 py-10 text-center">

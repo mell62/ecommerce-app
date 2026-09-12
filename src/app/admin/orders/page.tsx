@@ -20,6 +20,7 @@ const orderNoticeQueryParameters = ["updated"];
 type AdminOrdersPageProps = Readonly<{
   searchParams: Promise<{
     updated?: string | string[];
+    view?: string | string[];
   }>;
 }>;
 
@@ -65,7 +66,21 @@ export default async function AdminOrdersPage({
     (Array.isArray(resolvedSearchParams.updated)
       ? resolvedSearchParams.updated[0]
       : resolvedSearchParams.updated) === "true";
+  const orderView = Array.isArray(resolvedSearchParams.view)
+    ? resolvedSearchParams.view[0]
+    : resolvedSearchParams.view;
+  const isFulfillmentView = orderView === "fulfillment";
   const orders = await prisma.order.findMany({
+    ...(isFulfillmentView
+      ? {
+          where: {
+            paymentStatus: PaymentStatus.PAID,
+            status: {
+              in: ["PROCESSING", "SHIPPED"],
+            },
+          },
+        }
+      : {}),
     select: {
       id: true,
       status: true,
@@ -112,17 +127,28 @@ export default async function AdminOrdersPage({
             Order management
           </p>
           <h1 className="mt-2 font-display text-[var(--store-text-page-title)] font-semibold tracking-tight text-foreground">
-            Customer orders
+            {isFulfillmentView ? "Awaiting fulfillment" : "Customer orders"}
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted">
-            Review purchases, payment state, and fulfillment progress across
-            Zeus.
+            {isFulfillmentView
+              ? "Focus on paid orders that still need to be shipped or delivered."
+              : "Review purchases, payment state, and fulfillment progress across Zeus."}
           </p>
         </div>
 
-        <p className="rounded-ui border border-border bg-surface px-4 py-2 text-sm font-semibold text-muted">
-          {orders.length} {orders.length === 1 ? "order" : "orders"}
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="rounded-ui border border-border bg-surface px-4 py-2 text-sm font-semibold text-muted">
+            {orders.length} {orders.length === 1 ? "order" : "orders"}
+          </p>
+          {isFulfillmentView && orders.length > 0 && (
+            <Link
+              href="/admin/orders"
+              className="inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
+            >
+              View all orders
+            </Link>
+          )}
+        </div>
       </div>
 
       {wasUpdated && (
@@ -139,11 +165,23 @@ export default async function AdminOrdersPage({
       {orders.length === 0 ? (
         <section className="mt-8 rounded-ui border border-dashed border-border bg-surface px-5 py-10 text-center">
           <h2 className="font-display text-xl font-semibold text-foreground">
-            No customer orders yet
+            {isFulfillmentView
+              ? "No orders awaiting fulfillment"
+              : "No customer orders yet"}
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
-            New purchases will appear here when customers place their orders.
+            {isFulfillmentView
+              ? "Every paid order has completed its fulfillment journey."
+              : "New purchases will appear here when customers place their orders."}
           </p>
+          {isFulfillmentView && (
+            <Link
+              href="/admin/orders"
+              className="mt-4 inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
+            >
+              View all orders
+            </Link>
+          )}
         </section>
       ) : (
         <ol className="mt-8 grid gap-5" aria-label="Customer orders">

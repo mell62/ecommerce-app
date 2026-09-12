@@ -143,6 +143,82 @@ describe("AdminOrdersPage", () => {
     expect(screen.getByText("0 orders")).toBeInTheDocument();
   });
 
+  it("shows only paid orders awaiting fulfillment when requested", async () => {
+    orderFindManyMock.mockResolvedValue([orders[0]]);
+
+    render(
+      await AdminOrdersPage({
+        searchParams: Promise.resolve({ view: "fulfillment" }),
+      })
+    );
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Awaiting fulfillment" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("1 order")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View all orders" })).toHaveAttribute(
+      "href",
+      "/admin/orders"
+    );
+    expect(orderFindManyMock).toHaveBeenCalledWith({
+      where: {
+        paymentStatus: PaymentStatus.PAID,
+        status: {
+          in: ["PROCESSING", "SHIPPED"],
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+        paymentStatus: true,
+        totalPrice: true,
+        createdAt: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        items: {
+          select: {
+            id: true,
+            quantity: true,
+            price: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  });
+
+  it("shows one clear action when no orders await fulfillment", async () => {
+    orderFindManyMock.mockResolvedValue([]);
+
+    render(
+      await AdminOrdersPage({
+        searchParams: Promise.resolve({ view: "fulfillment" }),
+      })
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "No orders awaiting fulfillment",
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("link", { name: "View all orders" })
+    ).toHaveLength(1);
+  });
+
   it("confirms that an order status was updated", async () => {
     orderFindManyMock.mockResolvedValue(orders);
 

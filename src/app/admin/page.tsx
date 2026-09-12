@@ -75,7 +75,7 @@ export default async function AdminPage() {
       label: "Awaiting fulfillment",
       value: fulfillmentCount.toLocaleString("en-US"),
       detail: "Paid orders still in progress",
-      href: "/admin/orders",
+      href: "/admin/orders?view=fulfillment",
     },
     {
       label: "Paid revenue",

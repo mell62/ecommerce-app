@@ -63,6 +63,9 @@ describe("AdminPage", () => {
     );
     expect(screen.getByText("Awaiting fulfillment")).toBeInTheDocument();
     expect(screen.getByText("2")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "View awaiting fulfillment" })
+    ).toHaveAttribute("href", "/admin/orders?view=fulfillment");
     expect(screen.getByText("Paid revenue")).toBeInTheDocument();
     expect(screen.getByText("$1,849.50")).toBeInTheDocument();
 

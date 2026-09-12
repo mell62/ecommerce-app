@@ -124,22 +124,22 @@ export default async function AdminPage() {
           {summaries.map((summary) => (
             <div
               key={summary.label}
-              className="rounded-ui border border-border bg-surface p-4 shadow-sm"
+              className="flex h-full flex-col rounded-ui border border-border bg-surface p-4 shadow-sm"
             >
               <dt className="text-sm font-medium text-muted">
                 {summary.label}
               </dt>
-              <dd className="mt-2">
+              <dd className="mt-2 flex flex-1 flex-col">
                 <span className="block font-display text-2xl font-semibold tracking-tight text-foreground">
                   {summary.value}
                 </span>
-                <p className="mt-1 text-xs leading-5 text-muted">
+                <p className="mb-3 mt-1 text-xs leading-5 text-muted">
                   {summary.detail}
                 </p>
                 {summary.href && summary.action && (
                   <Link
                     href={summary.href}
-                    className="mt-3 inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
+                    className="mt-auto inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
                   >
                     {summary.action}
                   </Link>
@@ -154,23 +154,23 @@ export default async function AdminPage() {
         {adminAreas.map((area) => (
           <section
             key={area.title}
-            className="rounded-ui border border-border bg-surface p-5 shadow-sm"
+            className="flex h-full flex-col rounded-ui border border-border bg-surface p-5 shadow-sm"
           >
             <h2 className="font-display text-xl font-semibold text-foreground">
               {area.title}
             </h2>
-            <p className="mt-2 text-sm leading-6 text-muted">
+            <p className="mb-5 mt-2 text-sm leading-6 text-muted">
               {area.description}
             </p>
             {area.href && area.action ? (
               <Link
                 href={area.href}
-                className="mt-5 inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
+                className="mt-auto inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
               >
                 {area.action}
               </Link>
             ) : (
-              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
+              <p className="mt-auto text-xs font-semibold uppercase tracking-[0.14em] text-brand-700">
                 Coming next
               </p>
             )}

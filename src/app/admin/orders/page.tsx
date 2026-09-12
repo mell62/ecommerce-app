@@ -1,6 +1,8 @@
 import { PaymentStatus } from "@prisma/client";
 import type { Metadata } from "next";
 import Link from "next/link";
+import OrderStatusControl from "@/components/OrderStatusControl";
+import TransientQueryNotice from "@/components/TransientQueryNotice";
 import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
@@ -12,6 +14,14 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
 });
+
+const orderNoticeQueryParameters = ["updated"];
+
+type AdminOrdersPageProps = Readonly<{
+  searchParams: Promise<{
+    updated?: string | string[];
+  }>;
+}>;
 
 function formatStatus(status: string): string {
   return status
@@ -47,7 +57,14 @@ function getPaymentStatusClassName(status: PaymentStatus): string {
   }
 }
 
-export default async function AdminOrdersPage() {
+export default async function AdminOrdersPage({
+  searchParams,
+}: AdminOrdersPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const wasUpdated =
+    (Array.isArray(resolvedSearchParams.updated)
+      ? resolvedSearchParams.updated[0]
+      : resolvedSearchParams.updated) === "true";
   const orders = await prisma.order.findMany({
     select: {
       id: true,
@@ -107,6 +124,17 @@ export default async function AdminOrdersPage() {
           {orders.length} {orders.length === 1 ? "order" : "orders"}
         </p>
       </div>
+
+      {wasUpdated && (
+        <TransientQueryNotice queryParameters={orderNoticeQueryParameters}>
+          <p
+            className="mt-6 rounded-ui border border-success/25 bg-success/5 px-4 py-3 text-sm font-medium text-success"
+            role="status"
+          >
+            Order status updated successfully.
+          </p>
+        </TransientQueryNotice>
+      )}
 
       {orders.length === 0 ? (
         <section className="mt-8 rounded-ui border border-dashed border-border bg-surface px-5 py-10 text-center">
@@ -212,6 +240,11 @@ export default async function AdminOrdersPage() {
                       </dd>
                     </dl>
                   </div>
+                  <OrderStatusControl
+                    orderId={order.id}
+                    currentStatus={order.status}
+                    isPaid={order.paymentStatus === PaymentStatus.PAID}
+                  />
                 </article>
               </li>
             );

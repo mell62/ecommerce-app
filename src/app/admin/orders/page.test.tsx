@@ -14,6 +14,13 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    replace: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}));
+
 const orders = [
   {
     id: "order-12345678",
@@ -69,7 +76,9 @@ describe("AdminOrdersPage", () => {
   it("shows customer order and payment details accessibly", async () => {
     orderFindManyMock.mockResolvedValue(orders);
 
-    const { container } = render(await AdminOrdersPage());
+    const { container } = render(
+      await AdminOrdersPage({ searchParams: Promise.resolve({}) })
+    );
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Customer orders" })
@@ -80,6 +89,9 @@ describe("AdminOrdersPage", () => {
     expect(screen.getByText("Mechanical Keyboard × 2")).toBeInTheDocument();
     expect(screen.getByText("Processing")).toBeInTheDocument();
     expect(screen.getByText("Payment Paid")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Mark as shipped" })
+    ).toBeInTheDocument();
     expect(orderFindManyMock).toHaveBeenCalledWith({
       select: {
         id: true,
@@ -120,7 +132,7 @@ describe("AdminOrdersPage", () => {
   it("shows an empty state when no orders exist", async () => {
     orderFindManyMock.mockResolvedValue([]);
 
-    render(await AdminOrdersPage());
+    render(await AdminOrdersPage({ searchParams: Promise.resolve({}) }));
 
     expect(
       screen.getByRole("heading", {
@@ -129,5 +141,19 @@ describe("AdminOrdersPage", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByText("0 orders")).toBeInTheDocument();
+  });
+
+  it("confirms that an order status was updated", async () => {
+    orderFindManyMock.mockResolvedValue(orders);
+
+    render(
+      await AdminOrdersPage({
+        searchParams: Promise.resolve({ updated: "true" }),
+      })
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Order status updated successfully."
+    );
   });
 });

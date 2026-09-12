@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import CompletePaymentButton from "@/components/CompletePaymentButton";
 import OrdersPageHeader from "@/components/OrdersPageHeader";
 import PaymentStatusReconciler from "@/components/PaymentStatusReconciler";
+import TransientQueryNotice from "@/components/TransientQueryNotice";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 
@@ -22,6 +23,8 @@ type PaymentNotice = Readonly<{
   message: string;
   sessionId?: string;
 }>;
+
+const paymentNoticeQueryParameters = ["payment", "session_id", "order_id"];
 
 function getSingleSearchParam(
   value: string | string[] | undefined
@@ -42,9 +45,7 @@ function getPaymentNotice(
   if (payment === "success") {
     const sessionId = getSingleSearchParam(searchParams.session_id);
     const returnedOrder = sessionId
-      ? orders.find(
-          (order) => order.stripeCheckoutSessionId === sessionId
-        )
+      ? orders.find((order) => order.stripeCheckoutSessionId === sessionId)
       : undefined;
 
     if (returnedOrder?.paymentStatus === PaymentStatus.PAID) {
@@ -75,8 +76,7 @@ function getPaymentNotice(
       return {
         tone: "success",
         title: "Payment already received",
-        message:
-          "This order was paid successfully and is now being processed.",
+        message: "This order was paid successfully and is now being processed.",
       };
     }
 
@@ -155,42 +155,39 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
       <OrdersPageHeader />
 
       {paymentNotice && (
-        <div
-          className={`mb-6 flex items-start gap-3 rounded-ui border p-4 ${getPaymentNoticeClassName(paymentNotice.tone)}`}
-          role="status"
-          aria-live="polite"
-        >
-          <span
-            aria-hidden="true"
-            className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-current text-sm font-bold"
+        <TransientQueryNotice queryParameters={paymentNoticeQueryParameters}>
+          <div
+            className={`mb-6 flex items-start gap-3 rounded-ui border p-4 ${getPaymentNoticeClassName(paymentNotice.tone)}`}
+            role="status"
+            aria-live="polite"
           >
-            {paymentNotice.tone === "success" ? (
-              <svg
-                viewBox="0 0 20 20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="size-4"
-              >
-                <path d="m5.5 10 3 3 6-6" />
-              </svg>
-            ) : (
-              <span>i</span>
-            )}
-          </span>
-          <div>
-            <p className="font-semibold">{paymentNotice.title}</p>
-            <p className="mt-1 text-sm leading-6">
-              {paymentNotice.message}
-            </p>
-            {paymentNotice.tone === "pending" &&
-              paymentNotice.sessionId && (
-                <PaymentStatusReconciler
-                  sessionId={paymentNotice.sessionId}
-                />
+            <span
+              aria-hidden="true"
+              className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-current text-sm font-bold"
+            >
+              {paymentNotice.tone === "success" ? (
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="size-4"
+                >
+                  <path d="m5.5 10 3 3 6-6" />
+                </svg>
+              ) : (
+                <span>i</span>
               )}
+            </span>
+            <div>
+              <p className="font-semibold">{paymentNotice.title}</p>
+              <p className="mt-1 text-sm leading-6">{paymentNotice.message}</p>
+              {paymentNotice.tone === "pending" && paymentNotice.sessionId && (
+                <PaymentStatusReconciler sessionId={paymentNotice.sessionId} />
+              )}
+            </div>
           </div>
-        </div>
+        </TransientQueryNotice>
       )}
 
       {orders.length === 0 ? (

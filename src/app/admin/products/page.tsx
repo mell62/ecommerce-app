@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import DeleteProductButton from "@/components/DeleteProductButton";
+import TransientQueryNotice from "@/components/TransientQueryNotice";
 import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
@@ -13,6 +14,8 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
 });
+
+const productNoticeQueryParameters = ["created", "updated", "deleted"];
 
 function getStockDetails(stockCount: number): {
   label: string;
@@ -122,13 +125,16 @@ export default async function AdminProductsPage({
       </div>
 
       {(wasCreated || wasUpdated || wasDeleted) && (
-        <p
-          className="mt-6 rounded-ui border border-success/25 bg-success/5 px-4 py-3 text-sm font-medium text-success"
-          role="status"
-        >
-          Product {wasCreated ? "created" : wasUpdated ? "updated" : "deleted"}{" "}
-          successfully.
-        </p>
+        <TransientQueryNotice queryParameters={productNoticeQueryParameters}>
+          <p
+            className="mt-6 rounded-ui border border-success/25 bg-success/5 px-4 py-3 text-sm font-medium text-success"
+            role="status"
+          >
+            Product{" "}
+            {wasCreated ? "created" : wasUpdated ? "updated" : "deleted"}{" "}
+            successfully.
+          </p>
+        </TransientQueryNotice>
       )}
 
       {products.length === 0 ? (

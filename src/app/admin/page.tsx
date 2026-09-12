@@ -29,6 +29,14 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 
+type AdminSummary = Readonly<{
+  label: string;
+  value: string;
+  detail: string;
+  href?: string;
+  action?: string;
+}>;
+
 export default async function AdminPage() {
   const [productCount, lowStockCount, fulfillmentCount, paidRevenue] =
     await Promise.all([
@@ -58,32 +66,34 @@ export default async function AdminPage() {
       }),
     ]);
 
-  const summaries = [
+  const summaries: readonly AdminSummary[] = [
     {
       label: "Catalog products",
       value: productCount.toLocaleString("en-US"),
       detail: "Across the active catalog",
-      href: "/admin/products",
     },
     {
       label: "Low stock",
       value: lowStockCount.toLocaleString("en-US"),
       detail: "Products with 10 or fewer units",
       href: "/admin/products?stock=low",
+      action: "View low stock",
     },
     {
       label: "Awaiting fulfillment",
       value: fulfillmentCount.toLocaleString("en-US"),
       detail: "Paid orders still in progress",
       href: "/admin/orders?view=fulfillment",
+      action: "View awaiting fulfillment",
     },
     {
       label: "Paid revenue",
       value: currencyFormatter.format(paidRevenue._sum.totalPrice ?? 0),
       detail: "From successfully paid orders",
-      href: "/admin/orders",
+      href: "/admin/orders?payment=paid",
+      action: "Review paid orders",
     },
-  ] as const;
+  ];
 
   return (
     <div className="mx-auto w-full max-w-[var(--store-container)] px-[var(--store-page-gutter)] py-10 sm:py-12 lg:py-16">
@@ -126,12 +136,14 @@ export default async function AdminPage() {
                 <p className="mt-1 text-xs leading-5 text-muted">
                   {summary.detail}
                 </p>
-                <Link
-                  href={summary.href}
-                  className="mt-3 inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
-                >
-                  View {summary.label.toLowerCase()}
-                </Link>
+                {summary.href && summary.action && (
+                  <Link
+                    href={summary.href}
+                    className="mt-3 inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
+                  >
+                    {summary.action}
+                  </Link>
+                )}
               </dd>
             </div>
           ))}

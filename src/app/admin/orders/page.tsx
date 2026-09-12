@@ -19,6 +19,7 @@ const orderNoticeQueryParameters = ["updated"];
 
 type AdminOrdersPageProps = Readonly<{
   searchParams: Promise<{
+    payment?: string | string[];
     updated?: string | string[];
     view?: string | string[];
   }>;
@@ -69,7 +70,12 @@ export default async function AdminOrdersPage({
   const orderView = Array.isArray(resolvedSearchParams.view)
     ? resolvedSearchParams.view[0]
     : resolvedSearchParams.view;
+  const paymentFilter = Array.isArray(resolvedSearchParams.payment)
+    ? resolvedSearchParams.payment[0]
+    : resolvedSearchParams.payment;
   const isFulfillmentView = orderView === "fulfillment";
+  const isPaidOrdersView = !isFulfillmentView && paymentFilter === "paid";
+  const isFilteredView = isFulfillmentView || isPaidOrdersView;
   const orders = await prisma.order.findMany({
     ...(isFulfillmentView
       ? {
@@ -80,6 +86,12 @@ export default async function AdminOrdersPage({
             },
           },
         }
+      : isPaidOrdersView
+        ? {
+            where: {
+              paymentStatus: PaymentStatus.PAID,
+            },
+          }
       : {}),
     select: {
       id: true,
@@ -127,12 +139,18 @@ export default async function AdminOrdersPage({
             Order management
           </p>
           <h1 className="mt-2 font-display text-[var(--store-text-page-title)] font-semibold tracking-tight text-foreground">
-            {isFulfillmentView ? "Awaiting fulfillment" : "Customer orders"}
+            {isFulfillmentView
+              ? "Awaiting fulfillment"
+              : isPaidOrdersView
+                ? "Paid orders"
+                : "Customer orders"}
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted">
             {isFulfillmentView
               ? "Focus on paid orders that still need to be shipped or delivered."
-              : "Review purchases, payment state, and fulfillment progress across Zeus."}
+              : isPaidOrdersView
+                ? "Review the successfully paid orders included in Zeus revenue."
+                : "Review purchases, payment state, and fulfillment progress across Zeus."}
           </p>
         </div>
 
@@ -140,7 +158,7 @@ export default async function AdminOrdersPage({
           <p className="rounded-ui border border-border bg-surface px-4 py-2 text-sm font-semibold text-muted">
             {orders.length} {orders.length === 1 ? "order" : "orders"}
           </p>
-          {isFulfillmentView && orders.length > 0 && (
+          {isFilteredView && orders.length > 0 && (
             <Link
               href="/admin/orders"
               className="inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
@@ -167,14 +185,18 @@ export default async function AdminOrdersPage({
           <h2 className="font-display text-xl font-semibold text-foreground">
             {isFulfillmentView
               ? "No orders awaiting fulfillment"
+              : isPaidOrdersView
+                ? "No paid orders yet"
               : "No customer orders yet"}
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted">
             {isFulfillmentView
               ? "Every paid order has completed its fulfillment journey."
+              : isPaidOrdersView
+                ? "Successfully paid customer orders will appear in this revenue view."
               : "New purchases will appear here when customers place their orders."}
           </p>
-          {isFulfillmentView && (
+          {isFilteredView && (
             <Link
               href="/admin/orders"
               className="mt-4 inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"

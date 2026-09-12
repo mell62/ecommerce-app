@@ -219,6 +219,59 @@ describe("AdminOrdersPage", () => {
     ).toHaveLength(1);
   });
 
+  it("shows only orders included in paid revenue when requested", async () => {
+    orderFindManyMock.mockResolvedValue([orders[0]]);
+
+    render(
+      await AdminOrdersPage({
+        searchParams: Promise.resolve({ payment: "paid" }),
+      })
+    );
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Paid orders" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("1 order")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View all orders" })).toHaveAttribute(
+      "href",
+      "/admin/orders"
+    );
+    expect(orderFindManyMock).toHaveBeenCalledWith({
+      where: {
+        paymentStatus: PaymentStatus.PAID,
+      },
+      select: {
+        id: true,
+        status: true,
+        paymentStatus: true,
+        totalPrice: true,
+        createdAt: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        items: {
+          select: {
+            id: true,
+            quantity: true,
+            price: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  });
+
   it("confirms that an order status was updated", async () => {
     orderFindManyMock.mockResolvedValue(orders);
 

@@ -55,6 +55,9 @@ describe("AdminPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Catalog products")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "View catalog products" })
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Low stock")).toBeInTheDocument();
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View low stock" })).toHaveAttribute(
@@ -68,6 +71,9 @@ describe("AdminPage", () => {
     ).toHaveAttribute("href", "/admin/orders?view=fulfillment");
     expect(screen.getByText("Paid revenue")).toBeInTheDocument();
     expect(screen.getByText("$1,849.50")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Review paid orders" })
+    ).toHaveAttribute("href", "/admin/orders?payment=paid");
 
     expect(productCountMock).toHaveBeenNthCalledWith(1);
     expect(productCountMock).toHaveBeenNthCalledWith(2, {

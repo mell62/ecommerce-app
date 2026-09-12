@@ -176,6 +176,51 @@ describe("AdminProductForm", () => {
     );
   });
 
+  it("previews a supported product image and reports load failures", () => {
+    render(<AdminProductForm />);
+
+    expect(
+      screen.getByText("Enter an image path to preview it here.")
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Product name"), {
+      target: { value: "Wireless Headphones" },
+    });
+    fireEvent.change(screen.getByLabelText("Image URL"), {
+      target: { value: "/products/headphones.png" },
+    });
+
+    const preview = screen.getByRole("img", {
+      name: "Preview of Wireless Headphones",
+    });
+
+    expect(preview).toHaveAttribute(
+      "src",
+      expect.stringContaining("%2Fproducts%2Fheadphones.png")
+    );
+
+    fireEvent.error(preview);
+
+    expect(
+      screen.getByText(
+        "The image could not be loaded. Check the path and try again."
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("does not render unsupported image sources", () => {
+    render(<AdminProductForm />);
+
+    fireEvent.change(screen.getByLabelText("Image URL"), {
+      target: { value: "http://example.com/product.png" },
+    });
+
+    expect(
+      screen.getByText("This image source is not supported.")
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
   it("has no detectable accessibility violations", async () => {
     const { container } = render(<AdminProductForm />);
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type SubmitEvent } from "react";
@@ -8,6 +9,7 @@ import {
   PRODUCT_DESCRIPTION_MAX_LENGTH,
   PRODUCT_IMAGE_URL_MAX_LENGTH,
   PRODUCT_NAME_MAX_LENGTH,
+  isSupportedProductImageUrl,
   type ProductInput,
   type ProductInputErrors,
   type ProductInputField,
@@ -125,6 +127,7 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
   const [fieldErrors, setFieldErrors] = useState<ProductInputErrors>({});
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [didImageFail, setDidImageFail] = useState(false);
 
   function updateValue<Key extends keyof ProductFormValues>(
     field: Key,
@@ -197,6 +200,11 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
 
   const inputClassName =
     "store-field mt-2 min-h-12 w-full rounded-ui border border-border bg-surface px-3.5 py-2.5 text-foreground shadow-sm placeholder:text-muted/70 hover:border-border-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-70";
+  const previewImageUrl = values.imageUrl.trim();
+  const canPreviewImage = isSupportedProductImageUrl(previewImageUrl);
+  const previewLabel = values.name.trim()
+    ? `Preview of ${values.name.trim()}`
+    : "Product image preview";
 
   return (
     <form
@@ -326,7 +334,10 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
               name="imageUrl"
               type="text"
               value={values.imageUrl}
-              onChange={(event) => updateValue("imageUrl", event.target.value)}
+              onChange={(event) => {
+                setDidImageFail(false);
+                updateValue("imageUrl", event.target.value);
+              }}
               required
               maxLength={PRODUCT_IMAGE_URL_MAX_LENGTH}
               disabled={isSubmitting}
@@ -343,6 +354,50 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
                 {fieldErrors.imageUrl}
               </p>
             )}
+
+            <figure className="mt-4 flex items-center gap-4 rounded-ui border border-border bg-surface-muted/35 p-3">
+              <div className="relative flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-ui border border-border/70 bg-surface">
+                {previewImageUrl && canPreviewImage && !didImageFail ? (
+                  <Image
+                    key={previewImageUrl}
+                    src={previewImageUrl}
+                    alt={previewLabel}
+                    fill
+                    sizes="96px"
+                    className="object-contain p-2 drop-shadow-md"
+                    onError={() => setDidImageFail(true)}
+                  />
+                ) : (
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    className="size-8 text-muted/60"
+                  >
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <circle cx="8.5" cy="9" r="1.5" />
+                    <path d="m4 17 4.5-4.5 3.5 3 2.5-2.5 5.5 5.5" />
+                  </svg>
+                )}
+              </div>
+
+              <figcaption className="min-w-0 text-sm leading-6">
+                <span className="block font-semibold text-foreground">
+                  Image preview
+                </span>
+                <span className="mt-1 block text-muted" aria-live="polite">
+                  {!previewImageUrl
+                    ? "Enter an image path to preview it here."
+                    : !canPreviewImage
+                      ? "This image source is not supported."
+                      : didImageFail
+                        ? "The image could not be loaded. Check the path and try again."
+                        : "The image is ready to appear in the catalog."}
+                </span>
+              </figcaption>
+            </figure>
           </div>
         </div>
       </section>

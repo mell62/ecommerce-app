@@ -33,7 +33,7 @@ function getText(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function isSupportedImageUrl(imageUrl: string): boolean {
+export function isSupportedProductImageUrl(imageUrl: string): boolean {
   if (imageUrl.startsWith("/") && !imageUrl.startsWith("//")) {
     return true;
   }
@@ -89,7 +89,7 @@ export function validateProductInput(value: unknown): ProductInputResult {
     errors.imageUrl = "Enter an image URL.";
   } else if (imageUrl.length > PRODUCT_IMAGE_URL_MAX_LENGTH) {
     errors.imageUrl = `Use ${PRODUCT_IMAGE_URL_MAX_LENGTH} characters or fewer.`;
-  } else if (!isSupportedImageUrl(imageUrl)) {
+  } else if (!isSupportedProductImageUrl(imageUrl)) {
     errors.imageUrl =
       "Use a local image path or an images.unsplash.com HTTPS URL.";
   }

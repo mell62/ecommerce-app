@@ -13,6 +13,13 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    replace: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}));
+
 const products = [
   {
     id: "product-1",
@@ -25,6 +32,9 @@ const products = [
     isFeatured: true,
     isNew: false,
     isBestSeller: true,
+    _count: {
+      orderItems: 0,
+    },
   },
   {
     id: "product-2",
@@ -37,6 +47,9 @@ const products = [
     isFeatured: false,
     isNew: true,
     isBestSeller: false,
+    _count: {
+      orderItems: 2,
+    },
   },
 ];
 
@@ -78,6 +91,11 @@ describe("AdminProductsPage", () => {
         isFeatured: true,
         isNew: true,
         isBestSeller: true,
+        _count: {
+          select: {
+            orderItems: true,
+          },
+        },
       },
       orderBy: {
         name: "asc",
@@ -129,6 +147,20 @@ describe("AdminProductsPage", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent(
       "Product updated successfully."
+    );
+  });
+
+  it("confirms that a product was deleted", async () => {
+    productFindManyMock.mockResolvedValue(products);
+
+    render(
+      await AdminProductsPage({
+        searchParams: Promise.resolve({ deleted: "true" }),
+      })
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Product deleted successfully."
     );
   });
 });

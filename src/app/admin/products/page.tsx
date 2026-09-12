@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import DeleteProductButton from "@/components/DeleteProductButton";
 import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
@@ -40,6 +41,7 @@ function getStockDetails(stockCount: number): {
 type AdminProductsPageProps = Readonly<{
   searchParams: Promise<{
     created?: string | string[];
+    deleted?: string | string[];
     updated?: string | string[];
   }>;
 }>;
@@ -56,6 +58,10 @@ export default async function AdminProductsPage({
     (Array.isArray(resolvedSearchParams.updated)
       ? resolvedSearchParams.updated[0]
       : resolvedSearchParams.updated) === "true";
+  const wasDeleted =
+    (Array.isArray(resolvedSearchParams.deleted)
+      ? resolvedSearchParams.deleted[0]
+      : resolvedSearchParams.deleted) === "true";
   const products = await prisma.product.findMany({
     select: {
       id: true,
@@ -68,6 +74,11 @@ export default async function AdminProductsPage({
       isFeatured: true,
       isNew: true,
       isBestSeller: true,
+      _count: {
+        select: {
+          orderItems: true,
+        },
+      },
     },
     orderBy: {
       name: "asc",
@@ -110,12 +121,13 @@ export default async function AdminProductsPage({
         </div>
       </div>
 
-      {(wasCreated || wasUpdated) && (
+      {(wasCreated || wasUpdated || wasDeleted) && (
         <p
           className="mt-6 rounded-ui border border-success/25 bg-success/5 px-4 py-3 text-sm font-medium text-success"
           role="status"
         >
-          Product {wasCreated ? "created" : "updated"} successfully.
+          Product {wasCreated ? "created" : wasUpdated ? "updated" : "deleted"}{" "}
+          successfully.
         </p>
       )}
 
@@ -193,6 +205,11 @@ export default async function AdminProductsPage({
                   >
                     Edit {product.name}
                   </Link>
+                  <DeleteProductButton
+                    productId={product.id}
+                    productName={product.name}
+                    canDelete={product._count.orderItems === 0}
+                  />
                 </div>
               </li>
             );

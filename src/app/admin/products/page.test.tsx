@@ -63,6 +63,9 @@ describe("AdminProductsPage", () => {
     expect(screen.getByText("4 in stock · Low")).toBeInTheDocument();
     expect(screen.getByText("Out of stock")).toBeInTheDocument();
     expect(screen.getByText("15% discount")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Edit Gaming Mouse" })
+    ).toHaveAttribute("href", "/admin/products/product-1/edit");
     expect(productFindManyMock).toHaveBeenCalledWith({
       select: {
         id: true,
@@ -112,6 +115,20 @@ describe("AdminProductsPage", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent(
       "Product created successfully."
+    );
+  });
+
+  it("confirms that a product was updated", async () => {
+    productFindManyMock.mockResolvedValue(products);
+
+    render(
+      await AdminProductsPage({
+        searchParams: Promise.resolve({ updated: "true" }),
+      })
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Product updated successfully."
     );
   });
 });

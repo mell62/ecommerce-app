@@ -25,8 +25,7 @@ function fillRequiredFields(): void {
   });
   fireEvent.change(screen.getByLabelText("Image URL"), {
     target: {
-      value:
-        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
+      value: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e",
     },
   });
   fireEvent.change(screen.getByLabelText("Price"), {
@@ -118,6 +117,63 @@ describe("AdminProductForm", () => {
       "true"
     );
     expect(screen.getByText("Enter a price greater than zero.")).toBeVisible();
+  });
+
+  it("prefills and updates an existing product", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ product: { id: "product-1" } }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <AdminProductForm
+        product={{
+          id: "product-1",
+          name: "Gaming Mouse",
+          description: "A precise wireless gaming mouse.",
+          category: "Accessories",
+          imageUrl: "/mouse.png",
+          price: 59.99,
+          stockCount: 8,
+          discountPercent: 15,
+          isFeatured: true,
+          isNew: false,
+          isBestSeller: true,
+        }}
+      />
+    );
+
+    expect(screen.getByLabelText("Product name")).toHaveValue("Gaming Mouse");
+    expect(screen.getByLabelText("Price")).toHaveValue(59.99);
+    expect(screen.getByLabelText("Featured product")).toBeChecked();
+    fireEvent.change(screen.getByLabelText("Stock count"), {
+      target: { value: "20" },
+    });
+    fireEvent.submit(screen.getByRole("form", { name: "Edit product" }));
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/admin/products?updated=true");
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/admin/products/product-1",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({
+          name: "Gaming Mouse",
+          description: "A precise wireless gaming mouse.",
+          category: "Accessories",
+          imageUrl: "/mouse.png",
+          price: 59.99,
+          stockCount: 20,
+          discountPercent: 15,
+          isFeatured: true,
+          isNew: false,
+          isBestSeller: true,
+        }),
+      })
+    );
   });
 
   it("has no detectable accessibility violations", async () => {

@@ -40,6 +40,7 @@ function getStockDetails(stockCount: number): {
 type AdminProductsPageProps = Readonly<{
   searchParams: Promise<{
     created?: string | string[];
+    updated?: string | string[];
   }>;
 }>;
 
@@ -51,6 +52,10 @@ export default async function AdminProductsPage({
     (Array.isArray(resolvedSearchParams.created)
       ? resolvedSearchParams.created[0]
       : resolvedSearchParams.created) === "true";
+  const wasUpdated =
+    (Array.isArray(resolvedSearchParams.updated)
+      ? resolvedSearchParams.updated[0]
+      : resolvedSearchParams.updated) === "true";
   const products = await prisma.product.findMany({
     select: {
       id: true,
@@ -105,12 +110,12 @@ export default async function AdminProductsPage({
         </div>
       </div>
 
-      {wasCreated && (
+      {(wasCreated || wasUpdated) && (
         <p
           className="mt-6 rounded-ui border border-success/25 bg-success/5 px-4 py-3 text-sm font-medium text-success"
           role="status"
         >
-          Product created successfully.
+          Product {wasCreated ? "created" : "updated"} successfully.
         </p>
       )}
 
@@ -176,12 +181,18 @@ export default async function AdminProductsPage({
                   </div>
                 </div>
 
-                <div className="sm:text-right">
+                <div className="flex flex-wrap items-center gap-3 sm:flex-col sm:items-end">
                   <span
                     className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold ${stock.className}`}
                   >
                     {stock.label}
                   </span>
+                  <Link
+                    href={`/admin/products/${product.id}/edit`}
+                    className="inline-flex min-h-[var(--store-touch-target)] items-center text-sm font-semibold text-brand-700 underline decoration-brand-100 decoration-2 underline-offset-4 transition-colors hover:decoration-brand-500"
+                  >
+                    Edit {product.name}
+                  </Link>
                 </div>
               </li>
             );

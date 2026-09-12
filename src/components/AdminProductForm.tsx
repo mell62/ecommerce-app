@@ -8,6 +8,7 @@ import {
   PRODUCT_DESCRIPTION_MAX_LENGTH,
   PRODUCT_IMAGE_URL_MAX_LENGTH,
   PRODUCT_NAME_MAX_LENGTH,
+  type ProductInput,
   type ProductInputErrors,
   type ProductInputField,
 } from "@/lib/product-input";
@@ -25,7 +26,16 @@ type ProductFormValues = Readonly<{
   isBestSeller: boolean;
 }>;
 
-const initialValues: ProductFormValues = {
+type EditableProduct = ProductInput &
+  Readonly<{
+    id: string;
+  }>;
+
+type AdminProductFormProps = Readonly<{
+  product?: EditableProduct;
+}>;
+
+const emptyValues: ProductFormValues = {
   name: "",
   description: "",
   category: "",
@@ -37,6 +47,25 @@ const initialValues: ProductFormValues = {
   isNew: false,
   isBestSeller: false,
 };
+
+function getInitialValues(product?: EditableProduct): ProductFormValues {
+  if (!product) {
+    return emptyValues;
+  }
+
+  return {
+    name: product.name,
+    description: product.description,
+    category: product.category,
+    imageUrl: product.imageUrl,
+    price: String(product.price),
+    stockCount: String(product.stockCount),
+    discountPercent: String(product.discountPercent),
+    isFeatured: product.isFeatured,
+    isNew: product.isNew,
+    isBestSeller: product.isBestSeller,
+  };
+}
 
 const productFields: readonly ProductInputField[] = [
   "name",
@@ -51,7 +80,10 @@ const productFields: readonly ProductInputField[] = [
   "isBestSeller",
 ];
 
-function readApiError(data: unknown): {
+function readApiError(
+  data: unknown,
+  fallbackMessage: string
+): {
   message: string;
   fieldErrors: ProductInputErrors;
 } {
@@ -81,14 +113,15 @@ function readApiError(data: unknown): {
   }
 
   return {
-    message: "Failed to create product.",
+    message: fallbackMessage,
     fieldErrors,
   };
 }
 
-export default function AdminProductForm() {
+export default function AdminProductForm({ product }: AdminProductFormProps) {
   const router = useRouter();
-  const [values, setValues] = useState(initialValues);
+  const isEditing = Boolean(product);
+  const [values, setValues] = useState(() => getInitialValues(product));
   const [fieldErrors, setFieldErrors] = useState<ProductInputErrors>({});
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -117,34 +150,46 @@ export default function AdminProductForm() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/admin/products", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...values,
-          price: Number(values.price),
-          stockCount: Number(values.stockCount),
-          discountPercent: Number(values.discountPercent),
-        }),
-      });
+      const response = await fetch(
+        product ? `/api/admin/products/${product.id}` : "/api/admin/products",
+        {
+          method: isEditing ? "PATCH" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...values,
+            price: Number(values.price),
+            stockCount: Number(values.stockCount),
+            discountPercent: Number(values.discountPercent),
+          }),
+        }
+      );
       const contentType = response.headers.get("content-type");
       const data: unknown = contentType?.includes("application/json")
         ? await response.json()
         : null;
 
       if (!response.ok) {
-        const apiError = readApiError(data);
+        const apiError = readApiError(
+          data,
+          isEditing ? "Failed to update product." : "Failed to create product."
+        );
         setError(apiError.message);
         setFieldErrors(apiError.fieldErrors);
         return;
       }
 
-      router.push("/admin/products?created=true");
+      router.push(
+        isEditing
+          ? "/admin/products?updated=true"
+          : "/admin/products?created=true"
+      );
       router.refresh();
     } catch {
-      setError("Unable to reach the server. Check your connection and try again.");
+      setError(
+        "Unable to reach the server. Check your connection and try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -155,7 +200,7 @@ export default function AdminProductForm() {
 
   return (
     <form
-      aria-label="Create product"
+      aria-label={isEditing ? "Edit product" : "Create product"}
       aria-busy={isSubmitting}
       onSubmit={handleSubmit}
       className="mt-8 space-y-8"
@@ -188,7 +233,9 @@ export default function AdminProductForm() {
               maxLength={PRODUCT_NAME_MAX_LENGTH}
               disabled={isSubmitting}
               aria-invalid={Boolean(fieldErrors.name)}
-              aria-describedby={fieldErrors.name ? "product-name-error" : undefined}
+              aria-describedby={
+                fieldErrors.name ? "product-name-error" : undefined
+              }
               className={inputClassName}
               placeholder="Wireless headphones"
             />
@@ -342,7 +389,10 @@ export default function AdminProductForm() {
             ] as const
           ).map(({ field, label, ...attributes }) => (
             <div key={field}>
-              <label htmlFor={`product-${field}`} className="text-sm font-semibold">
+              <label
+                htmlFor={`product-${field}`}
+                className="text-sm font-semibold"
+              >
                 {label}
               </label>
               <input
@@ -428,7 +478,13 @@ export default function AdminProductForm() {
               className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none"
             />
           )}
-          {isSubmitting ? "Creating product..." : "Create product"}
+          {isSubmitting
+            ? isEditing
+              ? "Saving changes..."
+              : "Creating product..."
+            : isEditing
+              ? "Save changes"
+              : "Create product"}
         </button>
         <Link
           href="/admin/products"

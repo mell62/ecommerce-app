@@ -1,0 +1,133 @@
+import { PaymentStatus } from "@prisma/client";
+import { render, screen } from "@testing-library/react";
+import { axe } from "jest-axe";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import AdminOrdersPage from "@/app/admin/orders/page";
+
+const orderFindManyMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/db", () => ({
+  prisma: {
+    order: {
+      findMany: orderFindManyMock,
+    },
+  },
+}));
+
+const orders = [
+  {
+    id: "order-12345678",
+    status: "PROCESSING",
+    paymentStatus: PaymentStatus.PAID,
+    totalPrice: 169.98,
+    createdAt: new Date("2026-09-10T10:00:00.000Z"),
+    user: {
+      name: "Sherlock",
+      email: "sherlock@example.com",
+    },
+    items: [
+      {
+        id: "item-1",
+        quantity: 2,
+        price: 84.99,
+        product: {
+          id: "product-1",
+          name: "Mechanical Keyboard",
+        },
+      },
+    ],
+  },
+  {
+    id: "order-87654321",
+    status: "PENDING",
+    paymentStatus: PaymentStatus.PENDING,
+    totalPrice: 59.99,
+    createdAt: new Date("2026-09-09T10:00:00.000Z"),
+    user: {
+      name: "Watson",
+      email: "watson@example.com",
+    },
+    items: [
+      {
+        id: "item-2",
+        quantity: 1,
+        price: 59.99,
+        product: {
+          id: "product-2",
+          name: "Gaming Mouse",
+        },
+      },
+    ],
+  },
+];
+
+describe("AdminOrdersPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("shows customer order and payment details accessibly", async () => {
+    orderFindManyMock.mockResolvedValue(orders);
+
+    const { container } = render(await AdminOrdersPage());
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Customer orders" })
+    ).toBeInTheDocument();
+    expect(screen.getByText("2 orders")).toBeInTheDocument();
+    expect(screen.getByText("Sherlock")).toBeInTheDocument();
+    expect(screen.getByText("sherlock@example.com")).toBeInTheDocument();
+    expect(screen.getByText("Mechanical Keyboard × 2")).toBeInTheDocument();
+    expect(screen.getByText("Processing")).toBeInTheDocument();
+    expect(screen.getByText("Payment Paid")).toBeInTheDocument();
+    expect(orderFindManyMock).toHaveBeenCalledWith({
+      select: {
+        id: true,
+        status: true,
+        paymentStatus: true,
+        totalPrice: true,
+        createdAt: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        items: {
+          select: {
+            id: true,
+            quantity: true,
+            price: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const results = await axe(container);
+
+    expect(results.violations).toHaveLength(0);
+  });
+
+  it("shows an empty state when no orders exist", async () => {
+    orderFindManyMock.mockResolvedValue([]);
+
+    render(await AdminOrdersPage());
+
+    expect(
+      screen.getByRole("heading", {
+        level: 2,
+        name: "No customer orders yet",
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByText("0 orders")).toBeInTheDocument();
+  });
+});

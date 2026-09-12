@@ -17,8 +17,8 @@ const adminAreas = [
   {
     title: "Orders",
     description: "Review customer orders and update their fulfillment status.",
-    href: null,
-    action: null,
+    href: "/admin/orders",
+    action: "Manage orders",
   },
 ] as const;
 

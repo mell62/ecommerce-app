@@ -19,6 +19,10 @@ describe("AdminPage", () => {
     expect(
       screen.getByRole("heading", { level: 2, name: "Orders" })
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Manage orders" })).toHaveAttribute(
+      "href",
+      "/admin/orders"
+    );
 
     const results = await axe(container);
 

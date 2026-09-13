@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 
 export default function LogoutButton() {
+  const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [error, setError] = useState("");
   const errorId = useId();
@@ -37,7 +39,8 @@ export default function LogoutButton() {
         throw new Error(message);
       }
 
-      window.location.href = "/login";
+      router.replace("/login");
+      router.refresh();
     } catch (error) {
       console.error(error);
       setError(

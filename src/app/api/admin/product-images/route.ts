@@ -1,4 +1,5 @@
 import { getAdminAccess } from "@/lib/admin-auth";
+import { getDatabaseErrorDetails } from "@/lib/database-error";
 import { prisma } from "@/lib/db";
 import {
   PRODUCT_IMAGE_MAX_BYTES,
@@ -23,6 +24,24 @@ async function getUploadedFile(request: Request): Promise<File | null> {
   } catch {
     return null;
   }
+}
+
+function getDatabaseErrorResponse(error: unknown): Response | null {
+  const databaseError = getDatabaseErrorDetails(error);
+
+  if (!databaseError) {
+    return null;
+  }
+
+  return Response.json(
+    { error: databaseError.message },
+    {
+      status: databaseError.status,
+      headers: databaseError.retryAfterSeconds
+        ? { "Retry-After": String(databaseError.retryAfterSeconds) }
+        : undefined,
+    }
+  );
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -70,6 +89,12 @@ export async function POST(request: Request): Promise<Response> {
 
     return Response.json({ imageUrl }, { status: 201 });
   } catch (error) {
+    const databaseErrorResponse = getDatabaseErrorResponse(error);
+
+    if (databaseErrorResponse) {
+      return databaseErrorResponse;
+    }
+
     console.error(error);
 
     return Response.json(
@@ -144,6 +169,12 @@ export async function DELETE(request: Request): Promise<Response> {
 
     return Response.json({ message: "Product image deleted successfully." });
   } catch (error) {
+    const databaseErrorResponse = getDatabaseErrorResponse(error);
+
+    if (databaseErrorResponse) {
+      return databaseErrorResponse;
+    }
+
     console.error(error);
 
     return Response.json(

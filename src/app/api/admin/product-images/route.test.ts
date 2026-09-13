@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { Prisma } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DELETE, POST } from "@/app/api/admin/product-images/route";
 import { PRODUCT_IMAGE_MAX_BYTES } from "@/lib/product-input";
@@ -158,6 +159,26 @@ describe("admin product image upload API", () => {
     });
   });
 
+  it("returns a retryable response when upload authorization cannot reach the database", async () => {
+    getAdminAccessMock.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Database unavailable", {
+        code: "P1001",
+        clientVersion: "test",
+      })
+    );
+
+    const response = await POST(
+      createUploadRequest(new File(["image"], "mouse.png", { type: "image/png" }))
+    );
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("Retry-After")).toBe("5");
+    expect(await response.json()).toEqual({
+      error: "The database is temporarily unavailable. Try again shortly.",
+    });
+    expect(uploadProductImageMock).not.toHaveBeenCalled();
+  });
+
   it("requires an administrator to delete a managed image", async () => {
     getAdminAccessMock.mockResolvedValue({ status: "unauthenticated" });
 
@@ -220,5 +241,27 @@ describe("admin product image upload API", () => {
     expect(await response.json()).toEqual({
       message: "Product image deleted successfully.",
     });
+  });
+
+  it("returns a retryable response when image reference checks time out", async () => {
+    productFindManyMock.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Database unavailable", {
+        code: "P2024",
+        clientVersion: "test",
+      })
+    );
+
+    const response = await DELETE(
+      createDeleteRequest(
+        "https://project.supabase.co/storage/v1/object/public/product-images/products/image.webp"
+      )
+    );
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("Retry-After")).toBe("5");
+    expect(await response.json()).toEqual({
+      error: "The database is temporarily unavailable. Try again shortly.",
+    });
+    expect(deleteManagedProductImageMock).not.toHaveBeenCalled();
   });
 });

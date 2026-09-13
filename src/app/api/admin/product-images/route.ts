@@ -1,9 +1,18 @@
 import { getAdminAccess } from "@/lib/admin-auth";
+import { prisma } from "@/lib/db";
 import {
   PRODUCT_IMAGE_MAX_BYTES,
   isSupportedProductImageMimeType,
 } from "@/lib/product-input";
-import { uploadProductImage } from "@/lib/product-image-storage";
+import {
+  deleteManagedProductImage,
+  getManagedProductImagePath,
+  uploadProductImage,
+} from "@/lib/product-image-storage";
+
+type DeleteImageRequest = Readonly<{
+  imageUrl?: unknown;
+}>;
 
 async function getUploadedFile(request: Request): Promise<File | null> {
   try {
@@ -65,6 +74,80 @@ export async function POST(request: Request): Promise<Response> {
 
     return Response.json(
       { error: "Failed to upload product image." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request): Promise<Response> {
+  try {
+    const access = await getAdminAccess();
+
+    if (access.status === "unauthenticated") {
+      return Response.json(
+        { error: "You must be logged in to delete product images." },
+        { status: 401 }
+      );
+    }
+
+    if (access.status === "forbidden") {
+      return Response.json(
+        { error: "Administrator access is required." },
+        { status: 403 }
+      );
+    }
+
+    let body: DeleteImageRequest;
+
+    try {
+      body = (await request.json()) as DeleteImageRequest;
+    } catch {
+      return Response.json(
+        { error: "Enter a valid product image URL." },
+        { status: 400 }
+      );
+    }
+
+    const imageUrl =
+      typeof body.imageUrl === "string" ? body.imageUrl.trim() : "";
+    const objectPath = getManagedProductImagePath(imageUrl);
+
+    if (!objectPath) {
+      return Response.json(
+        { error: "Only managed product images can be deleted." },
+        { status: 400 }
+      );
+    }
+
+    const possibleReferences = await prisma.product.findMany({
+      where: {
+        imageUrl: {
+          contains: objectPath,
+        },
+      },
+      select: {
+        imageUrl: true,
+      },
+    });
+    const isInUse = possibleReferences.some(
+      (product) => getManagedProductImagePath(product.imageUrl) === objectPath
+    );
+
+    if (isInUse) {
+      return Response.json(
+        { error: "Images currently used by products cannot be deleted." },
+        { status: 409 }
+      );
+    }
+
+    await deleteManagedProductImage(imageUrl);
+
+    return Response.json({ message: "Product image deleted successfully." });
+  } catch (error) {
+    console.error(error);
+
+    return Response.json(
+      { error: "Failed to delete product image." },
       { status: 500 }
     );
   }

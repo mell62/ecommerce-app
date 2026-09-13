@@ -123,6 +123,28 @@ function readApiError(
   };
 }
 
+function isManagedProductImageUrl(imageUrl: string): boolean {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  if (!supabaseUrl) {
+    return false;
+  }
+
+  try {
+    const image = new URL(imageUrl);
+    const configuredSupabaseUrl = new URL(supabaseUrl);
+
+    return (
+      image.origin === configuredSupabaseUrl.origin &&
+      image.pathname.startsWith(
+        "/storage/v1/object/public/product-images/products/"
+      )
+    );
+  } catch {
+    return false;
+  }
+}
+
 export default function AdminProductForm({ product }: AdminProductFormProps) {
   const router = useRouter();
   const isEditing = Boolean(product);
@@ -236,6 +258,7 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
     setIsUploadingImage(true);
 
     try {
+      const previousImageUrl = values.imageUrl.trim();
       const formData = new FormData();
       formData.set("image", image);
 
@@ -269,6 +292,32 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
       setDidImageFail(false);
       updateValue("imageUrl", imageUrl);
       setImageUploadMessage(`${image.name} uploaded successfully.`);
+
+      if (
+        previousImageUrl &&
+        previousImageUrl !== product?.imageUrl &&
+        previousImageUrl !== imageUrl &&
+        isManagedProductImageUrl(previousImageUrl)
+      ) {
+        try {
+          const cleanupResponse = await fetch("/api/admin/product-images", {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ imageUrl: previousImageUrl }),
+          });
+
+          if (!cleanupResponse.ok) {
+            throw new Error("Previous image cleanup failed.");
+          }
+        } catch (cleanupError) {
+          console.error(cleanupError);
+          setImageUploadError(
+            "The new image was uploaded, but the previous unused image could not be removed."
+          );
+        }
+      }
     } catch (uploadError) {
       setImageUploadError(
         uploadError instanceof TypeError

@@ -266,6 +266,66 @@ describe("AdminProductForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("cleans up a previous unsaved upload when another image is uploaded", async () => {
+    const firstImageUrl =
+      "https://project.supabase.co/storage/v1/object/public/product-images/products/first.webp";
+    const secondImageUrl =
+      "https://project.supabase.co/storage/v1/object/public/product-images/products/second.webp";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ imageUrl: firstImageUrl }), {
+          status: 201,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ imageUrl: secondImageUrl }), {
+          status: 201,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ message: "Product image deleted successfully." }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        )
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<AdminProductForm />);
+    const uploadInput = screen.getByLabelText("Upload image");
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [new File(["first"], "first.webp", { type: "image/webp" })],
+      },
+    });
+    await waitFor(() => {
+      expect(screen.getByLabelText("Image URL")).toHaveValue(firstImageUrl);
+    });
+
+    fireEvent.change(uploadInput, {
+      target: {
+        files: [new File(["second"], "second.webp", { type: "image/webp" })],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Image URL")).toHaveValue(secondImageUrl);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/admin/product-images", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ imageUrl: firstImageUrl }),
+    });
+  });
+
   it("rejects an unsupported selected file before uploading", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

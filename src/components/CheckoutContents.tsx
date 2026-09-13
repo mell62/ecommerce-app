@@ -82,15 +82,23 @@ export default function CheckoutContents({
     postalCode: "",
     country: "US",
   });
-  const subtotal = items.reduce(
+  const availableItems = items.filter((item) => !item.isArchived);
+  const subtotal = availableItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
   const pricing = calculateOrderPricing(subtotal);
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  const hasStockIssue = items.some(
-    (item) => item.stockCount === 0 || item.quantity > item.stockCount
+  const totalQuantity = availableItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
   );
+  const hasArchivedItems = items.some((item) => item.isArchived);
+  const hasStockIssue = items.some(
+    (item) =>
+      !item.isArchived &&
+      (item.stockCount === 0 || item.quantity > item.stockCount)
+  );
+  const hasCheckoutIssue = hasArchivedItems || hasStockIssue;
 
   function updateShippingAddress(
     field: EditableShippingAddressField,
@@ -122,7 +130,7 @@ export default function CheckoutContents({
   }
 
   async function placeOrder(): Promise<void> {
-    if (isPlacingOrder || hasStockIssue) {
+    if (isPlacingOrder || hasCheckoutIssue) {
       return;
     }
 
@@ -322,9 +330,10 @@ export default function CheckoutContents({
                 key={item.id}
                 className="flex items-center gap-4 py-5 last:pb-1"
               >
-                <Link
-                  href={`/products/${item.id}`}
-                  className="group relative isolate flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-ui border border-border/70 bg-surface p-1 before:absolute before:inset-[16%] before:rounded-full before:bg-brand-100/65 before:blur-lg sm:size-24 sm:p-1.5"
+                <div
+                  className={`group relative isolate flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-ui border border-border/70 p-1 before:absolute before:inset-[16%] before:rounded-full before:bg-brand-100/65 before:blur-lg sm:size-24 sm:p-1.5 ${
+                    item.isArchived ? "bg-surface-muted" : "bg-surface"
+                  }`}
                 >
                   <Image
                     src={item.imageUrl}
@@ -332,31 +341,51 @@ export default function CheckoutContents({
                     width={96}
                     height={96}
                     sizes="(min-width: 640px) 96px, 80px"
-                    className="relative z-10 h-full w-full object-contain drop-shadow-lg transition-transform duration-300 ease-[var(--store-ease-emphasized)] group-hover:scale-[1.03]"
+                    className={`relative z-10 h-full w-full object-contain drop-shadow-lg transition-transform duration-300 ease-[var(--store-ease-emphasized)] ${
+                      item.isArchived
+                        ? "grayscale"
+                        : "group-hover:scale-[1.03]"
+                    }`}
                   />
-                </Link>
+                </div>
 
                 <div className="min-w-0 flex-1">
-                  <Link
-                    href={`/products/${item.id}`}
-                    className="font-display font-semibold text-foreground hover:text-brand-700"
-                  >
-                    {item.name}
-                  </Link>
-                  <p className="mt-1 text-sm text-muted">
-                    Quantity {item.quantity} <span aria-hidden="true">·</span> $
-                    {item.price.toFixed(2)} each
-                  </p>
-                  {item.price !== item.originalPrice && (
+                  {item.isArchived ? (
+                    <p className="font-display font-semibold text-foreground">
+                      {item.name}
+                    </p>
+                  ) : (
+                    <Link
+                      href={`/products/${item.id}`}
+                      className="font-display font-semibold text-foreground hover:text-brand-700"
+                    >
+                      {item.name}
+                    </Link>
+                  )}
+                  {item.isArchived && (
+                    <p className="mt-1 text-sm font-semibold text-warning">
+                      Unavailable
+                    </p>
+                  )}
+                  {!item.isArchived && (
+                    <p className="mt-1 text-sm text-muted">
+                      Quantity {item.quantity}{" "}
+                      <span aria-hidden="true">·</span> $
+                      {item.price.toFixed(2)} each
+                    </p>
+                  )}
+                  {!item.isArchived && item.price !== item.originalPrice && (
                     <p className="mt-1 text-xs font-medium text-brand-700">
                       {item.discountPercent}% discount applied
                     </p>
                   )}
                 </div>
 
-                <p className="shrink-0 self-start pt-1 font-semibold text-foreground">
-                  ${(item.price * item.quantity).toFixed(2)}
-                </p>
+                {!item.isArchived && (
+                  <p className="shrink-0 self-start pt-1 font-semibold text-foreground">
+                    ${(item.price * item.quantity).toFixed(2)}
+                  </p>
+                )}
               </article>
             ))}
           </div>
@@ -402,12 +431,16 @@ export default function CheckoutContents({
           </div>
         </dl>
 
-        {hasStockIssue && (
+        {hasCheckoutIssue && (
           <div
             className="mt-5 rounded-ui border border-danger/25 bg-danger/5 p-3 text-sm text-danger"
             role="alert"
           >
-            <p>Some quantities are no longer available.</p>
+            <p>
+              {hasArchivedItems
+                ? "Remove unavailable products before checkout."
+                : "Some quantities are no longer available."}
+            </p>
             <Link href="/cart" className="mt-1 inline-block font-semibold">
               Return to cart
             </Link>
@@ -426,7 +459,7 @@ export default function CheckoutContents({
         <button
           type="button"
           onClick={placeOrder}
-          disabled={isPlacingOrder || hasStockIssue}
+          disabled={isPlacingOrder || hasCheckoutIssue}
           aria-busy={isPlacingOrder}
           className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         >

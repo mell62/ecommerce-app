@@ -71,6 +71,45 @@ describe("CheckoutContents accessibility", () => {
     expect(results.violations).toHaveLength(0);
   });
 
+  it("marks archived products unavailable and prevents order submission", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            items: [{ ...cartItem, isArchived: true }],
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        )
+      )
+    );
+    const { container } = render(
+      <CartProvider isAuthenticated>
+        <CheckoutContents />
+      </CartProvider>
+    );
+
+    expect(await screen.findByText("Unavailable")).toBeVisible();
+    expect(
+      screen.getByText("Remove unavailable products before checkout.")
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Continue to payment" })
+    ).toBeDisabled();
+    expect(
+      screen.queryByRole("link", { name: cartItem.name })
+    ).not.toBeInTheDocument();
+
+    const results = await axe(container);
+
+    expect(results.violations).toHaveLength(0);
+  });
+
   it("shows field-specific errors and focuses the first invalid address field", async () => {
     render(
       <CartProvider isAuthenticated>

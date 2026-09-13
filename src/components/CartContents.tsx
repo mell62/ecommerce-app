@@ -153,15 +153,23 @@ export default function CartContents() {
     );
   }
 
-  const subtotal = items.reduce(
+  const availableItems = items.filter((item) => !item.isArchived);
+  const subtotal = availableItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
   const pricing = calculateOrderPricing(subtotal);
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  const hasStockIssue = items.some(
-    (item) => item.stockCount === 0 || item.quantity > item.stockCount
+  const totalQuantity = availableItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
   );
+  const hasArchivedItems = items.some((item) => item.isArchived);
+  const hasStockIssue = items.some(
+    (item) =>
+      !item.isArchived &&
+      (item.stockCount === 0 || item.quantity > item.stockCount)
+  );
+  const hasCheckoutIssue = hasArchivedItems || hasStockIssue;
 
   return (
     <div>
@@ -183,49 +191,82 @@ export default function CartContents() {
         <div className="space-y-4">
           {items.map((item) => {
             const isUpdating = updatingProductId === item.id;
+            const productImage = (
+              <Image
+                src={item.imageUrl}
+                alt={item.name}
+                width={160}
+                height={120}
+                sizes="(min-width: 640px) 160px, 100vw"
+                className={`relative z-10 h-full w-full object-contain drop-shadow-lg transition-transform duration-300 ease-[var(--store-ease-emphasized)] ${
+                  item.isArchived ? "grayscale" : "group-hover:scale-[1.03]"
+                }`}
+              />
+            );
 
             return (
               <article
                 key={item.id}
-                className="flex flex-col gap-4 rounded-ui border border-border bg-surface p-4 shadow-sm sm:flex-row sm:p-5"
+                className={`flex flex-col gap-4 rounded-ui border bg-surface p-4 shadow-sm sm:flex-row sm:p-5 ${
+                  item.isArchived ? "border-warning/30" : "border-border"
+                }`}
               >
-                <Link
-                  href={`/products/${item.id}`}
-                  className="group relative isolate flex aspect-[4/3] w-full shrink-0 items-center justify-center overflow-hidden rounded-ui border border-border/70 bg-surface p-1.5 before:absolute before:inset-[18%] before:rounded-full before:bg-brand-100/65 before:blur-xl sm:w-40"
-                >
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.name}
-                    width={160}
-                    height={120}
-                    sizes="(min-width: 640px) 160px, 100vw"
-                    className="relative z-10 h-full w-full object-contain drop-shadow-lg transition-transform duration-300 ease-[var(--store-ease-emphasized)] group-hover:scale-[1.03]"
-                  />
-                </Link>
+                {item.isArchived ? (
+                  <div className="relative isolate flex aspect-[4/3] w-full shrink-0 items-center justify-center overflow-hidden rounded-ui border border-border/70 bg-surface-muted p-1.5 before:absolute before:inset-[18%] before:rounded-full before:bg-brand-100/45 before:blur-xl sm:w-40">
+                    {productImage}
+                  </div>
+                ) : (
+                  <Link
+                    href={`/products/${item.id}`}
+                    className="group relative isolate flex aspect-[4/3] w-full shrink-0 items-center justify-center overflow-hidden rounded-ui border border-border/70 bg-surface p-1.5 before:absolute before:inset-[18%] before:rounded-full before:bg-brand-100/65 before:blur-xl sm:w-40"
+                  >
+                    {productImage}
+                  </Link>
+                )}
 
                 <div className="flex min-w-0 flex-1 flex-col">
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <Link
-                      href={`/products/${item.id}`}
-                      className="w-fit font-display text-lg font-semibold text-foreground hover:text-brand-700"
-                    >
-                      {item.name}
-                    </Link>
-                    <p className="font-bold text-foreground">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </p>
+                    {item.isArchived ? (
+                      <p className="font-display text-lg font-semibold text-foreground">
+                        {item.name}
+                      </p>
+                    ) : (
+                      <Link
+                        href={`/products/${item.id}`}
+                        className="w-fit font-display text-lg font-semibold text-foreground hover:text-brand-700"
+                      >
+                        {item.name}
+                      </Link>
+                    )}
+                    {item.isArchived ? (
+                      <span className="rounded-full border border-warning/30 bg-warning/5 px-2.5 py-1 text-xs font-semibold text-warning">
+                        Unavailable
+                      </span>
+                    ) : (
+                      <p className="font-bold text-foreground">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </p>
+                    )}
                   </div>
 
-                  <p className="mt-1 text-sm text-muted">
-                    ${item.price.toFixed(2)} each
-                    {item.price !== item.originalPrice && (
-                      <span className="ml-2 line-through">
-                        ${item.originalPrice.toFixed(2)}
-                      </span>
-                    )}
-                  </p>
+                  {item.isArchived ? (
+                    <p className="mt-2 text-sm leading-6 text-muted">
+                      This product is no longer available. Remove it to continue
+                      to checkout.
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-sm text-muted">
+                      ${item.price.toFixed(2)} each
+                      {item.price !== item.originalPrice && (
+                        <span className="ml-2 line-through">
+                          ${item.originalPrice.toFixed(2)}
+                        </span>
+                      )}
+                    </p>
+                  )}
 
-                  <div className="mt-4">
+                  {!item.isArchived && (
+                    <div className="mt-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
                       Quantity
                     </p>
@@ -261,7 +302,8 @@ export default function CartContents() {
                         +
                       </button>
                     </div>
-                  </div>
+                    </div>
+                  )}
 
                   {item.stockCount === 0 ? (
                     <p className="mt-2 text-sm font-medium text-danger">
@@ -349,10 +391,12 @@ export default function CartContents() {
             </div>
           </div>
 
-          {hasStockIssue ? (
+          {hasCheckoutIssue ? (
             <>
               <p className="mt-4 text-sm text-danger">
-                Update unavailable quantities before checkout.
+                {hasArchivedItems
+                  ? "Remove unavailable products before checkout."
+                  : "Update unavailable quantities before checkout."}
               </p>
               <button
                 type="button"

@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ChangeEvent, type SubmitEvent } from "react";
 import {
@@ -152,11 +151,13 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
   const [fieldErrors, setFieldErrors] = useState<ProductInputErrors>({});
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [didImageFail, setDidImageFail] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imageUploadError, setImageUploadError] = useState("");
   const [imageUploadMessage, setImageUploadMessage] = useState("");
-  const isFormBusy = isSubmitting || isUploadingImage;
+  const [pendingUploadedImageUrl, setPendingUploadedImageUrl] = useState("");
+  const isFormBusy = isSubmitting || isUploadingImage || isCancelling;
 
   function updateValue<Key extends keyof ProductFormValues>(
     field: Key,
@@ -217,6 +218,7 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
         return;
       }
 
+      setPendingUploadedImageUrl("");
       router.push(
         isEditing
           ? "/admin/products?updated=true"
@@ -258,7 +260,13 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
     setIsUploadingImage(true);
 
     try {
-      const previousImageUrl = values.imageUrl.trim();
+      const currentImageUrl = values.imageUrl.trim();
+      const previousImageUrl =
+        pendingUploadedImageUrl ||
+        (currentImageUrl !== product?.imageUrl &&
+        isManagedProductImageUrl(currentImageUrl)
+          ? currentImageUrl
+          : "");
       const formData = new FormData();
       formData.set("image", image);
 
@@ -291,11 +299,11 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
 
       setDidImageFail(false);
       updateValue("imageUrl", imageUrl);
+      setPendingUploadedImageUrl(imageUrl);
       setImageUploadMessage(`${image.name} uploaded successfully.`);
 
       if (
         previousImageUrl &&
-        previousImageUrl !== product?.imageUrl &&
         previousImageUrl !== imageUrl &&
         isManagedProductImageUrl(previousImageUrl)
       ) {
@@ -328,6 +336,56 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
       );
     } finally {
       setIsUploadingImage(false);
+    }
+  }
+
+  async function handleCancel(): Promise<void> {
+    if (isFormBusy) {
+      return;
+    }
+
+    const imageUrl = pendingUploadedImageUrl;
+    const shouldCleanUpImage = isManagedProductImageUrl(imageUrl);
+
+    if (!shouldCleanUpImage) {
+      router.push("/admin/products");
+      return;
+    }
+
+    setImageUploadError("");
+    setIsCancelling(true);
+
+    try {
+      const response = await fetch("/api/admin/product-images", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageUrl }),
+      });
+      const contentType = response.headers.get("content-type");
+      const data: unknown = contentType?.includes("application/json")
+        ? await response.json()
+        : null;
+
+      if (!response.ok) {
+        throw new Error(
+          readApiError(data, "Failed to remove the unsaved image.").message
+        );
+      }
+
+      setPendingUploadedImageUrl("");
+      router.push("/admin/products");
+    } catch (cleanupError) {
+      setImageUploadError(
+        cleanupError instanceof TypeError
+          ? "Unable to remove the unsaved image. Check your connection and try again."
+          : cleanupError instanceof Error
+            ? cleanupError.message
+            : "Failed to remove the unsaved image."
+      );
+    } finally {
+      setIsCancelling(false);
     }
   }
 
@@ -722,18 +780,14 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
               ? "Save changes"
               : "Create product"}
         </button>
-        <Link
-          href="/admin/products"
-          aria-disabled={isFormBusy}
-          onClick={(event) => {
-            if (isFormBusy) {
-              event.preventDefault();
-            }
-          }}
+        <button
+          type="button"
+          disabled={isFormBusy}
+          onClick={handleCancel}
           className="inline-flex min-h-12 items-center justify-center rounded-ui border border-border bg-surface px-5 py-2.5 font-semibold text-foreground shadow-sm hover:border-border-hover hover:text-brand-700"
         >
-          Cancel
-        </Link>
+          {isCancelling ? "Cancelling..." : "Cancel"}
+        </button>
       </div>
     </form>
   );

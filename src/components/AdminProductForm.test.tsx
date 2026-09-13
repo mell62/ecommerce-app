@@ -326,6 +326,83 @@ describe("AdminProductForm", () => {
     });
   });
 
+  it("removes an unsaved managed image before cancelling", async () => {
+    const imageUrl =
+      "https://project.supabase.co/storage/v1/object/public/product-images/products/temporary.webp";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ imageUrl }), {
+          status: 201,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ message: "Product image deleted successfully." }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        )
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<AdminProductForm />);
+
+    fireEvent.change(screen.getByLabelText("Upload image"), {
+      target: {
+        files: [
+          new File(["temporary"], "temporary.webp", { type: "image/webp" }),
+        ],
+      },
+    });
+    await waitFor(() => {
+      expect(screen.getByLabelText("Image URL")).toHaveValue(imageUrl);
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/admin/products");
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/admin/product-images", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ imageUrl }),
+    });
+  });
+
+  it("keeps an existing product image when cancelling an edit", () => {
+    const imageUrl =
+      "https://project.supabase.co/storage/v1/object/public/product-images/products/existing.webp";
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <AdminProductForm
+        product={{
+          id: "product-1",
+          name: "Gaming Mouse",
+          description: "A precise wireless gaming mouse.",
+          category: "Accessories",
+          imageUrl,
+          price: 59.99,
+          stockCount: 8,
+          discountPercent: 15,
+          isFeatured: true,
+          isNew: false,
+          isBestSeller: true,
+        }}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(pushMock).toHaveBeenCalledWith("/admin/products");
+  });
+
   it("rejects an unsupported selected file before uploading", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

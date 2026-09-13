@@ -144,6 +144,26 @@ function isManagedProductImageUrl(imageUrl: string): boolean {
   }
 }
 
+async function requestProductImageCleanup(imageUrl: string): Promise<void> {
+  const response = await fetch("/api/admin/product-images", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ imageUrl }),
+  });
+  const contentType = response.headers.get("content-type");
+  const data: unknown = contentType?.includes("application/json")
+    ? await response.json()
+    : null;
+
+  if (!response.ok) {
+    throw new Error(
+      readApiError(data, "Failed to remove the unsaved image.").message
+    );
+  }
+}
+
 export default function AdminProductForm({ product }: AdminProductFormProps) {
   const router = useRouter();
   const isEditing = Boolean(product);
@@ -188,6 +208,25 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
     setIsSubmitting(true);
 
     try {
+      if (
+        pendingUploadedImageUrl &&
+        values.imageUrl.trim() !== pendingUploadedImageUrl
+      ) {
+        try {
+          await requestProductImageCleanup(pendingUploadedImageUrl);
+          setPendingUploadedImageUrl("");
+        } catch (cleanupError) {
+          setImageUploadError(
+            cleanupError instanceof TypeError
+              ? "Unable to remove the unused upload. Check your connection and try again."
+              : cleanupError instanceof Error
+                ? cleanupError.message
+                : "Failed to remove the unused upload."
+          );
+          return;
+        }
+      }
+
       const response = await fetch(
         product ? `/api/admin/products/${product.id}` : "/api/admin/products",
         {
@@ -308,17 +347,7 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
         isManagedProductImageUrl(previousImageUrl)
       ) {
         try {
-          const cleanupResponse = await fetch("/api/admin/product-images", {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ imageUrl: previousImageUrl }),
-          });
-
-          if (!cleanupResponse.ok) {
-            throw new Error("Previous image cleanup failed.");
-          }
+          await requestProductImageCleanup(previousImageUrl);
         } catch (cleanupError) {
           console.error(cleanupError);
           setImageUploadError(
@@ -356,24 +385,7 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
     setIsCancelling(true);
 
     try {
-      const response = await fetch("/api/admin/product-images", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ imageUrl }),
-      });
-      const contentType = response.headers.get("content-type");
-      const data: unknown = contentType?.includes("application/json")
-        ? await response.json()
-        : null;
-
-      if (!response.ok) {
-        throw new Error(
-          readApiError(data, "Failed to remove the unsaved image.").message
-        );
-      }
-
+      await requestProductImageCleanup(imageUrl);
       setPendingUploadedImageUrl("");
       router.push("/admin/products");
     } catch (cleanupError) {

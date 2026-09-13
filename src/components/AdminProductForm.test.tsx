@@ -403,6 +403,69 @@ describe("AdminProductForm", () => {
     expect(pushMock).toHaveBeenCalledWith("/admin/products");
   });
 
+  it("removes an overridden upload before creating the product", async () => {
+    const uploadedImageUrl =
+      "https://project.supabase.co/storage/v1/object/public/product-images/products/temporary.webp";
+    const manualImageUrl =
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ imageUrl: uploadedImageUrl }), {
+          status: 201,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ message: "Product image deleted successfully." }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ product: { id: "product-1" } }), {
+          status: 201,
+          headers: { "Content-Type": "application/json" },
+        })
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<AdminProductForm />);
+
+    fireEvent.change(screen.getByLabelText("Upload image"), {
+      target: {
+        files: [new File(["temporary"], "temporary.webp", { type: "image/webp" })],
+      },
+    });
+    await waitFor(() => {
+      expect(screen.getByLabelText("Image URL")).toHaveValue(uploadedImageUrl);
+    });
+
+    fillRequiredFields();
+    fireEvent.submit(screen.getByRole("form", { name: "Create product" }));
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith("/admin/products?created=true");
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/admin/product-images", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ imageUrl: uploadedImageUrl }),
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/admin/products",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining(manualImageUrl),
+      })
+    );
+  });
+
   it("rejects an unsupported selected file before uploading", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

@@ -3,7 +3,7 @@ import { axe } from "jest-axe";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CartProvider from "@/components/CartProvider";
 import WishlistProvider from "@/components/WishlistProvider";
-import ProductPage from "./page";
+import ProductPage, { generateMetadata } from "./page";
 
 const findFirstMock = vi.hoisted(() => vi.fn());
 const findManyMock = vi.hoisted(() => vi.fn());
@@ -150,6 +150,51 @@ describe("ProductPage accessibility", () => {
     const results = await axe(container);
 
     expect(results.violations).toHaveLength(0);
+  });
+
+  it("builds search and social metadata from the product", async () => {
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ id: product.id }),
+    });
+
+    expect(metadata).toEqual({
+      title: product.name,
+      description: product.description,
+      openGraph: {
+        title: product.name,
+        description: product.description,
+        type: "website",
+        images: [
+          {
+            url: product.imageUrl,
+            alt: product.name,
+          },
+        ],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: product.name,
+        description: product.description,
+        images: [product.imageUrl],
+      },
+    });
+  });
+
+  it("prevents missing products from being indexed", async () => {
+    findFirstMock.mockResolvedValue(null);
+
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ id: "missing-metadata-product" }),
+    });
+
+    expect(metadata).toEqual({
+      title: "Product not found",
+      description: "This Zeus Electronics product is no longer available.",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    });
   });
 
   it("treats an archived or missing product as not found", async () => {

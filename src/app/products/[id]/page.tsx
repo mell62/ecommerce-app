@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { cache } from "react";
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import AddToCartButton from "@/components/AddToCartButton";
@@ -23,10 +25,8 @@ type ProductPageProps = Readonly<{
   }>;
 }>;
 
-export default async function ProductPage({ params }: ProductPageProps) {
-  const id = (await params).id;
-
-  const product = await prisma.product.findFirst({
+const getPublicProduct = cache(async (id: string) =>
+  prisma.product.findFirst({
     where: {
       id,
       isArchived: false,
@@ -38,7 +38,52 @@ export default async function ProductPage({ params }: ProductPageProps) {
         },
       },
     },
-  });
+  })
+);
+
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
+  const id = (await params).id;
+  const product = await getPublicProduct(id);
+
+  if (!product) {
+    return {
+      title: "Product not found",
+      description: "This Zeus Electronics product is no longer available.",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
+
+  return {
+    title: product.name,
+    description: product.description,
+    openGraph: {
+      title: product.name,
+      description: product.description,
+      type: "website",
+      images: [
+        {
+          url: product.imageUrl,
+          alt: product.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description: product.description,
+      images: [product.imageUrl],
+    },
+  };
+}
+
+export default async function ProductPage({ params }: ProductPageProps) {
+  const id = (await params).id;
+  const product = await getPublicProduct(id);
 
   if (!product) {
     return notFound();

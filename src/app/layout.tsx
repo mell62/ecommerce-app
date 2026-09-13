@@ -26,6 +26,14 @@ export const metadata: Metadata = {
   },
   description:
     "Shop thoughtfully selected electronics and accessories for work, gaming, and everyday life.",
+  icons: {
+    icon: {
+      url: "/logo.png",
+      type: "image/png",
+    },
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 type RootLayoutProps = Readonly<{

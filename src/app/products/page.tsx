@@ -1,10 +1,18 @@
-export const dynamic = "force-dynamic";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import SortDropdown from "@/components/SortDropdown";
 import ProductFilters from "@/components/ProductFilters";
 import WishlistButton from "@/components/WishlistButton";
 import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Products",
+  description:
+    "Shop Zeus electronics, monitors, keyboards, mice, and accessories for work, gaming, and everyday setups.",
+};
 
 type ProductsPageProps = Readonly<{
   searchParams: Promise<{

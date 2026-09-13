@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import WishlistProvider from "@/components/WishlistProvider";
-import ProductsPage from "./page";
+import ProductsPage, { metadata } from "./page";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/products",
@@ -54,5 +54,13 @@ describe("ProductsPage accessibility", () => {
     const results = await axe(container);
 
     expect(results.violations).toHaveLength(0);
+  });
+
+  it("provides catalog metadata", () => {
+    expect(metadata).toEqual({
+      title: "Products",
+      description:
+        "Shop Zeus electronics, monitors, keyboards, mice, and accessories for work, gaming, and everyday setups.",
+    });
   });
 });

@@ -1,8 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import CartProvider from "@/components/CartProvider";
 import SiteHeader from "@/components/SiteHeader";
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+}));
 
 function renderHeader() {
   return render(

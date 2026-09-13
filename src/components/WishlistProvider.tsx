@@ -6,9 +6,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 
 export type WishlistProduct = {
   id: string;
@@ -18,6 +20,7 @@ export type WishlistProduct = {
   imageUrl: string;
   stockCount: number;
   discountPercent: number;
+  isArchived: boolean;
 };
 
 type WishlistContextValue = {
@@ -53,7 +56,9 @@ function isWishlistProduct(value: unknown): value is WishlistProduct {
     "stockCount" in value &&
     typeof value.stockCount === "number" &&
     "discountPercent" in value &&
-    typeof value.discountPercent === "number"
+    typeof value.discountPercent === "number" &&
+    "isArchived" in value &&
+    typeof value.isArchived === "boolean"
   );
 }
 
@@ -82,12 +87,19 @@ export default function WishlistProvider({
   children,
   isAuthenticated,
 }: WishlistProviderProps) {
+  const pathname = usePathname();
+  const hasLoadedWishlist = useRef(false);
   const [products, setProducts] = useState<WishlistProduct[]>([]);
   const [isLoading, setIsLoading] = useState(isAuthenticated);
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) {
+      hasLoadedWishlist.current = false;
+      return;
+    }
+
+    if (hasLoadedWishlist.current && pathname !== "/wishlist") {
       return;
     }
 
@@ -113,6 +125,7 @@ export default function WishlistProvider({
             : [];
 
         setProducts(items);
+        hasLoadedWishlist.current = true;
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
           return;
@@ -131,7 +144,7 @@ export default function WishlistProvider({
     void loadWishlist();
 
     return () => controller.abort();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, pathname]);
 
   const addProduct = useCallback(async (productId: string): Promise<void> => {
     const response = await fetch("/api/wishlist", {

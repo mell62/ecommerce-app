@@ -6,9 +6,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 
 export type CartProduct = {
   id: string;
@@ -95,12 +97,23 @@ export default function CartProvider({
   children,
   isAuthenticated,
 }: CartProviderProps) {
+  const pathname = usePathname();
+  const hasLoadedCart = useRef(false);
   const [items, setItems] = useState<CartProduct[]>([]);
   const [isLoading, setIsLoading] = useState(isAuthenticated);
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) {
+      hasLoadedCart.current = false;
+      return;
+    }
+
+    if (
+      hasLoadedCart.current &&
+      pathname !== "/cart" &&
+      pathname !== "/checkout"
+    ) {
       return;
     }
 
@@ -126,6 +139,7 @@ export default function CartProvider({
             : [];
 
         setItems(loadedItems);
+        hasLoadedCart.current = true;
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
           return;
@@ -144,7 +158,7 @@ export default function CartProvider({
     void loadCart();
 
     return () => controller.abort();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, pathname]);
 
   const saveReturnedItem = useCallback((data: unknown): void => {
     if (

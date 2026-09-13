@@ -48,6 +48,7 @@ export async function GET(): Promise<Response> {
                 imageUrl: true,
                 stockCount: true,
                 discountPercent: true,
+                isArchived: true,
               },
             },
           },
@@ -90,17 +91,25 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    const productExists = await prisma.product.findUnique({
+    const product = await prisma.product.findUnique({
       where: {
         id: productId,
       },
       select: {
         id: true,
+        isArchived: true,
       },
     });
 
-    if (!productExists) {
+    if (!product) {
       return Response.json({ error: "Product not found." }, { status: 404 });
+    }
+
+    if (product.isArchived) {
+      return Response.json(
+        { error: "This product is no longer available." },
+        { status: 409 }
+      );
     }
 
     const wishlist = await prisma.wishlist.upsert({
@@ -131,6 +140,7 @@ export async function POST(request: Request): Promise<Response> {
             imageUrl: true,
             stockCount: true,
             discountPercent: true,
+            isArchived: true,
           },
         },
       },

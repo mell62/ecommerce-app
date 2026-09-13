@@ -4,6 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CartProvider from "@/components/CartProvider";
 import CheckoutContents from "@/components/CheckoutContents";
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/checkout",
+}));
+
 const redirectToStripeCheckoutMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/checkout-navigation", () => ({

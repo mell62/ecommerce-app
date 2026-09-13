@@ -198,7 +198,8 @@ export default function WishlistContents() {
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),21rem))] justify-start gap-5">
         {products.map((product) => {
-          const productHasDiscount = hasDiscount(product.discountPercent);
+          const productHasDiscount =
+            !product.isArchived && hasDiscount(product.discountPercent);
           const displayedPrice = getDiscountedPrice(
             product.price,
             product.discountPercent
@@ -209,6 +210,7 @@ export default function WishlistContents() {
           const cartItem = cartItems.find((item) => item.id === product.id);
           const isAtCartLimit = (cartItem?.quantity ?? 0) >= product.stockCount;
           const isAddDisabled =
+            product.isArchived ||
             product.stockCount === 0 ||
             isAtCartLimit ||
             isCartLoading ||
@@ -216,7 +218,9 @@ export default function WishlistContents() {
             isRemoving ||
             wasAdded;
           const addLabel =
-            product.stockCount === 0
+            product.isArchived
+              ? "Unavailable"
+              : product.stockCount === 0
               ? "Out of stock"
               : isCartLoading
                 ? "Loading cart..."
@@ -231,19 +235,24 @@ export default function WishlistContents() {
           return (
             <article
               key={product.id}
-              className="group flex h-full flex-col overflow-hidden rounded-ui border border-border bg-surface shadow-sm hover:-translate-y-1 hover:border-border-hover hover:shadow-card focus-within:border-brand-500 focus-within:shadow-card"
+              className={`group flex h-full flex-col overflow-hidden rounded-ui border bg-surface shadow-sm ${
+                product.isArchived
+                  ? "border-warning/30"
+                  : "border-border hover:-translate-y-1 hover:border-border-hover hover:shadow-card focus-within:border-brand-500 focus-within:shadow-card"
+              }`}
             >
-              <Link
-                href={`/products/${product.id}`}
-                className="relative isolate flex aspect-[4/3] items-center justify-center overflow-hidden border-b border-border bg-surface p-4 before:absolute before:inset-[24%] before:rounded-full before:bg-brand-100/65 before:blur-2xl sm:p-5"
-              >
+              <div className="relative isolate flex aspect-[4/3] items-center justify-center overflow-hidden border-b border-border bg-surface p-4 before:absolute before:inset-[24%] before:rounded-full before:bg-brand-100/65 before:blur-2xl sm:p-5">
                 <Image
                   src={product.imageUrl}
                   alt={product.name}
                   width={800}
                   height={600}
                   sizes="(min-width: 640px) 336px, calc(100vw - 2rem)"
-                  className="relative z-10 h-full w-full object-contain drop-shadow-xl transition-transform duration-300 ease-[var(--store-ease-emphasized)] group-hover:scale-[1.025]"
+                  className={`relative z-10 h-full w-full object-contain drop-shadow-xl transition-transform duration-300 ease-[var(--store-ease-emphasized)] ${
+                    product.isArchived
+                      ? "grayscale"
+                      : "group-hover:scale-[1.025]"
+                  }`}
                 />
 
                 {productHasDiscount && (
@@ -251,19 +260,36 @@ export default function WishlistContents() {
                     {product.discountPercent}% off
                   </span>
                 )}
-              </Link>
+                {product.isArchived && (
+                  <span className="absolute left-3 top-3 z-20 rounded-full border border-warning/30 bg-surface px-2.5 py-1 text-xs font-semibold text-warning shadow-sm">
+                    Unavailable
+                  </span>
+                )}
+              </div>
 
               <div className="flex flex-1 flex-col p-5">
-                <Link
-                  href={`/products/${product.id}`}
-                  className="w-fit font-display text-lg font-semibold text-foreground hover:text-brand-700"
-                >
-                  {product.name}
-                </Link>
+                {product.isArchived ? (
+                  <p className="font-display text-lg font-semibold text-foreground">
+                    {product.name}
+                  </p>
+                ) : (
+                  <Link
+                    href={`/products/${product.id}`}
+                    className="w-fit font-display text-lg font-semibold text-foreground hover:text-brand-700"
+                  >
+                    {product.name}
+                  </Link>
+                )}
                 <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted">
                   {product.description}
                 </p>
 
+                {product.isArchived ? (
+                  <p className="mt-auto pt-5 text-sm leading-6 text-muted">
+                    This saved product is no longer available. You can remove it
+                    from your wishlist.
+                  </p>
+                ) : (
                 <div className="mt-auto pt-5">
                   <div className="flex flex-wrap items-baseline gap-2">
                     <p className="text-xl font-bold text-foreground">
@@ -290,6 +316,7 @@ export default function WishlistContents() {
                     </p>
                   )}
                 </div>
+                )}
               </div>
 
               <div className="flex gap-2 border-t border-border p-4">

@@ -42,6 +42,7 @@ const product = {
   imageUrl: "/mouse.png",
   stockCount: 5,
   discountPercent: 15,
+  isArchived: false,
 };
 
 function createRequest(method: string, body: unknown): Request {
@@ -109,8 +110,28 @@ describe("wishlist API", () => {
     expect(wishlistUpsertMock).not.toHaveBeenCalled();
   });
 
+  it("rejects an archived product", async () => {
+    productFindUniqueMock.mockResolvedValue({
+      id: product.id,
+      isArchived: true,
+    });
+
+    const response = await POST(
+      createRequest("POST", { productId: product.id })
+    );
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: "This product is no longer available.",
+    });
+    expect(wishlistUpsertMock).not.toHaveBeenCalled();
+  });
+
   it("adds a product to the authenticated user's wishlist", async () => {
-    productFindUniqueMock.mockResolvedValue({ id: product.id });
+    productFindUniqueMock.mockResolvedValue({
+      id: product.id,
+      isArchived: false,
+    });
     wishlistUpsertMock.mockResolvedValue({ id: "wishlist-1" });
     wishlistItemCreateMock.mockResolvedValue({ product });
 
@@ -145,7 +166,10 @@ describe("wishlist API", () => {
 
   it("returns a conflict for a duplicate wishlist product", async () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
-    productFindUniqueMock.mockResolvedValue({ id: product.id });
+    productFindUniqueMock.mockResolvedValue({
+      id: product.id,
+      isArchived: false,
+    });
     wishlistUpsertMock.mockResolvedValue({ id: "wishlist-1" });
     wishlistItemCreateMock.mockRejectedValue(
       new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {

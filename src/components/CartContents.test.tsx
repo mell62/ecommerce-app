@@ -4,6 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import CartContents from "@/components/CartContents";
 import CartProvider from "@/components/CartProvider";
 
+const navigationState = vi.hoisted(() => ({ pathname: "/cart" }));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => navigationState.pathname,
+}));
+
 const cartItem = {
   id: "product-1",
   name: "Zeus Wireless Mouse",
@@ -19,6 +25,7 @@ const cartItem = {
 
 describe("CartContents accessibility", () => {
   beforeEach(() => {
+    navigationState.pathname = "/cart";
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -89,5 +96,41 @@ describe("CartContents accessibility", () => {
     const results = await axe(container);
 
     expect(results.violations).toHaveLength(0);
+  });
+
+  it("reloads the cart when navigating back from an admin page", async () => {
+    navigationState.pathname = "/admin/products";
+    let cartRequests = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => {
+        cartRequests += 1;
+
+        return Promise.resolve(
+          Response.json({
+            items: [
+              {
+                ...cartItem,
+                isArchived: cartRequests > 1,
+              },
+            ],
+          })
+        );
+      })
+    );
+    const getContents = () => (
+      <CartProvider isAuthenticated>
+        <CartContents />
+      </CartProvider>
+    );
+    const { rerender } = render(getContents());
+
+    expect(await screen.findByText(cartItem.name)).toBeVisible();
+
+    navigationState.pathname = "/cart";
+    rerender(getContents());
+
+    expect(await screen.findByText("Unavailable")).toBeVisible();
+    expect(cartRequests).toBe(2);
   });
 });

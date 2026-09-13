@@ -12,6 +12,7 @@ import OrdersError from "@/app/orders/error";
 import OrdersLoading from "@/app/orders/loading";
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
   useRouter: () => ({
     push: vi.fn(),
   }),

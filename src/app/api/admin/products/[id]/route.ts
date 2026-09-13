@@ -191,6 +191,7 @@ export async function DELETE(
           select: {
             id: true,
             name: true,
+            imageUrl: true,
           },
         });
 
@@ -245,6 +246,17 @@ export async function DELETE(
         },
         { status: 409 }
       );
+    }
+
+    if (getManagedProductImagePath(result.product.imageUrl)) {
+      try {
+        await deleteManagedProductImage(result.product.imageUrl);
+      } catch (imageError) {
+        console.error(
+          "Product deleted, but its managed image could not be deleted.",
+          imageError
+        );
+      }
     }
 
     return Response.json({

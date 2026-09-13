@@ -356,6 +356,8 @@ describe("admin product API", () => {
     productFindUniqueMock.mockResolvedValue({
       id: "product-1",
       name: "Gaming Mouse",
+      imageUrl:
+        "https://project.supabase.co/storage/v1/object/public/product-images/products/123e4567-e89b-12d3-a456-426614174000.webp",
     });
     orderItemCountMock.mockResolvedValue(2);
 
@@ -368,12 +370,16 @@ describe("admin product API", () => {
     });
     expect(reviewDeleteManyMock).not.toHaveBeenCalled();
     expect(productDeleteMock).not.toHaveBeenCalled();
+    expect(deleteManagedProductImageMock).not.toHaveBeenCalled();
   });
 
-  it("deletes an unordered product and its reviews in one transaction", async () => {
+  it("deletes an unordered product, its reviews, and its managed image", async () => {
+    const imageUrl =
+      "https://project.supabase.co/storage/v1/object/public/product-images/products/123e4567-e89b-12d3-a456-426614174000.webp";
     productFindUniqueMock.mockResolvedValue({
       id: "product-1",
       name: "Gaming Mouse",
+      imageUrl,
     });
     orderItemCountMock.mockResolvedValue(0);
     reviewDeleteManyMock.mockResolvedValue({ count: 3 });
@@ -395,6 +401,58 @@ describe("admin product API", () => {
     expect(transactionMock).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
     });
+    expect(productFindUniqueMock).toHaveBeenCalledWith({
+      where: {
+        id: "product-1",
+      },
+      select: {
+        id: true,
+        name: true,
+        imageUrl: true,
+      },
+    });
+    expect(deleteManagedProductImageMock).toHaveBeenCalledWith(imageUrl);
+    expect(await response.json()).toEqual({
+      message: "Gaming Mouse was deleted successfully.",
+      productId: "product-1",
+    });
+  });
+
+  it("does not attempt storage cleanup for an external product image", async () => {
+    productFindUniqueMock.mockResolvedValue({
+      id: "product-1",
+      name: "Gaming Mouse",
+      imageUrl: "https://images.unsplash.com/photo-123",
+    });
+    orderItemCountMock.mockResolvedValue(0);
+    reviewDeleteManyMock.mockResolvedValue({ count: 0 });
+    productDeleteMock.mockResolvedValue({ id: "product-1" });
+
+    const response = await DELETE(createRequest(null), context);
+
+    expect(response.status).toBe(200);
+    expect(deleteManagedProductImageMock).not.toHaveBeenCalled();
+  });
+
+  it("preserves a successful deletion when managed image cleanup fails", async () => {
+    const imageUrl =
+      "https://project.supabase.co/storage/v1/object/public/product-images/products/123e4567-e89b-12d3-a456-426614174000.webp";
+    productFindUniqueMock.mockResolvedValue({
+      id: "product-1",
+      name: "Gaming Mouse",
+      imageUrl,
+    });
+    orderItemCountMock.mockResolvedValue(0);
+    reviewDeleteManyMock.mockResolvedValue({ count: 0 });
+    productDeleteMock.mockResolvedValue({ id: "product-1" });
+    deleteManagedProductImageMock.mockRejectedValue(
+      new Error("Storage unavailable")
+    );
+
+    const response = await DELETE(createRequest(null), context);
+
+    expect(response.status).toBe(200);
+    expect(deleteManagedProductImageMock).toHaveBeenCalledWith(imageUrl);
     expect(await response.json()).toEqual({
       message: "Gaming Mouse was deleted successfully.",
       productId: "product-1",

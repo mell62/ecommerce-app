@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import ArchiveProductButton from "@/components/ArchiveProductButton";
 import DeleteProductButton from "@/components/DeleteProductButton";
 import TransientQueryNotice from "@/components/TransientQueryNotice";
 import { prisma } from "@/lib/db";
@@ -15,7 +16,13 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 
-const productNoticeQueryParameters = ["created", "updated", "deleted"];
+const productNoticeQueryParameters = [
+  "archived",
+  "created",
+  "deleted",
+  "restored",
+  "updated",
+];
 
 function getStockDetails(stockCount: number): {
   label: string;
@@ -43,8 +50,10 @@ function getStockDetails(stockCount: number): {
 
 type AdminProductsPageProps = Readonly<{
   searchParams: Promise<{
+    archived?: string | string[];
     created?: string | string[];
     deleted?: string | string[];
+    restored?: string | string[];
     stock?: string | string[];
     updated?: string | string[];
   }>;
@@ -54,6 +63,10 @@ export default async function AdminProductsPage({
   searchParams,
 }: AdminProductsPageProps) {
   const resolvedSearchParams = await searchParams;
+  const wasArchived =
+    (Array.isArray(resolvedSearchParams.archived)
+      ? resolvedSearchParams.archived[0]
+      : resolvedSearchParams.archived) === "true";
   const wasCreated =
     (Array.isArray(resolvedSearchParams.created)
       ? resolvedSearchParams.created[0]
@@ -66,6 +79,19 @@ export default async function AdminProductsPage({
     (Array.isArray(resolvedSearchParams.deleted)
       ? resolvedSearchParams.deleted[0]
       : resolvedSearchParams.deleted) === "true";
+  const wasRestored =
+    (Array.isArray(resolvedSearchParams.restored)
+      ? resolvedSearchParams.restored[0]
+      : resolvedSearchParams.restored) === "true";
+  const noticeAction = wasCreated
+    ? "created"
+    : wasUpdated
+      ? "updated"
+      : wasDeleted
+        ? "deleted"
+        : wasArchived
+          ? "archived"
+          : "restored";
   const stockFilter = Array.isArray(resolvedSearchParams.stock)
     ? resolvedSearchParams.stock[0]
     : resolvedSearchParams.stock;
@@ -88,6 +114,7 @@ export default async function AdminProductsPage({
       price: true,
       stockCount: true,
       discountPercent: true,
+      isArchived: true,
       isFeatured: true,
       isNew: true,
       isBestSeller: true,
@@ -149,15 +176,17 @@ export default async function AdminProductsPage({
         </div>
       </div>
 
-      {(wasCreated || wasUpdated || wasDeleted) && (
+      {(wasCreated ||
+        wasUpdated ||
+        wasDeleted ||
+        wasArchived ||
+        wasRestored) && (
         <TransientQueryNotice queryParameters={productNoticeQueryParameters}>
           <p
             className="mt-6 rounded-ui border border-success/25 bg-success/5 px-4 py-3 text-sm font-medium text-success"
             role="status"
           >
-            Product{" "}
-            {wasCreated ? "created" : wasUpdated ? "updated" : "deleted"}{" "}
-            successfully.
+            Product {noticeAction} successfully.
           </p>
         </TransientQueryNotice>
       )}
@@ -219,6 +248,11 @@ export default async function AdminProductsPage({
                         {label}
                       </span>
                     ))}
+                    {product.isArchived && (
+                      <span className="rounded-full border border-warning/25 bg-warning/5 px-2.5 py-1 text-xs font-semibold text-warning">
+                        Archived
+                      </span>
+                    )}
                   </div>
                   <p className="mt-1 text-sm text-muted">{product.category}</p>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
@@ -245,6 +279,11 @@ export default async function AdminProductsPage({
                   >
                     Edit {product.name}
                   </Link>
+                  <ArchiveProductButton
+                    productId={product.id}
+                    productName={product.name}
+                    isArchived={product.isArchived}
+                  />
                   <DeleteProductButton
                     productId={product.id}
                     productName={product.name}

@@ -29,6 +29,7 @@ const products = [
     price: 59.99,
     stockCount: 4,
     discountPercent: 15,
+    isArchived: false,
     isFeatured: true,
     isNew: false,
     isBestSeller: true,
@@ -44,6 +45,7 @@ const products = [
     price: 299.99,
     stockCount: 0,
     discountPercent: 0,
+    isArchived: true,
     isFeatured: false,
     isNew: true,
     isBestSeller: false,
@@ -76,6 +78,13 @@ describe("AdminProductsPage", () => {
     expect(screen.getByText("4 in stock · Low")).toBeInTheDocument();
     expect(screen.getByText("Out of stock")).toBeInTheDocument();
     expect(screen.getByText("15% discount")).toBeInTheDocument();
+    expect(screen.getByText("Archived")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Archive Gaming Mouse" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Restore Studio Monitor" })
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Edit Gaming Mouse" })
     ).toHaveAttribute("href", "/admin/products/product-1/edit");
@@ -88,6 +97,7 @@ describe("AdminProductsPage", () => {
         price: true,
         stockCount: true,
         discountPercent: true,
+        isArchived: true,
         isFeatured: true,
         isNew: true,
         isBestSeller: true,
@@ -153,6 +163,7 @@ describe("AdminProductsPage", () => {
         price: true,
         stockCount: true,
         discountPercent: true,
+        isArchived: true,
         isFeatured: true,
         isNew: true,
         isBestSeller: true,
@@ -224,6 +235,20 @@ describe("AdminProductsPage", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent(
       "Product deleted successfully."
+    );
+  });
+
+  it("confirms that a product was archived", async () => {
+    productFindManyMock.mockResolvedValue(products);
+
+    render(
+      await AdminProductsPage({
+        searchParams: Promise.resolve({ archived: "true" }),
+      })
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Product archived successfully."
     );
   });
 });

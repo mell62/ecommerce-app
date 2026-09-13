@@ -50,6 +50,7 @@ model Product {
   isFeatured      Boolean  @default(false)
   isNew           Boolean  @default(false)
   isBestSeller    Boolean  @default(false)
+  isArchived      Boolean  @default(false)
 
   orderItems    OrderItem[]
   cartItems     CartItem[]

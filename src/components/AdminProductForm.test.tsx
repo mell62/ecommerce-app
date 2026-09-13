@@ -42,10 +42,12 @@ function fillRequiredFields(): void {
 describe("AdminProductForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 
   it("submits normalized numeric values and returns to inventory", async () => {
@@ -219,6 +221,68 @@ describe("AdminProductForm", () => {
       screen.getByText("This image source is not supported.")
     ).toBeInTheDocument();
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  });
+
+  it("uploads a selected image and fills its public URL", async () => {
+    const imageUrl =
+      "https://project.supabase.co/storage/v1/object/public/product-images/products/headphones.webp";
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ imageUrl }), {
+        status: 201,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(<AdminProductForm />);
+    const image = new File(["image"], "headphones.webp", {
+      type: "image/webp",
+    });
+
+    fireEvent.change(screen.getByLabelText("Upload image"), {
+      target: {
+        files: [image],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Image URL")).toHaveValue(imageUrl);
+    });
+    expect(fetchMock).toHaveBeenCalledWith("/api/admin/product-images", {
+      method: "POST",
+      body: expect.any(FormData),
+    });
+    const requestOptions = fetchMock.mock.calls[0][1] as RequestInit;
+    const requestBody = requestOptions.body as FormData;
+
+    expect(requestBody.get("image")).toBe(image);
+    expect(requestOptions.headers).toBeUndefined();
+    expect(
+      screen.getByText("headphones.webp uploaded successfully.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "Product image preview" })
+    ).toBeInTheDocument();
+  });
+
+  it("rejects an unsupported selected file before uploading", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    render(<AdminProductForm />);
+
+    fireEvent.change(screen.getByLabelText("Upload image"), {
+      target: {
+        files: [
+          new File(["vector"], "product.svg", { type: "image/svg+xml" }),
+        ],
+      },
+    });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Use a JPEG, PNG, or WebP image."
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("has no detectable accessibility violations", async () => {

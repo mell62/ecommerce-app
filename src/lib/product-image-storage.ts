@@ -1,28 +1,16 @@
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
-import { PRODUCT_IMAGE_BUCKET } from "@/lib/product-input";
+import {
+  PRODUCT_IMAGE_BUCKET,
+  isSupportedProductImageMimeType,
+} from "@/lib/product-input";
 
 const extensionByMimeType = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
 } as const;
-
-export type SupportedProductImageMimeType = keyof typeof extensionByMimeType;
-
-export const PRODUCT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
-export const SUPPORTED_PRODUCT_IMAGE_MIME_TYPES = Object.freeze(
-  Object.keys(extensionByMimeType) as SupportedProductImageMimeType[]
-);
-
-export function isSupportedProductImageMimeType(
-  value: string
-): value is SupportedProductImageMimeType {
-  return SUPPORTED_PRODUCT_IMAGE_MIME_TYPES.some(
-    (mimeType) => mimeType === value
-  );
-}
 
 export async function uploadProductImage(file: File): Promise<string> {
   if (!isSupportedProductImageMimeType(file.type)) {

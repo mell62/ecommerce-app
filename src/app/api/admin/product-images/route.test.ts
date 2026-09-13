@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/admin/product-images/route";
-import { PRODUCT_IMAGE_MAX_BYTES } from "@/lib/product-image-storage";
+import { PRODUCT_IMAGE_MAX_BYTES } from "@/lib/product-input";
 
 const getAdminAccessMock = vi.hoisted(() => vi.fn());
 const uploadProductImageMock = vi.hoisted(() => vi.fn());
@@ -12,9 +12,6 @@ vi.mock("@/lib/admin-auth", () => ({
 }));
 
 vi.mock("@/lib/product-image-storage", () => ({
-  PRODUCT_IMAGE_MAX_BYTES: 5 * 1024 * 1024,
-  isSupportedProductImageMimeType: (value: string) =>
-    ["image/jpeg", "image/png", "image/webp"].includes(value),
   uploadProductImage: uploadProductImageMock,
 }));
 

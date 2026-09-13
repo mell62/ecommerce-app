@@ -2,8 +2,8 @@ import { getAdminAccess } from "@/lib/admin-auth";
 import {
   PRODUCT_IMAGE_MAX_BYTES,
   isSupportedProductImageMimeType,
-  uploadProductImage,
-} from "@/lib/product-image-storage";
+} from "@/lib/product-input";
+import { uploadProductImage } from "@/lib/product-image-storage";
 
 async function getUploadedFile(request: Request): Promise<File | null> {
   try {

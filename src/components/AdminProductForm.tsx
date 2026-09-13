@@ -3,12 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type SubmitEvent } from "react";
+import { useState, type ChangeEvent, type SubmitEvent } from "react";
 import {
   PRODUCT_CATEGORY_MAX_LENGTH,
   PRODUCT_DESCRIPTION_MAX_LENGTH,
+  PRODUCT_IMAGE_ACCEPT,
+  PRODUCT_IMAGE_MAX_BYTES,
   PRODUCT_IMAGE_URL_MAX_LENGTH,
   PRODUCT_NAME_MAX_LENGTH,
+  isSupportedProductImageMimeType,
   isSupportedProductImageUrl,
   type ProductInput,
   type ProductInputErrors,
@@ -128,6 +131,10 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [didImageFail, setDidImageFail] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState("");
+  const [imageUploadMessage, setImageUploadMessage] = useState("");
+  const isFormBusy = isSubmitting || isUploadingImage;
 
   function updateValue<Key extends keyof ProductFormValues>(
     field: Key,
@@ -148,6 +155,11 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
     event: SubmitEvent<HTMLFormElement>
   ): Promise<void> {
     event.preventDefault();
+
+    if (isFormBusy) {
+      return;
+    }
+
     setError("");
     setFieldErrors({});
     setIsSubmitting(true);
@@ -198,6 +210,78 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
     }
   }
 
+  async function handleImageSelection(
+    event: ChangeEvent<HTMLInputElement>
+  ): Promise<void> {
+    const image = event.target.files?.[0];
+
+    event.target.value = "";
+    setImageUploadError("");
+    setImageUploadMessage("");
+
+    if (!image) {
+      return;
+    }
+
+    if (!isSupportedProductImageMimeType(image.type)) {
+      setImageUploadError("Use a JPEG, PNG, or WebP image.");
+      return;
+    }
+
+    if (image.size > PRODUCT_IMAGE_MAX_BYTES) {
+      setImageUploadError("Product images must be 5 MB or smaller.");
+      return;
+    }
+
+    setIsUploadingImage(true);
+
+    try {
+      const formData = new FormData();
+      formData.set("image", image);
+
+      const response = await fetch("/api/admin/product-images", {
+        method: "POST",
+        body: formData,
+      });
+      const contentType = response.headers.get("content-type");
+      const data: unknown = contentType?.includes("application/json")
+        ? await response.json()
+        : null;
+
+      if (!response.ok) {
+        throw new Error(
+          readApiError(data, "Failed to upload product image.").message
+        );
+      }
+
+      const imageUrl =
+        typeof data === "object" &&
+        data !== null &&
+        "imageUrl" in data &&
+        typeof data.imageUrl === "string"
+          ? data.imageUrl
+          : "";
+
+      if (!imageUrl) {
+        throw new Error("The server did not return a valid image URL.");
+      }
+
+      setDidImageFail(false);
+      updateValue("imageUrl", imageUrl);
+      setImageUploadMessage(`${image.name} uploaded successfully.`);
+    } catch (uploadError) {
+      setImageUploadError(
+        uploadError instanceof TypeError
+          ? "Unable to upload the image. Check your connection and try again."
+          : uploadError instanceof Error
+            ? uploadError.message
+            : "Failed to upload product image."
+      );
+    } finally {
+      setIsUploadingImage(false);
+    }
+  }
+
   const inputClassName =
     "store-field mt-2 min-h-12 w-full rounded-ui border border-border bg-surface px-3.5 py-2.5 text-foreground shadow-sm placeholder:text-muted/70 hover:border-border-hover disabled:cursor-not-allowed disabled:bg-surface-muted disabled:opacity-70";
   const previewImageUrl = values.imageUrl.trim();
@@ -209,7 +293,7 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
   return (
     <form
       aria-label={isEditing ? "Edit product" : "Create product"}
-      aria-busy={isSubmitting}
+      aria-busy={isFormBusy}
       onSubmit={handleSubmit}
       className="mt-8 space-y-8"
     >
@@ -326,6 +410,52 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
           </div>
 
           <div>
+            <label
+              htmlFor="product-image-upload"
+              className="text-sm font-semibold"
+            >
+              Upload image
+            </label>
+            <input
+              id="product-image-upload"
+              name="imageUpload"
+              type="file"
+              accept={PRODUCT_IMAGE_ACCEPT}
+              onChange={handleImageSelection}
+              disabled={isFormBusy}
+              aria-describedby="product-image-upload-help"
+              className="mt-2 block min-h-12 w-full cursor-pointer rounded-ui border border-border bg-surface text-sm text-muted shadow-sm file:mr-3 file:min-h-12 file:cursor-pointer file:border-0 file:border-r file:border-border file:bg-surface-muted file:px-3.5 file:font-semibold file:text-foreground hover:border-border-hover disabled:cursor-wait disabled:opacity-60"
+            />
+            <p
+              id="product-image-upload-help"
+              className="mt-2 text-xs text-muted"
+            >
+              JPEG, PNG, or WebP up to 5 MB. Uploading fills the URL below.
+            </p>
+            {isUploadingImage && (
+              <p className="mt-2 text-sm font-medium text-brand-700" role="status">
+                Uploading image...
+              </p>
+            )}
+            {imageUploadMessage && !isUploadingImage && (
+              <p className="mt-2 text-sm font-medium text-success" role="status">
+                {imageUploadMessage}
+              </p>
+            )}
+            {imageUploadError && (
+              <p className="mt-2 text-sm text-danger" role="alert">
+                {imageUploadError}
+              </p>
+            )}
+
+            <div className="my-4 flex items-center gap-3" aria-hidden="true">
+              <span className="h-px flex-1 bg-border" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted">
+                Or
+              </span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
+
             <label htmlFor="product-image" className="text-sm font-semibold">
               Image URL
             </label>
@@ -336,6 +466,8 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
               value={values.imageUrl}
               onChange={(event) => {
                 setDidImageFail(false);
+                setImageUploadError("");
+                setImageUploadMessage("");
                 updateValue("imageUrl", event.target.value);
               }}
               required
@@ -524,7 +656,7 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
       <div className="flex flex-wrap gap-3">
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isFormBusy}
           className="inline-flex min-h-12 items-center justify-center gap-2 rounded-ui bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-card disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0"
         >
           {isSubmitting && (
@@ -543,9 +675,9 @@ export default function AdminProductForm({ product }: AdminProductFormProps) {
         </button>
         <Link
           href="/admin/products"
-          aria-disabled={isSubmitting}
+          aria-disabled={isFormBusy}
           onClick={(event) => {
-            if (isSubmitting) {
+            if (isFormBusy) {
               event.preventDefault();
             }
           }}

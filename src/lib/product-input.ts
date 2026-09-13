@@ -3,6 +3,25 @@ export const PRODUCT_DESCRIPTION_MAX_LENGTH = 2_000;
 export const PRODUCT_CATEGORY_MAX_LENGTH = 80;
 export const PRODUCT_IMAGE_URL_MAX_LENGTH = 2_048;
 export const PRODUCT_IMAGE_BUCKET = "product-images";
+export const PRODUCT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const SUPPORTED_PRODUCT_IMAGE_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+export const PRODUCT_IMAGE_ACCEPT =
+  SUPPORTED_PRODUCT_IMAGE_MIME_TYPES.join(",");
+
+export type SupportedProductImageMimeType =
+  (typeof SUPPORTED_PRODUCT_IMAGE_MIME_TYPES)[number];
+
+export function isSupportedProductImageMimeType(
+  value: string
+): value is SupportedProductImageMimeType {
+  return SUPPORTED_PRODUCT_IMAGE_MIME_TYPES.some(
+    (mimeType) => mimeType === value
+  );
+}
 
 export type ProductInput = Readonly<{
   name: string;

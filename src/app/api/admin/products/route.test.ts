@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { Prisma } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@/app/api/admin/products/route";
 
@@ -168,6 +169,23 @@ describe("admin products API", () => {
         ...createdProduct,
         createdAt: createdProduct.createdAt.toISOString(),
       },
+    });
+  });
+
+  it("returns a retryable response when the database is unavailable", async () => {
+    productCreateMock.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Database unavailable", {
+        code: "P1001",
+        clientVersion: "test",
+      })
+    );
+
+    const response = await POST(createRequest(validProduct));
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("Retry-After")).toBe("5");
+    expect(await response.json()).toEqual({
+      error: "The database is temporarily unavailable. Try again shortly.",
     });
   });
 });

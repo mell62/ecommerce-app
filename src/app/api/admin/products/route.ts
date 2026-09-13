@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { getAdminAccess } from "@/lib/admin-auth";
+import { getDatabaseErrorDetails } from "@/lib/database-error";
 import { validateProductInput } from "@/lib/product-input";
 
 async function getRequestBody(request: Request): Promise<unknown> {
@@ -60,6 +61,20 @@ export async function POST(request: Request): Promise<Response> {
 
     return Response.json({ product }, { status: 201 });
   } catch (error) {
+    const databaseError = getDatabaseErrorDetails(error);
+
+    if (databaseError) {
+      return Response.json(
+        { error: databaseError.message },
+        {
+          status: databaseError.status,
+          headers: databaseError.retryAfterSeconds
+            ? { "Retry-After": String(databaseError.retryAfterSeconds) }
+            : undefined,
+        }
+      );
+    }
+
     console.error(error);
 
     return Response.json(

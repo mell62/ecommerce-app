@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { PaymentStatus } from "@prisma/client";
+import { PaymentStatus, Prisma } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PATCH } from "@/app/api/admin/orders/[id]/route";
 
@@ -176,5 +176,23 @@ describe("admin order status API", () => {
       error:
         "The order changed while it was being updated. Refresh and try again.",
     });
+  });
+
+  it("returns a retryable response when the database is unavailable", async () => {
+    orderFindUniqueMock.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Database unavailable", {
+        code: "P1002",
+        clientVersion: "test",
+      })
+    );
+
+    const response = await PATCH(createRequest({ status: "SHIPPED" }), context);
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("Retry-After")).toBe("5");
+    expect(await response.json()).toEqual({
+      error: "The database is temporarily unavailable. Try again shortly.",
+    });
+    expect(orderUpdateManyMock).not.toHaveBeenCalled();
   });
 });

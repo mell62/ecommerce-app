@@ -1,5 +1,6 @@
 import { PaymentStatus } from "@prisma/client";
 import { getAdminAccess } from "@/lib/admin-auth";
+import { getDatabaseErrorDetails } from "@/lib/database-error";
 import { prisma } from "@/lib/db";
 import {
   canTransitionOrderStatus,
@@ -127,6 +128,20 @@ export async function PATCH(
       },
     });
   } catch (error) {
+    const databaseError = getDatabaseErrorDetails(error);
+
+    if (databaseError) {
+      return Response.json(
+        { error: databaseError.message },
+        {
+          status: databaseError.status,
+          headers: databaseError.retryAfterSeconds
+            ? { "Retry-After": String(databaseError.retryAfterSeconds) }
+            : undefined,
+        }
+      );
+    }
+
     console.error(error);
 
     return Response.json(

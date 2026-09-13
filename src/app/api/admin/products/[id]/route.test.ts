@@ -330,6 +330,23 @@ describe("admin product API", () => {
     });
   });
 
+  it("returns a retryable response when editing loses its database connection", async () => {
+    productFindUniqueMock.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Database unavailable", {
+        code: "P1001",
+        clientVersion: "test",
+      })
+    );
+
+    const response = await PATCH(createRequest(validProduct), context);
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("Retry-After")).toBe("5");
+    expect(await response.json()).toEqual({
+      error: "The database is temporarily unavailable. Try again shortly.",
+    });
+  });
+
   it("prevents a non-admin user from deleting a product", async () => {
     getAdminAccessMock.mockResolvedValue({
       status: "forbidden",
@@ -457,5 +474,24 @@ describe("admin product API", () => {
       message: "Gaming Mouse was deleted successfully.",
       productId: "product-1",
     });
+  });
+
+  it("returns a retryable response when deletion loses its database connection", async () => {
+    productFindUniqueMock.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Database unavailable", {
+        code: "P2024",
+        clientVersion: "test",
+      })
+    );
+
+    const response = await DELETE(createRequest(null), context);
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("Retry-After")).toBe("5");
+    expect(await response.json()).toEqual({
+      error: "The database is temporarily unavailable. Try again shortly.",
+    });
+    expect(productDeleteMock).not.toHaveBeenCalled();
+    expect(deleteManagedProductImageMock).not.toHaveBeenCalled();
   });
 });

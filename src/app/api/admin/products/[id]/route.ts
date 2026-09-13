@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { getAdminAccess } from "@/lib/admin-auth";
+import { getDatabaseErrorDetails } from "@/lib/database-error";
 import { prisma } from "@/lib/db";
 import {
   deleteManagedProductImage,
@@ -19,6 +20,24 @@ async function getRequestBody(request: Request): Promise<unknown> {
   } catch {
     return null;
   }
+}
+
+function getDatabaseErrorResponse(error: unknown): Response | null {
+  const databaseError = getDatabaseErrorDetails(error);
+
+  if (!databaseError) {
+    return null;
+  }
+
+  return Response.json(
+    { error: databaseError.message },
+    {
+      status: databaseError.status,
+      headers: databaseError.retryAfterSeconds
+        ? { "Retry-After": String(databaseError.retryAfterSeconds) }
+        : undefined,
+    }
+  );
 }
 
 export async function PATCH(
@@ -141,6 +160,12 @@ export async function PATCH(
       error.code === "P2025"
     ) {
       return Response.json({ error: "Product not found." }, { status: 404 });
+    }
+
+    const databaseErrorResponse = getDatabaseErrorResponse(error);
+
+    if (databaseErrorResponse) {
+      return databaseErrorResponse;
     }
 
     console.error(error);
@@ -275,6 +300,12 @@ export async function DELETE(
         },
         { status: 409 }
       );
+    }
+
+    const databaseErrorResponse = getDatabaseErrorResponse(error);
+
+    if (databaseErrorResponse) {
+      return databaseErrorResponse;
     }
 
     console.error(error);

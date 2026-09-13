@@ -55,6 +55,7 @@ describe("products API", () => {
     expect(response.status).toBe(200);
     expect(productFindManyMock).toHaveBeenCalledWith({
       where: {
+        isArchived: false,
         category: "Accessories",
         OR: [
           {

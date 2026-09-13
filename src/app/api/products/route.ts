@@ -34,6 +34,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   ];
 
   const where: Prisma.ProductWhereInput = {
+    isArchived: false,
     ...(category && {
       category,
     }),

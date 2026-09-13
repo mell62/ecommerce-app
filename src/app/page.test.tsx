@@ -54,6 +54,19 @@ describe("HomePage accessibility", () => {
         name: "Upgrade the way you work, play, and create",
       })
     ).toBeInTheDocument();
+    expect(
+      findManyMock.mock.calls.map(([query]) => query.where)
+    ).toEqual([
+      { isArchived: false, isFeatured: true },
+      { isArchived: false },
+      { isArchived: false, isBestSeller: true },
+      {
+        isArchived: false,
+        discountPercent: {
+          gt: 0,
+        },
+      },
+    ]);
 
     const results = await axe(container);
 

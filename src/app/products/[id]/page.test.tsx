@@ -5,14 +5,15 @@ import CartProvider from "@/components/CartProvider";
 import WishlistProvider from "@/components/WishlistProvider";
 import ProductPage from "./page";
 
-const findUniqueMock = vi.hoisted(() => vi.fn());
+const findFirstMock = vi.hoisted(() => vi.fn());
 const findManyMock = vi.hoisted(() => vi.fn());
 const getCurrentUserMock = vi.hoisted(() => vi.fn());
+const notFoundMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/db", () => ({
   prisma: {
     product: {
-      findUnique: findUniqueMock,
+      findFirst: findFirstMock,
       findMany: findManyMock,
     },
   },
@@ -23,7 +24,7 @@ vi.mock("@/lib/session", () => ({
 }));
 
 vi.mock("next/navigation", () => ({
-  notFound: vi.fn(),
+  notFound: notFoundMock,
   usePathname: () => "/products/product-1",
   useRouter: () => ({
     push: vi.fn(),
@@ -73,10 +74,11 @@ const relatedProduct = {
 
 describe("ProductPage accessibility", () => {
   beforeEach(() => {
-    findUniqueMock.mockReset();
+    findFirstMock.mockReset();
     findManyMock.mockReset();
     getCurrentUserMock.mockReset();
-    findUniqueMock.mockResolvedValue(product);
+    notFoundMock.mockReset();
+    findFirstMock.mockResolvedValue(product);
     findManyMock.mockResolvedValue([relatedProduct]);
     getCurrentUserMock.mockResolvedValue({
       id: "customer-1",
@@ -112,6 +114,30 @@ describe("ProductPage accessibility", () => {
     expect(
       screen.getByRole("heading", { level: 1, name: product.name })
     ).toBeInTheDocument();
+    expect(findFirstMock).toHaveBeenCalledWith({
+      where: {
+        id: product.id,
+        isArchived: false,
+      },
+      include: {
+        reviews: {
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
+    });
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          category: product.category,
+          isArchived: false,
+          NOT: {
+            id: product.id,
+          },
+        },
+      })
+    );
     expect(
       screen.getByRole("heading", { level: 2, name: "Leave a review" })
     ).toBeInTheDocument();
@@ -124,5 +150,29 @@ describe("ProductPage accessibility", () => {
     const results = await axe(container);
 
     expect(results.violations).toHaveLength(0);
+  });
+
+  it("treats an archived or missing product as not found", async () => {
+    findFirstMock.mockResolvedValue(null);
+    notFoundMock.mockImplementation(() => {
+      throw new Error("NEXT_NOT_FOUND");
+    });
+
+    await expect(
+      ProductPage({
+        params: Promise.resolve({ id: "archived-product" }),
+      })
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+
+    expect(findFirstMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: "archived-product",
+          isArchived: false,
+        },
+      })
+    );
+    expect(getCurrentUserMock).not.toHaveBeenCalled();
+    expect(findManyMock).not.toHaveBeenCalled();
   });
 });

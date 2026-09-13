@@ -26,9 +26,10 @@ type ProductPageProps = Readonly<{
 export default async function ProductPage({ params }: ProductPageProps) {
   const id = (await params).id;
 
-  const product = await prisma.product.findUnique({
+  const product = await prisma.product.findFirst({
     where: {
       id,
+      isArchived: false,
     },
     include: {
       reviews: {
@@ -39,15 +40,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
     },
   });
 
-  const user = await getCurrentUser();
-
   if (!product) {
     return notFound();
   }
 
+  const user = await getCurrentUser();
+
   const relatedProducts = await prisma.product.findMany({
     where: {
       category: product.category,
+      isArchived: false,
       NOT: {
         id: product.id,
       },

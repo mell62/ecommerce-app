@@ -95,6 +95,7 @@ function SectionLink({ href, children }: SectionLinkProps) {
 export default async function HomePage() {
   const featuredProducts = await prisma.product.findMany({
     where: {
+      isArchived: false,
       isFeatured: true,
     },
     include: {
@@ -116,6 +117,9 @@ export default async function HomePage() {
   });
 
   const productsWithReviews = await prisma.product.findMany({
+    where: {
+      isArchived: false,
+    },
     include: {
       reviews: {
         select: {
@@ -127,6 +131,7 @@ export default async function HomePage() {
 
   const bestSellerProducts = await prisma.product.findMany({
     where: {
+      isArchived: false,
       isBestSeller: true,
     },
     include: {
@@ -149,6 +154,7 @@ export default async function HomePage() {
 
   const dealProducts = await prisma.product.findMany({
     where: {
+      isArchived: false,
       discountPercent: {
         gt: 0,
       },

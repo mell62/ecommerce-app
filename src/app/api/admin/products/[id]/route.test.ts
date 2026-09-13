@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { Prisma } from "@prisma/client";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DELETE, PATCH } from "@/app/api/admin/products/[id]/route";
 
 const getAdminAccessMock = vi.hoisted(() => vi.fn());
@@ -12,6 +12,8 @@ const orderItemCountMock = vi.hoisted(() => vi.fn());
 const reviewDeleteManyMock = vi.hoisted(() => vi.fn());
 const reviewSummaryDeleteManyMock = vi.hoisted(() => vi.fn());
 const transactionMock = vi.hoisted(() => vi.fn());
+const deleteManagedProductImageMock = vi.hoisted(() => vi.fn());
+const getManagedProductImagePathMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/admin-auth", () => ({
   getAdminAccess: getAdminAccessMock,
@@ -35,6 +37,11 @@ vi.mock("@/lib/db", () => ({
     },
     $transaction: transactionMock,
   },
+}));
+
+vi.mock("@/lib/product-image-storage", () => ({
+  deleteManagedProductImage: deleteManagedProductImageMock,
+  getManagedProductImagePath: getManagedProductImagePathMock,
 }));
 
 const admin = {
@@ -75,12 +82,16 @@ const transactionClient = {
   product: {
     delete: productDeleteMock,
     findUnique: productFindUniqueMock,
+    update: productUpdateMock,
   },
   orderItem: {
     count: orderItemCountMock,
   },
   review: {
     deleteMany: reviewDeleteManyMock,
+  },
+  productReviewSummary: {
+    deleteMany: reviewSummaryDeleteManyMock,
   },
 };
 
@@ -99,6 +110,23 @@ describe("admin product API", () => {
       return Promise.all(operation as unknown[]);
     });
     reviewSummaryDeleteManyMock.mockResolvedValue({ count: 1 });
+    productFindUniqueMock.mockResolvedValue({
+      imageUrl: validProduct.imageUrl,
+    });
+    deleteManagedProductImageMock.mockResolvedValue(true);
+    getManagedProductImagePathMock.mockImplementation((imageUrl: string) => {
+      const marker = "/product-images/";
+      const markerIndex = imageUrl.indexOf(marker);
+
+      return markerIndex >= 0
+        ? imageUrl.slice(markerIndex + marker.length).split("?")[0]
+        : null;
+    });
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("requires a signed-in user", async () => {
@@ -202,13 +230,88 @@ describe("admin product API", () => {
         productId: "product-1",
       },
     });
-    expect(transactionMock).toHaveBeenCalledOnce();
+    expect(productFindUniqueMock).toHaveBeenCalledWith({
+      where: {
+        id: "product-1",
+      },
+      select: {
+        imageUrl: true,
+      },
+    });
+    expect(transactionMock).toHaveBeenCalledWith(expect.any(Function));
+    expect(deleteManagedProductImageMock).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({
       product: {
         ...updatedProduct,
         createdAt: updatedProduct.createdAt.toISOString(),
       },
     });
+  });
+
+  it("deletes the previous managed image after replacing it", async () => {
+    const previousImageUrl =
+      "https://project.supabase.co/storage/v1/object/public/product-images/products/123e4567-e89b-12d3-a456-426614174000.webp";
+    const replacementImageUrl =
+      "https://project.supabase.co/storage/v1/object/public/product-images/products/223e4567-e89b-12d3-a456-426614174000.webp";
+    productFindUniqueMock.mockResolvedValue({ imageUrl: previousImageUrl });
+    productUpdateMock.mockResolvedValue({
+      id: "product-1",
+      ...validProduct,
+      imageUrl: replacementImageUrl,
+      createdAt: new Date("2026-09-01T10:00:00.000Z"),
+    });
+
+    const response = await PATCH(
+      createRequest({ ...validProduct, imageUrl: replacementImageUrl }),
+      context
+    );
+
+    expect(response.status).toBe(200);
+    expect(deleteManagedProductImageMock).toHaveBeenCalledWith(
+      previousImageUrl
+    );
+  });
+
+  it("preserves a successful edit when previous image cleanup fails", async () => {
+    const previousImageUrl =
+      "https://project.supabase.co/storage/v1/object/public/product-images/products/123e4567-e89b-12d3-a456-426614174000.png";
+    productFindUniqueMock.mockResolvedValue({ imageUrl: previousImageUrl });
+    productUpdateMock.mockResolvedValue({
+      id: "product-1",
+      ...validProduct,
+      createdAt: new Date("2026-09-01T10:00:00.000Z"),
+    });
+    deleteManagedProductImageMock.mockRejectedValue(
+      new Error("Storage unavailable")
+    );
+
+    const response = await PATCH(createRequest(validProduct), context);
+
+    expect(response.status).toBe(200);
+    expect(deleteManagedProductImageMock).toHaveBeenCalledWith(
+      previousImageUrl
+    );
+  });
+
+  it("keeps a managed image when only its URL query changes", async () => {
+    const previousImageUrl =
+      "https://project.supabase.co/storage/v1/object/public/product-images/products/123e4567-e89b-12d3-a456-426614174000.webp";
+    const imageUrlWithQuery = `${previousImageUrl}?width=1200`;
+    productFindUniqueMock.mockResolvedValue({ imageUrl: previousImageUrl });
+    productUpdateMock.mockResolvedValue({
+      id: "product-1",
+      ...validProduct,
+      imageUrl: imageUrlWithQuery,
+      createdAt: new Date("2026-09-01T10:00:00.000Z"),
+    });
+
+    const response = await PATCH(
+      createRequest({ ...validProduct, imageUrl: imageUrlWithQuery }),
+      context
+    );
+
+    expect(response.status).toBe(200);
+    expect(deleteManagedProductImageMock).not.toHaveBeenCalled();
   });
 
   it("returns not found when the product no longer exists", async () => {

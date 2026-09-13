@@ -1,6 +1,10 @@
 import { Prisma } from "@prisma/client";
 import { getAdminAccess } from "@/lib/admin-auth";
 import { prisma } from "@/lib/db";
+import {
+  deleteManagedProductImage,
+  getManagedProductImagePath,
+} from "@/lib/product-image-storage";
 import { validateProductInput } from "@/lib/product-input";
 
 type AdminProductRouteContext = Readonly<{
@@ -59,8 +63,21 @@ export async function PATCH(
       );
     }
 
-    const [product] = await prisma.$transaction([
-      prisma.product.update({
+    const updateResult = await prisma.$transaction(async (transaction) => {
+      const existingProduct = await transaction.product.findUnique({
+        where: {
+          id: productId,
+        },
+        select: {
+          imageUrl: true,
+        },
+      });
+
+      if (!existingProduct) {
+        return null;
+      }
+
+      const product = await transaction.product.update({
         where: {
           id: productId,
         },
@@ -79,15 +96,45 @@ export async function PATCH(
           isBestSeller: true,
           createdAt: true,
         },
-      }),
-      prisma.productReviewSummary.deleteMany({
+      });
+      await transaction.productReviewSummary.deleteMany({
         where: {
           productId,
         },
-      }),
-    ]);
+      });
 
-    return Response.json({ product });
+      return {
+        previousImageUrl: existingProduct.imageUrl,
+        product,
+      };
+    });
+
+    if (!updateResult) {
+      return Response.json({ error: "Product not found." }, { status: 404 });
+    }
+
+    const previousManagedImagePath = getManagedProductImagePath(
+      updateResult.previousImageUrl
+    );
+    const currentManagedImagePath = getManagedProductImagePath(
+      updateResult.product.imageUrl
+    );
+
+    if (
+      previousManagedImagePath &&
+      previousManagedImagePath !== currentManagedImagePath
+    ) {
+      try {
+        await deleteManagedProductImage(updateResult.previousImageUrl);
+      } catch (imageError) {
+        console.error(
+          "Product updated, but its previous managed image could not be deleted.",
+          imageError
+        );
+      }
+    }
+
+    return Response.json({ product: updateResult.product });
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

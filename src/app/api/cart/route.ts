@@ -51,6 +51,7 @@ export async function GET(): Promise<Response> {
                 imageUrl: true,
                 stockCount: true,
                 discountPercent: true,
+                isArchived: true,
               },
             },
           },
@@ -122,11 +123,16 @@ export async function POST(request: Request): Promise<Response> {
             imageUrl: true,
             stockCount: true,
             discountPercent: true,
+            isArchived: true,
           },
         });
 
         if (!product) {
           return { outcome: "not-found" } as const;
+        }
+
+        if (product.isArchived) {
+          return { outcome: "unavailable" } as const;
         }
 
         const cart = await transaction.cart.upsert({
@@ -201,6 +207,13 @@ export async function POST(request: Request): Promise<Response> {
 
     if (result.outcome === "not-found") {
       return Response.json({ error: "Product not found." }, { status: 404 });
+    }
+
+    if (result.outcome === "unavailable") {
+      return Response.json(
+        { error: "This product is no longer available." },
+        { status: 409 }
+      );
     }
 
     if (result.outcome === "insufficient-stock") {
@@ -298,6 +311,7 @@ export async function PATCH(request: Request): Promise<Response> {
                 imageUrl: true,
                 stockCount: true,
                 discountPercent: true,
+                isArchived: true,
               },
             },
           },
@@ -305,6 +319,10 @@ export async function PATCH(request: Request): Promise<Response> {
 
         if (!existingItem) {
           return { outcome: "not-found" } as const;
+        }
+
+        if (existingItem.product.isArchived) {
+          return { outcome: "unavailable" } as const;
         }
 
         if (quantity > existingItem.product.stockCount) {
@@ -348,6 +366,13 @@ export async function PATCH(request: Request): Promise<Response> {
       return Response.json(
         { error: "Product is not in your cart." },
         { status: 404 }
+      );
+    }
+
+    if (result.outcome === "unavailable") {
+      return Response.json(
+        { error: "This product is no longer available." },
+        { status: 409 }
       );
     }
 

@@ -62,6 +62,7 @@ export async function createOrderFromCart(
                     price: true,
                     stockCount: true,
                     discountPercent: true,
+                    isArchived: true,
                   },
                 },
               },
@@ -71,6 +72,17 @@ export async function createOrderFromCart(
 
         if (!cart || cart.items.length === 0) {
           return { outcome: "empty-cart" } as const;
+        }
+
+        const archivedItem = cart.items.find(
+          (item) => item.product.isArchived
+        );
+
+        if (archivedItem) {
+          return {
+            outcome: "unavailable-product",
+            productName: archivedItem.product.name,
+          } as const;
         }
 
         const unavailableItem = cart.items.find(
@@ -125,6 +137,7 @@ export async function createOrderFromCart(
           const updateResult = await transaction.product.updateMany({
             where: {
               id: item.productId,
+              isArchived: false,
               stockCount: {
                 gte: item.quantity,
               },

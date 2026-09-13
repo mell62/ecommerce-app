@@ -49,6 +49,7 @@ const product = {
   imageUrl: "/mouse.png",
   stockCount: 5,
   discountPercent: 15,
+  isArchived: false,
 };
 
 function createRequest(method: string, body: unknown): Request {
@@ -143,6 +144,23 @@ describe("cart API", () => {
     });
   });
 
+  it("prevents an archived product from being added", async () => {
+    transactionClient.product.findUnique.mockResolvedValue({
+      ...product,
+      isArchived: true,
+    });
+
+    const response = await POST(
+      createRequest("POST", { productId: product.id, quantity: 1 })
+    );
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: "This product is no longer available.",
+    });
+    expect(transactionClient.cart.upsert).not.toHaveBeenCalled();
+  });
+
   it("prevents an update above the current stock count", async () => {
     transactionClient.cartItem.findFirst.mockResolvedValue({
       id: "cart-item-1",
@@ -155,6 +173,26 @@ describe("cart API", () => {
 
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({ error: "Only 5 available." });
+    expect(transactionClient.cartItem.update).not.toHaveBeenCalled();
+  });
+
+  it("prevents quantity changes for an archived cart product", async () => {
+    transactionClient.cartItem.findFirst.mockResolvedValue({
+      id: "cart-item-1",
+      product: {
+        ...product,
+        isArchived: true,
+      },
+    });
+
+    const response = await PATCH(
+      createRequest("PATCH", { productId: product.id, quantity: 2 })
+    );
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: "This product is no longer available.",
+    });
     expect(transactionClient.cartItem.update).not.toHaveBeenCalled();
   });
 

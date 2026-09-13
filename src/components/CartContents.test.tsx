@@ -13,6 +13,7 @@ const cartItem = {
   imageUrl: "/mouse.png",
   stockCount: 24,
   discountPercent: 10,
+  isArchived: false,
   quantity: 2,
 };
 

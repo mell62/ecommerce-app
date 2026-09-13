@@ -19,6 +19,7 @@ export type CartProduct = {
   imageUrl: string;
   stockCount: number;
   discountPercent: number;
+  isArchived: boolean;
   quantity: number;
 };
 
@@ -60,6 +61,8 @@ function isCartProduct(value: unknown): value is CartProduct {
     typeof value.stockCount === "number" &&
     "discountPercent" in value &&
     typeof value.discountPercent === "number" &&
+    "isArchived" in value &&
+    typeof value.isArchived === "boolean" &&
     "quantity" in value &&
     typeof value.quantity === "number" &&
     Number.isInteger(value.quantity) &&

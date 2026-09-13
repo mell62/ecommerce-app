@@ -76,6 +76,7 @@ const cart = {
         price: 59.99,
         stockCount: 5,
         discountPercent: 15,
+        isArchived: false,
       },
     },
     {
@@ -86,6 +87,7 @@ const cart = {
         price: 20,
         stockCount: 8,
         discountPercent: 0,
+        isArchived: false,
       },
     },
   ],
@@ -179,6 +181,7 @@ describe("orders API", () => {
             price: 59.99,
             stockCount: 2,
             discountPercent: 15,
+            isArchived: false,
           },
         },
       ],
@@ -191,6 +194,30 @@ describe("orders API", () => {
       error: "Zeus Wireless Mouse only has 2 available.",
     });
     expect(transactionClient.order.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects an order containing an archived product", async () => {
+    transactionClient.cart.findUnique.mockResolvedValue({
+      id: "cart-1",
+      items: [
+        {
+          quantity: 1,
+          product: {
+            ...cart.items[0].product,
+            isArchived: true,
+          },
+        },
+      ],
+    });
+
+    const response = await POST(createOrderRequest());
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: "Zeus Wireless Mouse is no longer available.",
+    });
+    expect(transactionClient.order.create).not.toHaveBeenCalled();
+    expect(transactionClient.product.updateMany).not.toHaveBeenCalled();
   });
 
   it("calculates trusted totals, decrements stock, and clears the cart", async () => {
@@ -252,6 +279,7 @@ describe("orders API", () => {
     expect(transactionClient.product.updateMany).toHaveBeenNthCalledWith(1, {
       where: {
         id: "mouse",
+        isArchived: false,
         stockCount: {
           gte: 1,
         },

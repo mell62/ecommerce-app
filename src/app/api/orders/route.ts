@@ -79,6 +79,13 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ error: "Your cart is empty." }, { status: 400 });
     }
 
+    if (result.outcome === "unavailable-product") {
+      return Response.json(
+        { error: `${result.productName} is no longer available.` },
+        { status: 409 }
+      );
+    }
+
     if (result.outcome === "insufficient-stock") {
       return Response.json(
         {

@@ -92,9 +92,10 @@ describe("session cookies", () => {
 
   it("rejects a token whose signature has been changed", async () => {
     const token = await createAndReadToken();
-    const finalCharacter = token.endsWith("a") ? "b" : "a";
+    const [header, payload, signature] = token.split(".");
+    const changedCharacter = signature.startsWith("a") ? "b" : "a";
     cookieGetMock.mockReturnValue({
-      value: `${token.slice(0, -1)}${finalCharacter}`,
+      value: `${header}.${payload}.${changedCharacter}${signature.slice(1)}`,
     });
 
     await expect(getSession()).resolves.toBeNull();

@@ -5,6 +5,7 @@ import {
   PRODUCT_IMAGE_MAX_BYTES,
   isSupportedProductImageMimeType,
 } from "@/lib/product-input";
+import { hasMatchingProductImageSignature } from "@/lib/product-image-validation";
 import {
   deleteManagedProductImage,
   getManagedProductImagePath,
@@ -90,6 +91,13 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json(
         { error: "Product images must be 5 MB or smaller." },
         { status: 413 }
+      );
+    }
+
+    if (!(await hasMatchingProductImageSignature(image))) {
+      return Response.json(
+        { error: "The file contents do not match the selected image type." },
+        { status: 415 }
       );
     }
 

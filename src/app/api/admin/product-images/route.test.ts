@@ -36,6 +36,21 @@ const admin = {
   role: "ADMIN",
 };
 
+const webpSignature = new Uint8Array([
+  0x52,
+  0x49,
+  0x46,
+  0x46,
+  0x10,
+  0x00,
+  0x00,
+  0x00,
+  0x57,
+  0x45,
+  0x42,
+  0x50,
+]);
+
 function createUploadRequest(
   file?: File,
   origin = "http://localhost"
@@ -180,8 +195,26 @@ describe("admin product image upload API", () => {
     expect(uploadProductImageMock).not.toHaveBeenCalled();
   });
 
+  it("rejects text disguised as a supported image type", async () => {
+    const response = await POST(
+      createUploadRequest(
+        new File(["not really an image"], "product.png", {
+          type: "image/png",
+        })
+      )
+    );
+
+    expect(response.status).toBe(415);
+    expect(await response.json()).toEqual({
+      error: "The file contents do not match the selected image type.",
+    });
+    expect(uploadProductImageMock).not.toHaveBeenCalled();
+  });
+
   it("uploads a validated product image", async () => {
-    const image = new File(["image"], "mouse.webp", { type: "image/webp" });
+    const image = new File([webpSignature], "mouse.webp", {
+      type: "image/webp",
+    });
     uploadProductImageMock.mockResolvedValue(
       "https://project.supabase.co/storage/v1/object/public/product-images/products/image.webp"
     );

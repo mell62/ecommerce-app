@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CartCounter from "@/components/CartCounter";
 import LogoutButton from "@/components/LogoutButton";
 
@@ -34,6 +34,7 @@ const navigationLinkClass =
 
 export default function SiteHeader({ userName }: SiteHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -46,10 +47,21 @@ export default function SiteHeader({ userName }: SiteHeaderProps) {
       }
     }
 
+    function closeOnOutsideInteraction(event: PointerEvent): void {
+      if (
+        event.target instanceof Node &&
+        !headerRef.current?.contains(event.target)
+      ) {
+        setIsMenuOpen(false);
+      }
+    }
+
     window.addEventListener("keydown", closeOnEscape);
+    document.addEventListener("pointerdown", closeOnOutsideInteraction);
 
     return () => {
       window.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("pointerdown", closeOnOutsideInteraction);
     };
   }, [isMenuOpen]);
 
@@ -58,7 +70,10 @@ export default function SiteHeader({ userName }: SiteHeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur">
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur"
+    >
       <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link
           href="/"

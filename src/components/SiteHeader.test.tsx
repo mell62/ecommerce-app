@@ -41,3 +41,33 @@ describe("SiteHeader accessibility", () => {
     expect(results.violations).toHaveLength(0);
   });
 });
+
+describe("SiteHeader mobile navigation", () => {
+  it("closes the menu when the user interacts outside the header", () => {
+    renderHeader();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open navigation menu" })
+    );
+    fireEvent.pointerDown(document.body);
+
+    expect(
+      screen.getByRole("button", { name: "Open navigation menu" })
+    ).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("keeps the menu open when the user interacts inside the header", () => {
+    renderHeader();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open navigation menu" })
+    );
+    fireEvent.pointerDown(
+      screen.getByRole("navigation", { name: "Mobile primary navigation" })
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Close navigation menu" })
+    ).toHaveAttribute("aria-expanded", "true");
+  });
+});

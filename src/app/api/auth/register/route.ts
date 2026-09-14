@@ -1,6 +1,11 @@
 import argon2 from "argon2";
 import { prisma } from "@/lib/db";
+import { consumeRateLimit } from "@/lib/rate-limit";
+import { getClientAddress } from "@/lib/request-client";
 import { createSession } from "@/lib/session";
+
+const REGISTRATION_LIMIT = 10;
+const REGISTRATION_WINDOW_MS = 60 * 60 * 1000;
 
 type RegisterRequestBody = {
   name?: unknown;
@@ -28,6 +33,25 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json(
         { error: "Password must be at least 8 characters long." },
         { status: 400 }
+      );
+    }
+
+    const rateLimit = await consumeRateLimit({
+      namespace: "auth:register",
+      identifier: getClientAddress(request),
+      limit: REGISTRATION_LIMIT,
+      windowMs: REGISTRATION_WINDOW_MS,
+    });
+
+    if (!rateLimit.allowed) {
+      return Response.json(
+        { error: "Too many accounts created. Try again later." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimit.retryAfterSeconds),
+          },
+        }
       );
     }
 

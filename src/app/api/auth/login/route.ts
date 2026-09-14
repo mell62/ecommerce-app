@@ -1,6 +1,7 @@
 import argon2 from "argon2";
 import { prisma } from "@/lib/db";
 import { consumeRateLimit } from "@/lib/rate-limit";
+import { getClientAddress } from "@/lib/request-client";
 import { createSession } from "@/lib/session";
 
 const LOGIN_ATTEMPT_LIMIT = 5;
@@ -10,21 +11,6 @@ type LoginRequestBody = {
   email?: unknown;
   password?: unknown;
 };
-
-function getClientAddress(request: Request): string {
-  const realIp = request.headers.get("x-real-ip")?.trim();
-
-  if (realIp) {
-    return realIp;
-  }
-
-  const forwardedIp = request.headers
-    .get("x-forwarded-for")
-    ?.split(",")[0]
-    ?.trim();
-
-  return forwardedIp || "unknown-client";
-}
 
 export async function POST(request: Request): Promise<Response> {
   try {

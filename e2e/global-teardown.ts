@@ -16,6 +16,14 @@ export default async function globalTeardown(): Promise<void> {
   });
 
   try {
+    await prisma.rateLimitBucket.deleteMany({
+      where: {
+        key: {
+          startsWith: "auth:register:",
+        },
+      },
+    });
+
     const testUsers = await prisma.user.findMany({
       where: {
         email: {

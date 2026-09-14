@@ -54,12 +54,14 @@ function createOrderRequest(
   body: unknown = {
     shippingAddress: validShippingAddress,
     checkoutIdempotencyKey,
-  }
+  },
+  origin = "http://localhost"
 ): Request {
   return new Request("http://localhost/api/orders", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Origin: origin,
     },
     body: JSON.stringify(body),
   });
@@ -108,6 +110,19 @@ describe("orders API", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("rejects cross-site order creation before authentication", async () => {
+    const response = await POST(
+      createOrderRequest(undefined, "https://malicious.example")
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "Cross-site requests are not allowed.",
+    });
+    expect(getCurrentUserMock).not.toHaveBeenCalled();
+    expect(transactionMock).not.toHaveBeenCalled();
   });
 
   it("requires authentication before placing an order", async () => {

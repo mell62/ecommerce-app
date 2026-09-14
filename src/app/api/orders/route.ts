@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { createOrderFromCart, StockConflictError } from "@/lib/order-service";
+import { isSameOriginRequest } from "@/lib/request-origin";
 import { getCurrentUser } from "@/lib/session";
 import { validateShippingAddress } from "@/lib/shipping-address";
 
@@ -39,6 +40,13 @@ function getCheckoutIdempotencyKey(value: unknown): string | null {
 
 export async function POST(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const user = await getCurrentUser();
 
     if (!user) {

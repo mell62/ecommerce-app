@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { getAdminAccess } from "@/lib/admin-auth";
 import { getDatabaseErrorDetails } from "@/lib/database-error";
 import { validateProductInput } from "@/lib/product-input";
+import { isSameOriginRequest } from "@/lib/request-origin";
 
 async function getRequestBody(request: Request): Promise<unknown> {
   try {
@@ -13,6 +14,13 @@ async function getRequestBody(request: Request): Promise<unknown> {
 
 export async function POST(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const access = await getAdminAccess();
 
     if (access.status === "unauthenticated") {

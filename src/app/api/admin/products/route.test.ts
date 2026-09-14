@@ -39,11 +39,15 @@ const validProduct = {
   isBestSeller: false,
 };
 
-function createRequest(body: unknown): Request {
+function createRequest(
+  body: unknown,
+  origin = "http://localhost"
+): Request {
   return new Request("http://localhost/api/admin/products", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Origin: origin,
     },
     body: JSON.stringify(body),
   });
@@ -56,6 +60,19 @@ describe("admin products API", () => {
       status: "authorized",
       user: admin,
     });
+  });
+
+  it("rejects cross-site creation before checking admin access", async () => {
+    const response = await POST(
+      createRequest(validProduct, "https://malicious.example")
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "Cross-site requests are not allowed.",
+    });
+    expect(getAdminAccessMock).not.toHaveBeenCalled();
+    expect(productCreateMock).not.toHaveBeenCalled();
   });
 
   it("requires a signed-in user", async () => {
@@ -85,6 +102,7 @@ describe("admin products API", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Origin: "http://localhost",
         },
         body: "{",
       })

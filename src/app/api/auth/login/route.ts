@@ -9,6 +9,8 @@ import { createSession } from "@/lib/session";
 const LOGIN_CLIENT_LIMIT = 20;
 const LOGIN_ACCOUNT_LIMIT = 5;
 const LOGIN_WINDOW_MS = 5 * 60 * 1000;
+const DUMMY_PASSWORD_HASH =
+  "$argon2id$v=19$m=65536,t=3,p=4$MASbSGfa1Gyl1SygJbFyjg$+UA83F5ussnOf/PDfZKfBRShBmlMJM5CBq6d3xVIpRQ";
 
 async function getRequestBody(request: Request): Promise<unknown> {
   try {
@@ -80,16 +82,12 @@ export async function POST(request: Request): Promise<Response> {
       },
     });
 
-    if (!user) {
-      return Response.json(
-        { error: "Invalid email or password." },
-        { status: 401 }
-      );
-    }
+    const isValidPassword = await argon2.verify(
+      user?.password ?? DUMMY_PASSWORD_HASH,
+      password
+    );
 
-    const isValidPassword = await argon2.verify(user.password, password);
-
-    if (!isValidPassword) {
+    if (!user || !isValidPassword) {
       return Response.json(
         { error: "Invalid email or password." },
         { status: 401 }

@@ -216,4 +216,26 @@ describe("login API rate limiting", () => {
     });
     expect(createSessionMock).not.toHaveBeenCalled();
   });
+
+  it("performs password verification even when the account does not exist", async () => {
+    findUniqueMock.mockResolvedValue(null);
+    verifyMock.mockResolvedValue(false);
+
+    const response = await POST(
+      createRequest({
+        email: "unknown@example.com",
+        password: "submitted-password",
+      })
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid email or password.",
+    });
+    expect(verifyMock).toHaveBeenCalledWith(
+      expect.stringMatching(/^\$argon2id\$/),
+      "submitted-password"
+    );
+    expect(createSessionMock).not.toHaveBeenCalled();
+  });
 });

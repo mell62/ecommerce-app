@@ -1,6 +1,66 @@
 import type { NextConfig } from "next";
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+let supabaseHostname: string | undefined;
+
+if (supabaseUrl) {
+  try {
+    const parsedUrl = new URL(supabaseUrl);
+
+    if (parsedUrl.protocol === "https:") {
+      supabaseHostname = parsedUrl.hostname;
+    }
+  } catch {
+    supabaseHostname = undefined;
+  }
+}
+
+export function buildContentSecurityPolicy(
+  hostname: string | undefined,
+  isDevelopment: boolean
+): string {
+  const scriptSources = [
+    "'self'",
+    "'unsafe-inline'",
+    ...(isDevelopment ? ["'unsafe-eval'"] : []),
+  ];
+  const imageSources = [
+    "'self'",
+    "data:",
+    "blob:",
+    "https://images.unsplash.com",
+    ...(hostname ? [`https://${hostname}`] : []),
+  ];
+  const connectionSources = [
+    "'self'",
+    ...(isDevelopment ? ["ws:", "wss:"] : []),
+  ];
+
+  return [
+    "default-src 'self'",
+    `script-src ${scriptSources.join(" ")}`,
+    "style-src 'self' 'unsafe-inline'",
+    `img-src ${imageSources.join(" ")}`,
+    "font-src 'self' data:",
+    `connect-src ${connectionSources.join(" ")}`,
+    "worker-src 'self' blob:",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join("; ");
+}
+
+const contentSecurityPolicy = buildContentSecurityPolicy(
+  supabaseHostname,
+  process.env.NODE_ENV === "development"
+);
+
 export const securityHeaders = [
+  {
+    key: "Content-Security-Policy",
+    value: contentSecurityPolicy,
+  },
   {
     key: "X-Content-Type-Options",
     value: "nosniff",
@@ -18,21 +78,6 @@ export const securityHeaders = [
     value: "camera=(), microphone=(), geolocation=()",
   },
 ];
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-let supabaseHostname: string | undefined;
-
-if (supabaseUrl) {
-  try {
-    const parsedUrl = new URL(supabaseUrl);
-
-    if (parsedUrl.protocol === "https:") {
-      supabaseHostname = parsedUrl.hostname;
-    }
-  } catch {
-    supabaseHostname = undefined;
-  }
-}
 
 const nextConfig: NextConfig = {
   async headers() {

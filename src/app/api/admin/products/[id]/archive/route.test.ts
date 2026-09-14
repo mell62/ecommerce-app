@@ -26,11 +26,15 @@ const admin = {
   role: "ADMIN",
 };
 
-function createRequest(body: unknown): Request {
+function createRequest(
+  body: unknown,
+  origin = "http://localhost"
+): Request {
   return new Request("http://localhost/api/admin/products/product-1/archive", {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
+      Origin: origin,
     },
     body: JSON.stringify(body),
   });
@@ -55,6 +59,20 @@ describe("admin product archive API", () => {
           isArchived: data.isArchived,
         })
     );
+  });
+
+  it("rejects cross-site updates before checking admin access", async () => {
+    const response = await PATCH(
+      createRequest({ isArchived: true }, "https://malicious.example"),
+      context
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "Cross-site requests are not allowed.",
+    });
+    expect(getAdminAccessMock).not.toHaveBeenCalled();
+    expect(productUpdateMock).not.toHaveBeenCalled();
   });
 
   it("requires a signed-in administrator", async () => {

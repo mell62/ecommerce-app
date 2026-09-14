@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { getAdminAccess } from "@/lib/admin-auth";
 import { getDatabaseErrorDetails } from "@/lib/database-error";
 import { prisma } from "@/lib/db";
+import { isSameOriginRequest } from "@/lib/request-origin";
 
 type AdminProductArchiveRouteContext = Readonly<{
   params: Promise<{
@@ -26,6 +27,13 @@ export async function PATCH(
   { params }: AdminProductArchiveRouteContext
 ): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const access = await getAdminAccess();
 
     if (access.status === "unauthenticated") {

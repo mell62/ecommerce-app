@@ -63,11 +63,15 @@ const pendingOrder = {
   ],
 };
 
-function createRequest(body: unknown): Request {
+function createRequest(
+  body: unknown,
+  origin = "http://localhost:3000"
+): Request {
   return new Request("http://localhost:3000/api/checkout/session", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Origin: origin,
     },
     body: JSON.stringify(body),
   });
@@ -96,6 +100,23 @@ describe("Stripe Checkout Session API", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("rejects cross-site session creation before authentication", async () => {
+    const response = await POST(
+      createRequest(
+        { orderId: pendingOrder.id },
+        "https://malicious.example"
+      )
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "Cross-site requests are not allowed.",
+    });
+    expect(getCurrentUserMock).not.toHaveBeenCalled();
+    expect(consumeRateLimitMock).not.toHaveBeenCalled();
+    expect(checkoutSessionCreateMock).not.toHaveBeenCalled();
   });
 
   it("requires an authenticated customer", async () => {

@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { isSameOriginRequest } from "@/lib/request-origin";
 import { getCurrentUser } from "@/lib/session";
 import { MAX_REVIEW_LENGTH } from "@/lib/review-validation";
 
@@ -28,6 +29,13 @@ async function getReviewRequestBody(
 
 export async function POST(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const body = await getReviewRequestBody(request);
 
     if (!body) {
@@ -108,6 +116,13 @@ export async function POST(request: Request): Promise<Response> {
 
 export async function DELETE(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const user = await getCurrentUser();
 
     if (!user) {
@@ -164,6 +179,13 @@ export async function DELETE(request: Request): Promise<Response> {
 
 export async function PATCH(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const user = await getCurrentUser();
 
     if (!user) {

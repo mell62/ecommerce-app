@@ -29,11 +29,16 @@ const currentUser = {
   name: "Alex",
 };
 
-function createRequest(method: string, body: unknown): Request {
+function createRequest(
+  method: string,
+  body: unknown,
+  origin = "http://localhost"
+): Request {
   return new Request("http://localhost/api/reviews", {
     method,
     headers: {
       "Content-Type": "application/json",
+      Origin: origin,
     },
     body: JSON.stringify(body),
   });
@@ -49,11 +54,39 @@ describe("reviews API", () => {
     vi.restoreAllMocks();
   });
 
+  it.each([
+    ["POST", POST],
+    ["PATCH", PATCH],
+    ["DELETE", DELETE],
+  ] as const)("rejects cross-site %s requests", async (method, handler) => {
+    const response = await handler(
+      createRequest(
+        method,
+        {
+          productId: "product-1",
+          reviewId: "review-1",
+          rating: 5,
+          comment: "Excellent mouse.",
+        },
+        "https://malicious.example"
+      )
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "Cross-site requests are not allowed.",
+    });
+    expect(getCurrentUserMock).not.toHaveBeenCalled();
+    expect(reviewCreateMock).not.toHaveBeenCalled();
+    expect(reviewFindUniqueMock).not.toHaveBeenCalled();
+  });
+
   it("rejects malformed JSON without calling the database", async () => {
     const request = new Request("http://localhost/api/reviews", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Origin: "http://localhost",
       },
       body: "{",
     });

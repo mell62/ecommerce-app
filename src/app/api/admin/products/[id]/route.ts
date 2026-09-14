@@ -7,6 +7,7 @@ import {
   getManagedProductImagePath,
 } from "@/lib/product-image-storage";
 import { validateProductInput } from "@/lib/product-input";
+import { isSameOriginRequest } from "@/lib/request-origin";
 
 type AdminProductRouteContext = Readonly<{
   params: Promise<{
@@ -45,6 +46,13 @@ export async function PATCH(
   { params }: AdminProductRouteContext
 ): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const access = await getAdminAccess();
 
     if (access.status === "unauthenticated") {
@@ -178,10 +186,17 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: AdminProductRouteContext
 ): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const access = await getAdminAccess();
 
     if (access.status === "unauthenticated") {

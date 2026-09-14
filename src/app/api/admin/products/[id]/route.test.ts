@@ -64,11 +64,15 @@ const validProduct = {
   isBestSeller: true,
 };
 
-function createRequest(body: unknown): Request {
+function createRequest(
+  body: unknown,
+  origin = "http://localhost"
+): Request {
   return new Request("http://localhost/api/admin/products/product-1", {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
+      Origin: origin,
     },
     body: JSON.stringify(body),
   });
@@ -129,6 +133,26 @@ describe("admin product API", () => {
     vi.unstubAllEnvs();
   });
 
+  it.each([
+    ["PATCH", PATCH],
+    ["DELETE", DELETE],
+  ] as const)(
+    "rejects cross-site %s requests before checking admin access",
+    async (_method, handler) => {
+      const response = await handler(
+        createRequest(validProduct, "https://malicious.example"),
+        context
+      );
+
+      expect(response.status).toBe(403);
+      expect(await response.json()).toEqual({
+        error: "Cross-site requests are not allowed.",
+      });
+      expect(getAdminAccessMock).not.toHaveBeenCalled();
+      expect(transactionMock).not.toHaveBeenCalled();
+    }
+  );
+
   it("requires a signed-in user", async () => {
     getAdminAccessMock.mockResolvedValue({ status: "unauthenticated" });
 
@@ -172,6 +196,7 @@ describe("admin product API", () => {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
+          Origin: "http://localhost",
         },
         body: "{",
       }),

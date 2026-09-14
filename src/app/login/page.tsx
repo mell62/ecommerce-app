@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getSafeInternalRedirect } from "@/lib/safe-redirect";
 
 function getLoginError(data: unknown): string {
   if (
@@ -28,11 +29,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
 
   const requestedRedirect = searchParams.get("redirect");
-
-  const redirectPath =
-    requestedRedirect?.startsWith("/") && !requestedRedirect.startsWith("//")
-      ? requestedRedirect
-      : "/";
+  const redirectPath = getSafeInternalRedirect(requestedRedirect);
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>

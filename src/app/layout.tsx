@@ -28,10 +28,10 @@ export const metadata: Metadata = {
     "Shop thoughtfully selected electronics and accessories for work, gaming, and everyday life.",
   icons: {
     icon: {
-      url: "/logo.png",
+      url: "/black-logo.png",
       type: "image/png",
     },
-    shortcut: "/logo.png",
+    shortcut: "/black-logo.png",
     apple: "/logo.png",
   },
 };

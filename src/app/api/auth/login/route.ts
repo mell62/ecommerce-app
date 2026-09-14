@@ -6,7 +6,8 @@ import { getClientAddress } from "@/lib/request-client";
 import { isSameOriginRequest } from "@/lib/request-origin";
 import { createSession } from "@/lib/session";
 
-const LOGIN_ATTEMPT_LIMIT = 5;
+const LOGIN_CLIENT_LIMIT = 20;
+const LOGIN_ACCOUNT_LIMIT = 5;
 const LOGIN_WINDOW_MS = 5 * 60 * 1000;
 
 async function getRequestBody(request: Request): Promise<unknown> {
@@ -34,20 +35,40 @@ export async function POST(request: Request): Promise<Response> {
 
     const { email, password } = result.data;
 
-    const rateLimit = await consumeRateLimit({
-      namespace: "auth:login",
-      identifier: `${getClientAddress(request)}:${email}`,
-      limit: LOGIN_ATTEMPT_LIMIT,
+    const clientAddress = getClientAddress(request);
+    const clientRateLimit = await consumeRateLimit({
+      namespace: "auth:login:client",
+      identifier: clientAddress,
+      limit: LOGIN_CLIENT_LIMIT,
       windowMs: LOGIN_WINDOW_MS,
     });
 
-    if (!rateLimit.allowed) {
+    if (!clientRateLimit.allowed) {
       return Response.json(
         { error: "Too many login attempts. Try again later." },
         {
           status: 429,
           headers: {
-            "Retry-After": String(rateLimit.retryAfterSeconds),
+            "Retry-After": String(clientRateLimit.retryAfterSeconds),
+          },
+        }
+      );
+    }
+
+    const accountRateLimit = await consumeRateLimit({
+      namespace: "auth:login:account",
+      identifier: `${clientAddress}:${email}`,
+      limit: LOGIN_ACCOUNT_LIMIT,
+      windowMs: LOGIN_WINDOW_MS,
+    });
+
+    if (!accountRateLimit.allowed) {
+      return Response.json(
+        { error: "Too many login attempts. Try again later." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(accountRateLimit.retryAfterSeconds),
           },
         }
       );

@@ -84,7 +84,7 @@ describe("login API rate limiting", () => {
     expect(findUniqueMock).not.toHaveBeenCalled();
   });
 
-  it("limits a normalized account and client address before checking credentials", async () => {
+  it("limits the client and normalized account before checking credentials", async () => {
     const response = await POST(
       createRequest({
         email: "  WATSON@EXAMPLE.COM ",
@@ -93,8 +93,14 @@ describe("login API rate limiting", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(consumeRateLimitMock).toHaveBeenCalledWith({
-      namespace: "auth:login",
+    expect(consumeRateLimitMock).toHaveBeenNthCalledWith(1, {
+      namespace: "auth:login:client",
+      identifier: "203.0.113.10",
+      limit: 20,
+      windowMs: 300_000,
+    });
+    expect(consumeRateLimitMock).toHaveBeenNthCalledWith(2, {
+      namespace: "auth:login:account",
       identifier: "203.0.113.10:watson@example.com",
       limit: 5,
       windowMs: 300_000,
@@ -109,10 +115,10 @@ describe("login API rate limiting", () => {
     expect(createSessionMock).toHaveBeenCalledWith(user);
   });
 
-  it("returns 429 and retry timing without querying the user when blocked", async () => {
+  it("blocks a client that exceeds the broader login limit", async () => {
     consumeRateLimitMock.mockResolvedValue({
       allowed: false,
-      limit: 5,
+      limit: 20,
       remaining: 0,
       resetAt: new Date("2026-09-14T10:02:15.000Z"),
       retryAfterSeconds: 135,
@@ -130,6 +136,38 @@ describe("login API rate limiting", () => {
     await expect(response.json()).resolves.toEqual({
       error: "Too many login attempts. Try again later.",
     });
+    expect(findUniqueMock).not.toHaveBeenCalled();
+    expect(verifyMock).not.toHaveBeenCalled();
+    expect(createSessionMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks repeated attempts for one account from the same client", async () => {
+    consumeRateLimitMock
+      .mockResolvedValueOnce({
+        allowed: true,
+        limit: 20,
+        remaining: 14,
+        resetAt: new Date("2026-09-14T10:05:00.000Z"),
+        retryAfterSeconds: 0,
+      })
+      .mockResolvedValueOnce({
+        allowed: false,
+        limit: 5,
+        remaining: 0,
+        resetAt: new Date("2026-09-14T10:03:00.000Z"),
+        retryAfterSeconds: 180,
+      });
+
+    const response = await POST(
+      createRequest({
+        email: "watson@example.com",
+        password: "attempt-six",
+      })
+    );
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("180");
+    expect(consumeRateLimitMock).toHaveBeenCalledTimes(2);
     expect(findUniqueMock).not.toHaveBeenCalled();
     expect(verifyMock).not.toHaveBeenCalled();
     expect(createSessionMock).not.toHaveBeenCalled();

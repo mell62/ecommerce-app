@@ -43,6 +43,7 @@ function createRequest(body: unknown, ip = "203.0.113.10"): Request {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Origin: "http://localhost",
       "x-real-ip": ip,
     },
     body: JSON.stringify(body),
@@ -61,6 +62,26 @@ describe("login API rate limiting", () => {
     });
     findUniqueMock.mockResolvedValue(user);
     verifyMock.mockResolvedValue(true);
+  });
+
+  it("rejects a cross-site request before consuming a rate limit", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Origin: "https://attacker.example",
+        },
+        body: JSON.stringify({
+          email: "watson@example.com",
+          password: "correct-password",
+        }),
+      })
+    );
+
+    expect(response.status).toBe(403);
+    expect(consumeRateLimitMock).not.toHaveBeenCalled();
+    expect(findUniqueMock).not.toHaveBeenCalled();
   });
 
   it("limits a normalized account and client address before checking credentials", async () => {

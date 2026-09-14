@@ -45,6 +45,7 @@ function createRequest(body: unknown, ip = "203.0.113.10"): Request {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Origin: "http://localhost",
       "x-real-ip": ip,
     },
     body: JSON.stringify(body),
@@ -64,6 +65,27 @@ describe("registration API rate limiting", () => {
     findUniqueMock.mockResolvedValue(null);
     hashMock.mockResolvedValue("stored-password-hash");
     createMock.mockResolvedValue(createdUser);
+  });
+
+  it("rejects a cross-site request before consuming a rate limit", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Origin: "https://attacker.example",
+        },
+        body: JSON.stringify({
+          name: "Watson",
+          email: "watson@example.com",
+          password: "password123",
+        }),
+      })
+    );
+
+    expect(response.status).toBe(403);
+    expect(consumeRateLimitMock).not.toHaveBeenCalled();
+    expect(findUniqueMock).not.toHaveBeenCalled();
   });
 
   it("limits valid registration attempts by client address", async () => {

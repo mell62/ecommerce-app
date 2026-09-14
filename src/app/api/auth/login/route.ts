@@ -2,6 +2,7 @@ import argon2 from "argon2";
 import { prisma } from "@/lib/db";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { getClientAddress } from "@/lib/request-client";
+import { isSameOriginRequest } from "@/lib/request-origin";
 import { createSession } from "@/lib/session";
 
 const LOGIN_ATTEMPT_LIMIT = 5;
@@ -14,6 +15,13 @@ type LoginRequestBody = {
 
 export async function POST(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const body: LoginRequestBody = await request.json();
 
     const email =

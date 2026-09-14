@@ -63,6 +63,7 @@ function createRequest(path: string, body: unknown): Request {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Origin: "http://localhost",
     },
     body: JSON.stringify(body),
   });
@@ -221,7 +222,14 @@ describe("authentication rules", () => {
   });
 
   it("deletes the server session during logout", async () => {
-    const response = await logout();
+    const response = await logout(
+      new Request("http://localhost/api/auth/logout", {
+        method: "POST",
+        headers: {
+          Origin: "http://localhost",
+        },
+      })
+    );
 
     expect(response.status).toBe(200);
     expect(deleteSessionMock).toHaveBeenCalledOnce();

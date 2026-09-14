@@ -2,6 +2,7 @@ import argon2 from "argon2";
 import { prisma } from "@/lib/db";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { getClientAddress } from "@/lib/request-client";
+import { isSameOriginRequest } from "@/lib/request-origin";
 import { createSession } from "@/lib/session";
 
 const REGISTRATION_LIMIT = 10;
@@ -15,6 +16,13 @@ type RegisterRequestBody = {
 
 export async function POST(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const body: RegisterRequestBody = await request.json();
 
     const name = typeof body.name === "string" ? body.name.trim() : "";

@@ -14,6 +14,7 @@ const createSessionMock = vi.hoisted(() => vi.fn());
 const deleteSessionMock = vi.hoisted(() => vi.fn());
 const getCurrentUserMock = vi.hoisted(() => vi.fn());
 const redirectMock = vi.hoisted(() => vi.fn());
+const consumeRateLimitMock = vi.hoisted(() => vi.fn());
 
 vi.mock("argon2", () => ({
   default: {
@@ -38,6 +39,10 @@ vi.mock("@/lib/session", () => ({
   createSession: createSessionMock,
   deleteSession: deleteSessionMock,
   getCurrentUser: getCurrentUserMock,
+}));
+
+vi.mock("@/lib/rate-limit", () => ({
+  consumeRateLimit: consumeRateLimitMock,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -73,6 +78,13 @@ describe("authentication rules", () => {
     getCurrentUserMock.mockResolvedValue(null);
     redirectMock.mockImplementation(() => {
       throw new Error("NEXT_REDIRECT");
+    });
+    consumeRateLimitMock.mockResolvedValue({
+      allowed: true,
+      limit: 5,
+      remaining: 4,
+      resetAt: new Date("2026-09-14T10:05:00.000Z"),
+      retryAfterSeconds: 0,
     });
   });
 

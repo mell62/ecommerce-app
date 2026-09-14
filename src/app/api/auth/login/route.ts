@@ -1,11 +1,30 @@
 import argon2 from "argon2";
 import { prisma } from "@/lib/db";
+import { consumeRateLimit } from "@/lib/rate-limit";
 import { createSession } from "@/lib/session";
+
+const LOGIN_ATTEMPT_LIMIT = 5;
+const LOGIN_WINDOW_MS = 5 * 60 * 1000;
 
 type LoginRequestBody = {
   email?: unknown;
   password?: unknown;
 };
+
+function getClientAddress(request: Request): string {
+  const realIp = request.headers.get("x-real-ip")?.trim();
+
+  if (realIp) {
+    return realIp;
+  }
+
+  const forwardedIp = request.headers
+    .get("x-forwarded-for")
+    ?.split(",")[0]
+    ?.trim();
+
+  return forwardedIp || "unknown-client";
+}
 
 export async function POST(request: Request): Promise<Response> {
   try {
@@ -19,6 +38,25 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json(
         { error: "Email and password are required." },
         { status: 400 }
+      );
+    }
+
+    const rateLimit = await consumeRateLimit({
+      namespace: "auth:login",
+      identifier: `${getClientAddress(request)}:${email}`,
+      limit: LOGIN_ATTEMPT_LIMIT,
+      windowMs: LOGIN_WINDOW_MS,
+    });
+
+    if (!rateLimit.allowed) {
+      return Response.json(
+        { error: "Too many login attempts. Try again later." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimit.retryAfterSeconds),
+          },
+        }
       );
     }
 

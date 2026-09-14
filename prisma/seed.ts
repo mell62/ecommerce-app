@@ -2,82 +2,45 @@ import "dotenv/config";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+import { catalogProductFixtures } from "./catalog-fixtures.ts";
 import { reviewFixturesByProductName } from "./review-fixtures.ts";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
-
-const prisma = new PrismaClient({
-  adapter,
-});
+const prisma = new PrismaClient({ adapter });
 
 async function main(): Promise<void> {
   await prisma.$transaction([
+    prisma.productReviewSummary.deleteMany(),
     prisma.review.deleteMany(),
     prisma.orderItem.deleteMany(),
     prisma.order.deleteMany(),
     prisma.cartItem.deleteMany(),
+    prisma.wishlistItem.deleteMany(),
     prisma.product.deleteMany(),
   ]);
 
-  await prisma.product.create({
-    data: {
-      name: "Mechanical Keyboard",
-      description: "RGB mechanical keyboard with blue switches",
-      price: 89.99,
-      category: "Accessories",
-      imageUrl: "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae",
-      stockCount: 20,
-      discountPercent: 10,
-      isNew: false,
-      isBestSeller: true,
-      isFeatured: false,
-      reviews: {
-        create: [...reviewFixturesByProductName["Mechanical Keyboard"]],
-      },
-    },
-  });
+  for (const fixture of catalogProductFixtures) {
+    const { ratings, strengths, concerns, ...productData } = fixture;
+    void ratings;
+    void strengths;
+    void concerns;
 
-  await prisma.product.create({
-    data: {
-      name: "Gaming Mouse",
-      description: "Wireless gaming mouse with adjustable DPI",
-      price: 59.99,
-      category: "Accessories",
-      imageUrl: "https://images.unsplash.com/photo-1527814050087-3793815479db",
-      stockCount: 35,
-      discountPercent: 15,
-      isNew: false,
-      isBestSeller: false,
-      isFeatured: true,
-      reviews: {
-        create: [...reviewFixturesByProductName["Gaming Mouse"]],
+    await prisma.product.create({
+      data: {
+        ...productData,
+        reviews: {
+          create: [...reviewFixturesByProductName[productData.name]],
+        },
       },
-    },
-  });
+    });
+  }
 
-  await prisma.product.create({
-    data: {
-      name: "27-inch Monitor",
-      description: "144Hz IPS gaming monitor",
-      price: 299.99,
-      category: "Monitors",
-      imageUrl: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf",
-      stockCount: 12,
-      discountPercent: 20,
-      isNew: true,
-      isBestSeller: false,
-      isFeatured: false,
-      reviews: {
-        create: [...reviewFixturesByProductName["27-inch Monitor"]],
-      },
-    },
-  });
-
-  console.log("Database seeded successfully.");
+  const productCount = await prisma.product.count();
+  const reviewCount = await prisma.review.count();
+  console.log(
+    `Database seeded with ${productCount} products and ${reviewCount} reviews.`
+  );
 }
 
 main()
@@ -87,4 +50,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

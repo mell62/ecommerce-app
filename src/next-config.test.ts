@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import nextConfig, {
   buildContentSecurityPolicy,
+  buildSecurityHeaders,
   securityHeaders,
 } from "../next.config";
 
@@ -63,5 +64,18 @@ describe("Next.js security headers", () => {
     );
     expect(policy).toContain("connect-src 'self' ws: wss:");
     expect(policy).not.toContain("https://undefined");
+  });
+
+  it("forces future HTTPS connections only in production", () => {
+    const productionHeaders = buildSecurityHeaders("default-src 'self'", true);
+    const developmentHeaders = buildSecurityHeaders("default-src 'self'", false);
+
+    expect(productionHeaders).toContainEqual({
+      key: "Strict-Transport-Security",
+      value: "max-age=31536000; includeSubDomains",
+    });
+    expect(developmentHeaders).not.toContainEqual(
+      expect.objectContaining({ key: "Strict-Transport-Security" })
+    );
   });
 });

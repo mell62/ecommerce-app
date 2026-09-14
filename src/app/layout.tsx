@@ -6,6 +6,7 @@ import CartProvider from "@/components/CartProvider";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import WishlistProvider from "@/components/WishlistProvider";
+import { ADMIN_ROLE } from "@/lib/admin-auth";
 import { getCurrentUser } from "@/lib/session";
 import "./globals.css";
 
@@ -64,7 +65,10 @@ export default async function RootLayout({ children }: RootLayoutProps) {
               Skip to main content
             </Link>
 
-            <SiteHeader userName={user?.name ?? null} />
+            <SiteHeader
+              userName={user?.name ?? null}
+              isAdmin={user?.role === ADMIN_ROLE}
+            />
 
             <main id="main-content" tabIndex={-1} className="flex-1">
               {children}

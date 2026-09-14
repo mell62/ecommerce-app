@@ -8,6 +8,7 @@ import LogoutButton from "@/components/LogoutButton";
 
 type SiteHeaderProps = Readonly<{
   userName: string | null;
+  isAdmin: boolean;
 }>;
 
 const navigationItems = [
@@ -32,9 +33,12 @@ const navigationItems = [
 const navigationLinkClass =
   "flex min-h-11 items-center rounded-md px-3 text-sm font-semibold text-foreground hover:bg-brand-50 hover:text-brand-700";
 
-export default function SiteHeader({ userName }: SiteHeaderProps) {
+export default function SiteHeader({ userName, isAdmin }: SiteHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+  const visibleNavigationItems = isAdmin
+    ? [...navigationItems, { href: "/admin", label: "Admin" }]
+    : navigationItems;
 
   useEffect(() => {
     if (!isMenuOpen) {
@@ -95,7 +99,7 @@ export default function SiteHeader({ userName }: SiteHeaderProps) {
           aria-label="Primary navigation"
           className="hidden items-center gap-1 lg:flex"
         >
-          {navigationItems.map((item) => (
+          {visibleNavigationItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -169,7 +173,7 @@ export default function SiteHeader({ userName }: SiteHeaderProps) {
               aria-label="Mobile primary navigation"
               className="mx-auto flex max-w-7xl flex-col gap-1"
             >
-              {navigationItems.map((item) => (
+              {visibleNavigationItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}

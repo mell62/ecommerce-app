@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { describe, expect, it, vi } from "vitest";
 import CartProvider from "@/components/CartProvider";
@@ -8,10 +8,10 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/",
 }));
 
-function renderHeader() {
+function renderHeader(isAdmin = false) {
   return render(
     <CartProvider isAuthenticated={false}>
-      <SiteHeader userName={null} />
+      <SiteHeader userName={null} isAdmin={isAdmin} />
     </CartProvider>
   );
 }
@@ -69,5 +69,37 @@ describe("SiteHeader mobile navigation", () => {
     expect(
       screen.getByRole("button", { name: "Close navigation menu" })
     ).toHaveAttribute("aria-expanded", "true");
+  });
+});
+
+describe("SiteHeader admin navigation", () => {
+  it("shows the admin destination to administrators", () => {
+    renderHeader(true);
+
+    expect(
+      within(
+        screen.getByRole("navigation", { name: "Primary navigation" })
+      ).getByRole("link", { name: "Admin" })
+    ).toHaveAttribute("href", "/admin");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open navigation menu" })
+    );
+
+    expect(
+      within(
+        screen.getByRole("navigation", {
+          name: "Mobile primary navigation",
+        })
+      ).getByRole("link", { name: "Admin" })
+    ).toHaveAttribute("href", "/admin");
+  });
+
+  it("hides the admin destination from customers", () => {
+    renderHeader();
+
+    expect(
+      screen.queryByRole("link", { name: "Admin" })
+    ).not.toBeInTheDocument();
   });
 });

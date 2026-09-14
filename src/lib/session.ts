@@ -5,24 +5,40 @@ import { prisma } from "@/lib/db";
 
 const SESSION_COOKIE_NAME = "session";
 const SESSION_DURATION = 60 * 60 * 24 * 7;
+const SESSION_SECRET_MIN_LENGTH = 32;
+const SESSION_ISSUER = "zeus";
+const SESSION_AUDIENCE = "zeus-web";
 
-type SessionUser = Pick<User, "id" | "role">;
+type SessionUser = Pick<User, "id">;
 
 interface SessionPayload extends JWTPayload {
   userId: string;
-  role: string;
 }
 
 export type CurrentUser = Pick<User, "id" | "name" | "email" | "role">;
 
 function getSessionSecret(): Uint8Array {
-  const secret = process.env.SESSION_SECRET;
+  const secret = process.env.SESSION_SECRET?.trim();
 
   if (!secret) {
     throw new Error("SESSION_SECRET is not configured.");
   }
 
+  if (secret.length < SESSION_SECRET_MIN_LENGTH) {
+    throw new Error(
+      `SESSION_SECRET must be at least ${SESSION_SECRET_MIN_LENGTH} characters long.`
+    );
+  }
+
   return new TextEncoder().encode(secret);
+}
+
+function isSessionPayload(payload: JWTPayload): payload is SessionPayload {
+  return (
+    typeof payload.userId === "string" &&
+    Boolean(payload.userId) &&
+    payload.sub === payload.userId
+  );
 }
 
 export async function createSession(user: SessionUser): Promise<void> {
@@ -30,12 +46,14 @@ export async function createSession(user: SessionUser): Promise<void> {
 
   const token = await new SignJWT({
     userId: user.id,
-    role: user.role,
   })
     .setProtectedHeader({
       alg: "HS256",
     })
     .setIssuedAt()
+    .setIssuer(SESSION_ISSUER)
+    .setAudience(SESSION_AUDIENCE)
+    .setSubject(user.id)
     .setExpirationTime(expiresAt)
     .sign(getSessionSecret());
 
@@ -59,15 +77,13 @@ export async function getSession(): Promise<SessionPayload | null> {
   }
 
   try {
-    const { payload } = await jwtVerify<SessionPayload>(
-      token,
-      getSessionSecret(),
-      {
-        algorithms: ["HS256"],
-      }
-    );
+    const { payload } = await jwtVerify(token, getSessionSecret(), {
+      algorithms: ["HS256"],
+      issuer: SESSION_ISSUER,
+      audience: SESSION_AUDIENCE,
+    });
 
-    return payload;
+    return isSessionPayload(payload) ? payload : null;
   } catch {
     return null;
   }

@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SignJWT } from "jose";
 import {
   createSession,
   deleteSession,
@@ -31,11 +32,11 @@ vi.mock("@/lib/db", () => ({
 }));
 
 const originalSessionSecret = process.env.SESSION_SECRET;
+const testSessionSecret = "test-session-secret-at-least-32-characters";
 
 async function createAndReadToken(): Promise<string> {
   await createSession({
     id: "customer-1",
-    role: "USER",
   });
 
   return cookieSetMock.mock.calls[0][1] as string;
@@ -44,7 +45,7 @@ async function createAndReadToken(): Promise<string> {
 describe("session cookies", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.SESSION_SECRET = "test-session-secret";
+    process.env.SESSION_SECRET = testSessionSecret;
   });
 
   afterEach(() => {
@@ -73,9 +74,20 @@ describe("session cookies", () => {
     await expect(getSession()).resolves.toEqual(
       expect.objectContaining({
         userId: "customer-1",
-        role: "USER",
+        iss: "zeus",
+        aud: "zeus-web",
+        sub: "customer-1",
       })
     );
+  });
+
+  it("rejects a signing secret shorter than 32 characters", async () => {
+    process.env.SESSION_SECRET = "too-short";
+
+    await expect(
+      createSession({ id: "customer-1" })
+    ).rejects.toThrow("SESSION_SECRET must be at least 32 characters long.");
+    expect(cookieSetMock).not.toHaveBeenCalled();
   });
 
   it("rejects a token whose signature has been changed", async () => {
@@ -84,6 +96,34 @@ describe("session cookies", () => {
     cookieGetMock.mockReturnValue({
       value: `${token.slice(0, -1)}${finalCharacter}`,
     });
+
+    await expect(getSession()).resolves.toBeNull();
+  });
+
+  it("rejects a valid signature issued for another application", async () => {
+    const token = await new SignJWT({ userId: "customer-1" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setIssuer("another-store")
+      .setAudience("zeus-web")
+      .setSubject("customer-1")
+      .setExpirationTime("1h")
+      .sign(new TextEncoder().encode(testSessionSecret));
+    cookieGetMock.mockReturnValue({ value: token });
+
+    await expect(getSession()).resolves.toBeNull();
+  });
+
+  it("rejects a signed payload whose subject does not match its user ID", async () => {
+    const token = await new SignJWT({ userId: "customer-1" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setIssuer("zeus")
+      .setAudience("zeus-web")
+      .setSubject("customer-2")
+      .setExpirationTime("1h")
+      .sign(new TextEncoder().encode(testSessionSecret));
+    cookieGetMock.mockReturnValue({ value: token });
 
     await expect(getSession()).resolves.toBeNull();
   });

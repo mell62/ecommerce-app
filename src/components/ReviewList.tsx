@@ -1,6 +1,5 @@
 import type { Review } from "@prisma/client";
-import DeleteReviewButton from "@/components/DeleteReviewButton";
-import EditReviewButton from "@/components/EditReviewButton";
+import ReviewActions from "@/components/ReviewActions";
 import StarRatingDisplay from "@/components/StarRatingDisplay";
 
 export default function ReviewList({
@@ -58,14 +57,11 @@ export default function ReviewList({
           </p>
 
           {userId === review.userId && (
-            <div className="mt-5 flex flex-wrap gap-3 border-t border-border pt-4">
-              <EditReviewButton
-                reviewId={review.id}
-                initialRating={review.rating}
-                initialComment={review.comment}
-              />
-              <DeleteReviewButton reviewId={review.id} />
-            </div>
+            <ReviewActions
+              reviewId={review.id}
+              initialRating={review.rating}
+              initialComment={review.comment}
+            />
           )}
         </article>
       ))}

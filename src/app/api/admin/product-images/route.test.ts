@@ -36,7 +36,10 @@ const admin = {
   role: "ADMIN",
 };
 
-function createUploadRequest(file?: File): Request {
+function createUploadRequest(
+  file?: File,
+  origin = "http://localhost"
+): Request {
   const formData = new FormData();
 
   if (file) {
@@ -45,15 +48,22 @@ function createUploadRequest(file?: File): Request {
 
   return new Request("http://localhost/api/admin/product-images", {
     method: "POST",
+    headers: {
+      Origin: origin,
+    },
     body: formData,
   });
 }
 
-function createDeleteRequest(imageUrl: unknown): Request {
+function createDeleteRequest(
+  imageUrl: unknown,
+  origin = "http://localhost"
+): Request {
   return new Request("http://localhost/api/admin/product-images", {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
+      Origin: origin,
     },
     body: JSON.stringify({ imageUrl }),
   });
@@ -76,6 +86,39 @@ describe("admin product image upload API", () => {
     });
     productFindManyMock.mockResolvedValue([]);
     deleteManagedProductImageMock.mockResolvedValue(true);
+  });
+
+  it("rejects cross-site uploads before checking admin access", async () => {
+    const response = await POST(
+      createUploadRequest(
+        new File(["image"], "mouse.png", { type: "image/png" }),
+        "https://malicious.example"
+      )
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "Cross-site requests are not allowed.",
+    });
+    expect(getAdminAccessMock).not.toHaveBeenCalled();
+    expect(uploadProductImageMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects cross-site deletion before checking admin access", async () => {
+    const response = await DELETE(
+      createDeleteRequest(
+        "https://project.supabase.co/storage/v1/object/public/product-images/products/image.webp",
+        "https://malicious.example"
+      )
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "Cross-site requests are not allowed.",
+    });
+    expect(getAdminAccessMock).not.toHaveBeenCalled();
+    expect(productFindManyMock).not.toHaveBeenCalled();
+    expect(deleteManagedProductImageMock).not.toHaveBeenCalled();
   });
 
   it("requires a signed-in administrator", async () => {

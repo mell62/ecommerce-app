@@ -10,6 +10,7 @@ import {
   getManagedProductImagePath,
   uploadProductImage,
 } from "@/lib/product-image-storage";
+import { isSameOriginRequest } from "@/lib/request-origin";
 
 type DeleteImageRequest = Readonly<{
   imageUrl?: unknown;
@@ -46,6 +47,13 @@ function getDatabaseErrorResponse(error: unknown): Response | null {
 
 export async function POST(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const access = await getAdminAccess();
 
     if (access.status === "unauthenticated") {
@@ -106,6 +114,13 @@ export async function POST(request: Request): Promise<Response> {
 
 export async function DELETE(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const access = await getAdminAccess();
 
     if (access.status === "unauthenticated") {

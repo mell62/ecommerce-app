@@ -1,5 +1,6 @@
 import { PaymentStatus } from "@prisma/client";
 import { markOrderPaid } from "@/lib/payment-service";
+import { isSameOriginRequest } from "@/lib/request-origin";
 import { getCurrentUser } from "@/lib/session";
 import { getStripeClient } from "@/lib/stripe";
 import {
@@ -36,6 +37,13 @@ async function getRequestBody(request: Request): Promise<StatusRequestBody | nul
 
 export async function POST(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const user = await getCurrentUser();
 
     if (!user) {

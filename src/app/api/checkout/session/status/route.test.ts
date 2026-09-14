@@ -36,11 +36,15 @@ const checkoutSession = {
   payment_status: "paid",
 };
 
-function createRequest(body: unknown): Request {
+function createRequest(
+  body: unknown,
+  origin = "http://localhost:3000"
+): Request {
   return new Request("http://localhost:3000/api/checkout/session/status", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Origin: origin,
     },
     body: JSON.stringify(body),
   });
@@ -52,6 +56,23 @@ describe("Stripe Checkout status API", () => {
     getCurrentUserMock.mockResolvedValue({ id: "customer-1" });
     checkoutSessionRetrieveMock.mockResolvedValue(checkoutSession);
     markOrderPaidMock.mockResolvedValue("paid");
+  });
+
+  it("rejects cross-site payment verification before authentication", async () => {
+    const response = await POST(
+      createRequest(
+        { sessionId: checkoutSession.id },
+        "https://malicious.example"
+      )
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "Cross-site requests are not allowed.",
+    });
+    expect(getCurrentUserMock).not.toHaveBeenCalled();
+    expect(checkoutSessionRetrieveMock).not.toHaveBeenCalled();
+    expect(markOrderPaidMock).not.toHaveBeenCalled();
   });
 
   it("requires an authenticated customer", async () => {

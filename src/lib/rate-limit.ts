@@ -79,6 +79,18 @@ export async function consumeRateLimit({
   const key = createRateLimitKey(namespace, identifier);
   const expiresAt = new Date(now.getTime() + windowMs);
   const rows = await prisma.$queryRaw<RateLimitRow[]>(Prisma.sql`
+    WITH "expiredBuckets" AS (
+      SELECT "key"
+      FROM "RateLimitBucket"
+      WHERE "expiresAt" <= ${now}
+        AND "key" <> ${key}
+      ORDER BY "expiresAt" ASC
+      LIMIT 100
+    ),
+    "deletedBuckets" AS (
+      DELETE FROM "RateLimitBucket"
+      WHERE "key" IN (SELECT "key" FROM "expiredBuckets")
+    )
     INSERT INTO "RateLimitBucket" (
       "key",
       "attempts",

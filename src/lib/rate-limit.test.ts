@@ -52,6 +52,33 @@ describe("database rate limiting", () => {
     expect(queryRawMock).toHaveBeenCalledOnce();
   });
 
+  it("removes a bounded batch of expired buckets while consuming a limit", async () => {
+    const now = new Date("2026-09-14T10:00:00.000Z");
+    queryRawMock.mockResolvedValue([
+      {
+        attempts: 1,
+        expiresAt: new Date("2026-09-14T10:01:00.000Z"),
+      },
+    ]);
+
+    await consumeRateLimit({
+      namespace: "login",
+      identifier: "customer@example.com",
+      limit: 5,
+      windowMs: 60_000,
+      now,
+    });
+
+    const query = queryRawMock.mock.calls[0]?.[0] as
+      | { strings?: readonly string[] }
+      | undefined;
+    const queryText = query?.strings?.join(" ") ?? "";
+
+    expect(queryText).toContain('DELETE FROM "RateLimitBucket"');
+    expect(queryText).toContain('WHERE "expiresAt" <=');
+    expect(queryText).toContain("LIMIT 100");
+  });
+
   it("blocks requests over the limit and returns rounded retry timing", async () => {
     const now = new Date("2026-09-14T10:00:00.250Z");
     const resetAt = new Date("2026-09-14T10:00:31.000Z");

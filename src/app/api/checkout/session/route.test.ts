@@ -6,6 +6,7 @@ const getCurrentUserMock = vi.hoisted(() => vi.fn());
 const orderFindFirstMock = vi.hoisted(() => vi.fn());
 const orderUpdateMock = vi.hoisted(() => vi.fn());
 const checkoutSessionCreateMock = vi.hoisted(() => vi.fn());
+const consumeRateLimitMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/session", () => ({
   getCurrentUser: getCurrentUserMock,
@@ -18,6 +19,10 @@ vi.mock("@/lib/db", () => ({
       update: orderUpdateMock,
     },
   },
+}));
+
+vi.mock("@/lib/rate-limit", () => ({
+  consumeRateLimit: consumeRateLimitMock,
 }));
 
 vi.mock("@/lib/stripe", () => ({
@@ -80,6 +85,13 @@ describe("Stripe Checkout Session API", () => {
     orderUpdateMock.mockResolvedValue({
       id: pendingOrder.id,
     });
+    consumeRateLimitMock.mockResolvedValue({
+      allowed: true,
+      limit: 10,
+      remaining: 9,
+      resetAt: new Date("2026-09-14T10:10:00.000Z"),
+      retryAfterSeconds: 0,
+    });
   });
 
   afterEach(() => {
@@ -92,6 +104,7 @@ describe("Stripe Checkout Session API", () => {
     const response = await POST(createRequest({ orderId: pendingOrder.id }));
 
     expect(response.status).toBe(401);
+    expect(consumeRateLimitMock).not.toHaveBeenCalled();
     expect(orderFindFirstMock).not.toHaveBeenCalled();
   });
 
@@ -101,9 +114,43 @@ describe("Stripe Checkout Session API", () => {
       const response = await POST(createRequest(body));
 
       expect(response.status).toBe(400);
+      expect(consumeRateLimitMock).not.toHaveBeenCalled();
       expect(checkoutSessionCreateMock).not.toHaveBeenCalled();
     }
   );
+
+  it("limits valid checkout requests per authenticated customer", async () => {
+    const response = await POST(createRequest({ orderId: pendingOrder.id }));
+
+    expect(response.status).toBe(201);
+    expect(consumeRateLimitMock).toHaveBeenCalledWith({
+      namespace: "payments:checkout-session",
+      identifier: currentUser.id,
+      limit: 10,
+      windowMs: 600_000,
+    });
+  });
+
+  it("returns retry timing without loading an order or calling Stripe when blocked", async () => {
+    consumeRateLimitMock.mockResolvedValue({
+      allowed: false,
+      limit: 10,
+      remaining: 0,
+      resetAt: new Date("2026-09-14T10:06:30.000Z"),
+      retryAfterSeconds: 390,
+    });
+
+    const response = await POST(createRequest({ orderId: pendingOrder.id }));
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("390");
+    await expect(response.json()).resolves.toEqual({
+      error: "Too many payment attempts. Try again shortly.",
+    });
+    expect(orderFindFirstMock).not.toHaveBeenCalled();
+    expect(checkoutSessionCreateMock).not.toHaveBeenCalled();
+    expect(orderUpdateMock).not.toHaveBeenCalled();
+  });
 
   it("does not expose another customer's order", async () => {
     orderFindFirstMock.mockResolvedValue(null);

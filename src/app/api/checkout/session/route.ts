@@ -1,8 +1,12 @@
 import { PaymentProvider, PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { consumeRateLimit } from "@/lib/rate-limit";
 import { getCurrentUser } from "@/lib/session";
 import { getStripeClient } from "@/lib/stripe";
 import { buildStripeCheckoutLineItems } from "@/lib/stripe-checkout";
+
+const CHECKOUT_SESSION_LIMIT = 10;
+const CHECKOUT_SESSION_WINDOW_MS = 10 * 60 * 1000;
 
 type CheckoutSessionRequestBody = Readonly<{
   orderId: string;
@@ -49,6 +53,25 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json(
         { error: "A valid order ID is required." },
         { status: 400 }
+      );
+    }
+
+    const rateLimit = await consumeRateLimit({
+      namespace: "payments:checkout-session",
+      identifier: user.id,
+      limit: CHECKOUT_SESSION_LIMIT,
+      windowMs: CHECKOUT_SESSION_WINDOW_MS,
+    });
+
+    if (!rateLimit.allowed) {
+      return Response.json(
+        { error: "Too many payment attempts. Try again shortly." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimit.retryAfterSeconds),
+          },
+        }
       );
     }
 

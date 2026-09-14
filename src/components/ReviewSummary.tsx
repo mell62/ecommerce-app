@@ -114,7 +114,7 @@ export default function ReviewSummary({ productId }: ReviewSummaryProps) {
   return (
     <aside
       aria-labelledby={headingId}
-      className="rounded-ui border border-brand-100 bg-brand-50/50 p-5 shadow-sm sm:p-6"
+      className="min-w-0 rounded-ui border border-brand-100 bg-brand-50/50 p-5 shadow-sm sm:p-6"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -162,7 +162,9 @@ export default function ReviewSummary({ productId }: ReviewSummaryProps) {
 
       {state.status === "ready" && (
         <div className="mt-5" aria-live="polite">
-          <p className="leading-7 text-muted">{state.summary}</p>
+          <p className="[overflow-wrap:anywhere] leading-7 text-muted">
+            {state.summary}
+          </p>
           <p className="mt-4 border-t border-brand-100 pt-3 text-xs leading-5 text-muted">
             AI-generated from {state.reviewCount} customer{" "}
             {state.reviewCount === 1 ? "review" : "reviews"}. Read individual

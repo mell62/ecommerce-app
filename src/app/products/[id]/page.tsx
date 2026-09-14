@@ -8,12 +8,11 @@ import Link from "next/link";
 import ReviewForm from "@/components/ReviewForm";
 import { getDiscountedPrice, hasDiscount } from "@/lib/pricing";
 import { getCurrentUser } from "@/lib/session";
-import DeleteReviewButton from "@/components/DeleteReviewButton";
-import EditReviewButton from "@/components/EditReviewButton";
+import ReviewList from "@/components/ReviewList";
+import RatingBreakdown from "@/components/RatingBreakdown";
 import WishlistButton from "@/components/WishlistButton";
 import ProductImageZoom from "@/components/ProductImageZoom";
 import { getRandomReviewPlaceholder } from "@/lib/review-prompts";
-import StarRatingDisplay from "@/components/StarRatingDisplay";
 import ReviewSummary from "@/components/ReviewSummary";
 
 export const dynamic = "force-dynamic";
@@ -277,10 +276,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 Your review is published
               </p>
               <p className="mt-1 text-sm leading-6 text-muted">
-                You can edit or delete it from the customer feedback below.
+                You can edit or delete it on the customer reviews page.
               </p>
               <Link
-                href="#reviews"
+                href={`/products/${product.id}/reviews#review-${product.reviews.find((review) => review.userId === user.id)?.id}`}
                 className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-700 hover:text-brand-600"
               >
                 View your review
@@ -361,7 +360,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
 
         <div
-          className={`mt-6 grid gap-6 ${
+          className={`mt-6 grid min-w-0 gap-6 ${
             reviewCount > 0
               ? "lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)] lg:items-start lg:gap-8"
               : "max-w-3xl"
@@ -375,68 +374,23 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {product.reviews.map((review) => (
-                <article
-                  key={review.id}
-                  className="rounded-ui border border-border bg-surface p-5 shadow-sm sm:p-6"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <span
-                        aria-hidden="true"
-                        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 font-display font-semibold uppercase text-brand-700"
-                      >
-                        {review.name.charAt(0)}
-                      </span>
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-foreground">
-                            {review.name}
-                          </p>
-                          {user?.id === review.userId && (
-                            <span className="rounded-ui bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-700">
-                              Your review
-                            </span>
-                          )}
-                        </div>
-                        <time
-                          dateTime={review.createdAt.toISOString()}
-                          className="text-xs text-muted"
-                        >
-                          {new Intl.DateTimeFormat("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          }).format(review.createdAt)}
-                        </time>
-                      </div>
-                    </div>
-
-                    <StarRatingDisplay rating={review.rating} />
-                  </div>
-
-                  <p className="mt-4 break-words whitespace-pre-wrap leading-7 text-muted">
-                    {review.comment}
-                  </p>
-
-                  {user?.id === review.userId && (
-                    <div className="mt-5 flex flex-wrap gap-3 border-t border-border pt-4">
-                      <EditReviewButton
-                        reviewId={review.id}
-                        initialRating={review.rating}
-                        initialComment={review.comment}
-                      />
-                      <DeleteReviewButton reviewId={review.id} />
-                    </div>
-                  )}
-                </article>
-              ))}
+            <div className="min-w-0 space-y-4">
+              <ReviewList
+                reviews={product.reviews.slice(0, 5)}
+                userId={user?.id}
+                compactPreview
+              />
+              {reviewCount > 3 && (
+                <Link href={`/products/${product.id}/reviews`} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-brand-700 underline decoration-brand-100 underline-offset-4 hover:decoration-brand-500">
+                  View all {reviewCount} reviews <span aria-hidden="true">→</span>
+                </Link>
+              )}
             </div>
           )}
 
           {reviewCount > 0 && (
-            <div className="order-first lg:order-none lg:col-start-2 lg:sticky lg:top-24">
+            <div className="order-first min-w-0 space-y-5 lg:order-none lg:col-start-2 lg:sticky lg:top-24">
+              <RatingBreakdown reviews={product.reviews} />
               <ReviewSummary productId={product.id} />
             </div>
           )}

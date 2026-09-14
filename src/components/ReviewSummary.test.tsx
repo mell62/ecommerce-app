@@ -57,6 +57,26 @@ describe("ReviewSummary", () => {
     );
   });
 
+  it("allows a summary with an unbroken word to wrap inside its card", async () => {
+    const longSummary = "comfortable".repeat(100);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse({
+          status: "ready",
+          summary: longSummary,
+          reviewCount: 4,
+        })
+      )
+    );
+
+    render(<ReviewSummary productId="product-1" />);
+
+    expect(await screen.findByText(longSummary)).toHaveClass(
+      "[overflow-wrap:anywhere]"
+    );
+  });
+
   it("explains when there are not enough reviews", async () => {
     vi.stubGlobal(
       "fetch",

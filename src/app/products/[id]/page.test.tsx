@@ -180,6 +180,28 @@ describe("ProductPage accessibility", () => {
     });
   });
 
+  it("limits the preview to five reviews with three below desktop widths", async () => {
+    findFirstMock.mockResolvedValue({
+      ...product,
+      reviews: Array.from({ length: 6 }, (_, index) => ({
+        ...product.reviews[0], id: `review-${index}`, comment: `Feedback number ${index}`, rating: 5,
+      })),
+    });
+    render(
+      <WishlistProvider isAuthenticated={false}>
+        <CartProvider isAuthenticated={false}>
+          {await ProductPage({ params: Promise.resolve({ id: product.id }) })}
+        </CartProvider>
+      </WishlistProvider>
+    );
+    expect(screen.getByText("Feedback number 2")).toBeVisible();
+    expect(screen.getByText("Feedback number 3").closest("article")).toHaveClass("hidden", "lg:block");
+    expect(screen.getByText("Feedback number 4").closest("article")).toHaveClass("hidden", "lg:block");
+    expect(screen.queryByText("Feedback number 5")).not.toBeInTheDocument();
+    expect(screen.getByText("Based on 6 reviews")).toBeVisible();
+    expect(screen.getByRole("link", { name: /View all 6 reviews/ })).toHaveAttribute("href", "/products/product-1/reviews");
+  });
+
   it("prevents missing products from being indexed", async () => {
     findFirstMock.mockResolvedValue(null);
 

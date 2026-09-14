@@ -72,6 +72,16 @@ model ProductReviewSummary {
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
+model RateLimitBucket {
+  key         String   @id
+  attempts    Int      @default(0)
+  windowStart DateTime
+  expiresAt   DateTime
+  updatedAt   DateTime @updatedAt
+
+  @@index([expiresAt])
+}
+
 model Order {
   id                      String           @id @default(cuid())
   userId                  String

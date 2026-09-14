@@ -8,16 +8,26 @@ const { getProductReviewSummaryMock, ProductNotFoundErrorMock } = vi.hoisted(
     ProductNotFoundErrorMock: class extends Error {},
   })
 );
+const consumeRateLimitMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/review-summary-cache", () => ({
   getProductReviewSummary: getProductReviewSummaryMock,
   ReviewSummaryProductNotFoundError: ProductNotFoundErrorMock,
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  consumeRateLimit: consumeRateLimitMock,
+}));
+
 function callGet(productId: string): Promise<Response> {
   return GET(
     new Request(
-      `http://localhost:3000/api/products/${productId}/review-summary`
+      `http://localhost:3000/api/products/${productId}/review-summary`,
+      {
+        headers: {
+          "x-real-ip": "203.0.113.10",
+        },
+      }
     ),
     {
       params: Promise.resolve({ id: productId }),
@@ -28,6 +38,13 @@ function callGet(productId: string): Promise<Response> {
 describe("product review summary API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    consumeRateLimitMock.mockResolvedValue({
+      allowed: true,
+      limit: 20,
+      remaining: 19,
+      resetAt: new Date("2026-09-14T10:01:00.000Z"),
+      retryAfterSeconds: 0,
+    });
   });
 
   it("returns a ready summary without exposing cache internals", async () => {
@@ -51,6 +68,32 @@ describe("product review summary API", () => {
       generatedAt: generatedAt.toISOString(),
     });
     expect(getProductReviewSummaryMock).toHaveBeenCalledWith("product-1");
+    expect(consumeRateLimitMock).toHaveBeenCalledWith({
+      namespace: "ai:review-summary",
+      identifier: "203.0.113.10",
+      limit: 20,
+      windowMs: 60_000,
+    });
+  });
+
+  it("returns retry timing without loading a summary when blocked", async () => {
+    consumeRateLimitMock.mockResolvedValue({
+      allowed: false,
+      limit: 20,
+      remaining: 0,
+      resetAt: new Date("2026-09-14T10:00:42.000Z"),
+      retryAfterSeconds: 42,
+    });
+
+    const response = await callGet("product-1");
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(response.headers.get("Retry-After")).toBe("42");
+    await expect(response.json()).resolves.toEqual({
+      error: "Too many review summary requests. Try again shortly.",
+    });
+    expect(getProductReviewSummaryMock).not.toHaveBeenCalled();
   });
 
   it("returns a normal state when there are not enough reviews", async () => {
@@ -73,6 +116,7 @@ describe("product review summary API", () => {
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: "Product ID is required." });
+    expect(consumeRateLimitMock).not.toHaveBeenCalled();
     expect(getProductReviewSummaryMock).not.toHaveBeenCalled();
   });
 

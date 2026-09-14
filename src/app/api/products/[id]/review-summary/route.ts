@@ -2,8 +2,13 @@ import {
   getProductReviewSummary,
   ReviewSummaryProductNotFoundError,
 } from "@/lib/review-summary-cache";
+import { consumeRateLimit } from "@/lib/rate-limit";
+import { getClientAddress } from "@/lib/request-client";
 
 export const runtime = "nodejs";
+
+const REVIEW_SUMMARY_LIMIT = 20;
+const REVIEW_SUMMARY_WINDOW_MS = 60 * 1000;
 
 type ReviewSummaryRouteContext = Readonly<{
   params: Promise<{
@@ -16,7 +21,7 @@ const noStoreHeaders = {
 };
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: ReviewSummaryRouteContext
 ): Promise<Response> {
   try {
@@ -26,6 +31,26 @@ export async function GET(
       return Response.json(
         { error: "Product ID is required." },
         { status: 400, headers: noStoreHeaders }
+      );
+    }
+
+    const rateLimit = await consumeRateLimit({
+      namespace: "ai:review-summary",
+      identifier: getClientAddress(request),
+      limit: REVIEW_SUMMARY_LIMIT,
+      windowMs: REVIEW_SUMMARY_WINDOW_MS,
+    });
+
+    if (!rateLimit.allowed) {
+      return Response.json(
+        { error: "Too many review summary requests. Try again shortly." },
+        {
+          status: 429,
+          headers: {
+            ...noStoreHeaders,
+            "Retry-After": String(rateLimit.retryAfterSeconds),
+          },
+        }
       );
     }
 

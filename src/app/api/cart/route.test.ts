@@ -52,11 +52,16 @@ const product = {
   isArchived: false,
 };
 
-function createRequest(method: string, body: unknown): Request {
+function createRequest(
+  method: string,
+  body: unknown,
+  origin = "http://localhost"
+): Request {
   return new Request("http://localhost/api/cart", {
     method,
     headers: {
       "Content-Type": "application/json",
+      Origin: origin,
     },
     body: JSON.stringify(body),
   });
@@ -71,6 +76,28 @@ describe("cart API", () => {
         callback: (client: typeof transactionClient) => Promise<unknown>
       ) => callback(transactionClient)
     );
+  });
+
+  it.each([
+    ["POST", POST],
+    ["PATCH", PATCH],
+    ["DELETE", DELETE],
+  ] as const)("rejects cross-site %s requests", async (method, handler) => {
+    const response = await handler(
+      createRequest(
+        method,
+        { productId: product.id, quantity: 1 },
+        "https://malicious.example"
+      )
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "Cross-site requests are not allowed.",
+    });
+    expect(getCurrentUserMock).not.toHaveBeenCalled();
+    expect(transactionMock).not.toHaveBeenCalled();
+    expect(cartItemDeleteManyMock).not.toHaveBeenCalled();
   });
 
   it("requires authentication before adding a product", async () => {

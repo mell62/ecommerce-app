@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getDiscountedPrice } from "@/lib/pricing";
+import { isSameOriginRequest } from "@/lib/request-origin";
 import { getCurrentUser } from "@/lib/session";
 
 type CartRequestBody = {
@@ -77,6 +78,13 @@ export async function GET(): Promise<Response> {
 
 export async function POST(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const user = await getCurrentUser();
 
     if (!user) {
@@ -259,6 +267,13 @@ export async function POST(request: Request): Promise<Response> {
 
 export async function PATCH(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const user = await getCurrentUser();
 
     if (!user) {
@@ -414,6 +429,13 @@ export async function PATCH(request: Request): Promise<Response> {
 
 export async function DELETE(request: Request): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const user = await getCurrentUser();
 
     if (!user) {

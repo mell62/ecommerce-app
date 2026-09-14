@@ -1,4 +1,5 @@
 import { PaymentProvider, PaymentStatus } from "@prisma/client";
+import { getApplicationOrigin } from "@/lib/application-origin";
 import { prisma } from "@/lib/db";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { isSameOriginRequest } from "@/lib/request-origin";
@@ -150,7 +151,7 @@ export async function POST(request: Request): Promise<Response> {
         estimatedTax: order.estimatedTax,
       }
     );
-    const applicationOrigin = new URL(request.url).origin;
+    const applicationOrigin = getApplicationOrigin(request.url);
     const stripe = getStripeClient();
     const checkoutSession = await stripe.checkout.sessions.create(
       {

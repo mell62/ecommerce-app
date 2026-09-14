@@ -80,6 +80,7 @@ function createRequest(
 describe("Stripe Checkout Session API", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("NEXT_PUBLIC_BASE_URL", "http://localhost:3000");
     getCurrentUserMock.mockResolvedValue(currentUser);
     orderFindFirstMock.mockResolvedValue(pendingOrder);
     checkoutSessionCreateMock.mockResolvedValue({
@@ -99,6 +100,7 @@ describe("Stripe Checkout Session API", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
 
@@ -287,6 +289,28 @@ describe("Stripe Checkout Session API", () => {
     expect(await response.json()).toEqual({
       checkoutUrl: "https://checkout.stripe.com/c/pay/test",
     });
+  });
+
+  it("uses the configured origin for Stripe return URLs", async () => {
+    vi.stubEnv("NEXT_PUBLIC_BASE_URL", "https://shop.zeus.example");
+
+    const response = await POST(
+      createRequest(
+        { orderId: pendingOrder.id },
+        "http://localhost:3000"
+      )
+    );
+
+    expect(response.status).toBe(201);
+    expect(checkoutSessionCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success_url:
+          "https://shop.zeus.example/orders?payment=success&session_id={CHECKOUT_SESSION_ID}",
+        cancel_url:
+          "https://shop.zeus.example/orders?payment=cancelled&order_id=order-1",
+      }),
+      expect.anything()
+    );
   });
 
   it("does not persist a session ID when Stripe fails", async () => {

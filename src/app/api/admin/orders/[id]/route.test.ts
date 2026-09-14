@@ -34,11 +34,15 @@ const paidProcessingOrder = {
   paymentStatus: PaymentStatus.PAID,
 };
 
-function createRequest(body: unknown): Request {
+function createRequest(
+  body: unknown,
+  origin = "http://localhost"
+): Request {
   return new Request("http://localhost/api/admin/orders/order-1", {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
+      Origin: origin,
     },
     body: JSON.stringify(body),
   });
@@ -57,6 +61,21 @@ describe("admin order status API", () => {
     });
     orderFindUniqueMock.mockResolvedValue(paidProcessingOrder);
     orderUpdateManyMock.mockResolvedValue({ count: 1 });
+  });
+
+  it("rejects cross-site updates before checking admin access", async () => {
+    const response = await PATCH(
+      createRequest({ status: "SHIPPED" }, "https://malicious.example"),
+      context
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "Cross-site requests are not allowed.",
+    });
+    expect(getAdminAccessMock).not.toHaveBeenCalled();
+    expect(orderFindUniqueMock).not.toHaveBeenCalled();
+    expect(orderUpdateManyMock).not.toHaveBeenCalled();
   });
 
   it("requires a signed-in user", async () => {

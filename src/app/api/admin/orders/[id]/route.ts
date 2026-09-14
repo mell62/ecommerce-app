@@ -6,6 +6,7 @@ import {
   canTransitionOrderStatus,
   isOrderFulfillmentStatus,
 } from "@/lib/order-status";
+import { isSameOriginRequest } from "@/lib/request-origin";
 
 type AdminOrderRouteContext = Readonly<{
   params: Promise<{
@@ -34,6 +35,13 @@ export async function PATCH(
   { params }: AdminOrderRouteContext
 ): Promise<Response> {
   try {
+    if (!isSameOriginRequest(request)) {
+      return Response.json(
+        { error: "Cross-site requests are not allowed." },
+        { status: 403 }
+      );
+    }
+
     const access = await getAdminAccess();
 
     if (access.status === "unauthenticated") {

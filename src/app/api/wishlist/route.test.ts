@@ -45,11 +45,16 @@ const product = {
   isArchived: false,
 };
 
-function createRequest(method: string, body: unknown): Request {
+function createRequest(
+  method: string,
+  body: unknown,
+  origin = "http://localhost"
+): Request {
   return new Request("http://localhost/api/wishlist", {
     method,
     headers: {
       "Content-Type": "application/json",
+      Origin: origin,
     },
     body: JSON.stringify(body),
   });
@@ -63,6 +68,27 @@ describe("wishlist API", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it.each([
+    ["POST", POST],
+    ["DELETE", DELETE],
+  ] as const)("rejects cross-site %s requests", async (method, handler) => {
+    const response = await handler(
+      createRequest(
+        method,
+        { productId: product.id },
+        "https://malicious.example"
+      )
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      error: "Cross-site requests are not allowed.",
+    });
+    expect(getCurrentUserMock).not.toHaveBeenCalled();
+    expect(productFindUniqueMock).not.toHaveBeenCalled();
+    expect(wishlistItemDeleteManyMock).not.toHaveBeenCalled();
   });
 
   it("requires authentication before loading a wishlist", async () => {

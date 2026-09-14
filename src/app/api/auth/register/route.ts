@@ -1,4 +1,5 @@
 import argon2 from "argon2";
+import { validateRegistrationInput } from "@/lib/auth-input";
 import { prisma } from "@/lib/db";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { getClientAddress } from "@/lib/request-client";
@@ -8,11 +9,13 @@ import { createSession } from "@/lib/session";
 const REGISTRATION_LIMIT = 10;
 const REGISTRATION_WINDOW_MS = 60 * 60 * 1000;
 
-type RegisterRequestBody = {
-  name?: unknown;
-  email?: unknown;
-  password?: unknown;
-};
+async function getRequestBody(request: Request): Promise<unknown> {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(request: Request): Promise<Response> {
   try {
@@ -23,26 +26,13 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    const body: RegisterRequestBody = await request.json();
+    const result = validateRegistrationInput(await getRequestBody(request));
 
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    const email =
-      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-    const password = typeof body.password === "string" ? body.password : "";
-
-    if (!name || !email || !password) {
-      return Response.json(
-        { error: "Name, email, and password are required." },
-        { status: 400 }
-      );
+    if (!result.success) {
+      return Response.json({ error: result.error }, { status: 400 });
     }
 
-    if (password.length < 8) {
-      return Response.json(
-        { error: "Password must be at least 8 characters long." },
-        { status: 400 }
-      );
-    }
+    const { name, email, password } = result.data;
 
     const rateLimit = await consumeRateLimit({
       namespace: "auth:register",

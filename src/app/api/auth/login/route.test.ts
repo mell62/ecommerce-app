@@ -145,6 +145,23 @@ describe("login API rate limiting", () => {
     expect(findUniqueMock).not.toHaveBeenCalled();
   });
 
+  it("returns a client error for malformed JSON", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Origin: "http://localhost",
+        },
+        body: "{",
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(consumeRateLimitMock).not.toHaveBeenCalled();
+    expect(findUniqueMock).not.toHaveBeenCalled();
+  });
+
   it("keeps the credential error generic when authentication fails", async () => {
     verifyMock.mockResolvedValue(false);
 

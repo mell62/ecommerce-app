@@ -147,4 +147,22 @@ describe("registration API rate limiting", () => {
     expect(response.status).toBe(400);
     expect(consumeRateLimitMock).not.toHaveBeenCalled();
   });
+
+  it("rejects malformed JSON before hashing or using the database", async () => {
+    const response = await POST(
+      new Request("http://localhost/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Origin: "http://localhost",
+        },
+        body: "{",
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(consumeRateLimitMock).not.toHaveBeenCalled();
+    expect(findUniqueMock).not.toHaveBeenCalled();
+    expect(hashMock).not.toHaveBeenCalled();
+  });
 });

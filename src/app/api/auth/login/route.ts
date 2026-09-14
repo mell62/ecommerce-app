@@ -1,4 +1,5 @@
 import argon2 from "argon2";
+import { validateLoginInput } from "@/lib/auth-input";
 import { prisma } from "@/lib/db";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { getClientAddress } from "@/lib/request-client";
@@ -8,10 +9,13 @@ import { createSession } from "@/lib/session";
 const LOGIN_ATTEMPT_LIMIT = 5;
 const LOGIN_WINDOW_MS = 5 * 60 * 1000;
 
-type LoginRequestBody = {
-  email?: unknown;
-  password?: unknown;
-};
+async function getRequestBody(request: Request): Promise<unknown> {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
 
 export async function POST(request: Request): Promise<Response> {
   try {
@@ -22,18 +26,13 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    const body: LoginRequestBody = await request.json();
+    const result = validateLoginInput(await getRequestBody(request));
 
-    const email =
-      typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-    const password = typeof body.password === "string" ? body.password : "";
-
-    if (!email || !password) {
-      return Response.json(
-        { error: "Email and password are required." },
-        { status: 400 }
-      );
+    if (!result.success) {
+      return Response.json({ error: result.error }, { status: 400 });
     }
+
+    const { email, password } = result.data;
 
     const rateLimit = await consumeRateLimit({
       namespace: "auth:login",

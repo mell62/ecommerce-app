@@ -1,6 +1,9 @@
 import { validateServerEnvironment } from "../src/lib/environment-validation.ts";
 
-const errors = validateServerEnvironment(process.env);
+const isProduction =
+  process.argv.includes("--production") ||
+  process.env.NODE_ENV === "production";
+const errors = validateServerEnvironment(process.env, isProduction);
 
 if (errors.length > 0) {
   console.error("Environment validation failed:");

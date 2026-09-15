@@ -29,7 +29,8 @@ function parseUrl(value: string): URL | null {
 }
 
 export function validateServerEnvironment(
-  environment: Environment
+  environment: Environment,
+  isProduction = false
 ): string[] {
   const errors: string[] = [];
 
@@ -75,7 +76,9 @@ export function validateServerEnvironment(
       baseUrl.protocol === "http:" &&
       (baseUrl.hostname === "localhost" || baseUrl.hostname === "127.0.0.1");
 
-    if (baseUrl.protocol !== "https:" && !isLocalDevelopmentUrl) {
+    if (isProduction && baseUrl.protocol !== "https:") {
+      errors.push("NEXT_PUBLIC_BASE_URL must use HTTPS in production.");
+    } else if (baseUrl.protocol !== "https:" && !isLocalDevelopmentUrl) {
       errors.push(
         "NEXT_PUBLIC_BASE_URL must use HTTPS except during local development."
       );
@@ -110,15 +113,9 @@ export function validateServerEnvironment(
     errors.push("STRIPE_SECRET_KEY has an invalid format.");
   }
 
-  const stripeWebhookSecret = getValue(
-    environment,
-    "STRIPE_WEBHOOK_SECRET"
-  );
+  const stripeWebhookSecret = getValue(environment, "STRIPE_WEBHOOK_SECRET");
 
-  if (
-    stripeWebhookSecret &&
-    !stripeWebhookSecret.startsWith("whsec_")
-  ) {
+  if (stripeWebhookSecret && !stripeWebhookSecret.startsWith("whsec_")) {
     errors.push("STRIPE_WEBHOOK_SECRET has an invalid format.");
   }
 

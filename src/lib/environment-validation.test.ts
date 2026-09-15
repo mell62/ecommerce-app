@@ -35,6 +35,17 @@ describe("server environment validation", () => {
     );
   });
 
+  it("rejects a local HTTP base URL in production", () => {
+    expect(
+      validateServerEnvironment(
+        { ...validEnvironment, NEXT_PUBLIC_BASE_URL: "http://localhost:3000" },
+        true
+      )
+    ).toContain("NEXT_PUBLIC_BASE_URL must use HTTPS in production.");
+
+    expect(validateServerEnvironment(validEnvironment, true)).toEqual([]);
+  });
+
   it("reports missing variables without exposing secret values", () => {
     const errors = validateServerEnvironment({});
 

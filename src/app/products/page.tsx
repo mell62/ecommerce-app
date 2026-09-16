@@ -114,6 +114,12 @@ async function getProducts(
 
   const res = await fetch(url, {
     cache: "no-store",
+    ...(process.env.VERCEL_AUTOMATION_BYPASS_SECRET && {
+      headers: {
+        "x-vercel-protection-bypass":
+          process.env.VERCEL_AUTOMATION_BYPASS_SECRET,
+      },
+    }),
   });
 
   if (!res.ok) {

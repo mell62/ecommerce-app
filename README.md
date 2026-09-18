@@ -16,6 +16,17 @@
 
 > The public deployment uses Stripe's test environment. No real payment is required to explore the checkout flow.
 
+## 💳 Test checkout
+
+The live demo uses Stripe test mode. To complete a test payment:
+
+- Card number: `4242 4242 4242 4242`
+- Expiration date: any future date, such as `12/34`
+- CVC: any three digits
+- Other fields: any test values
+
+Never enter real card information. This card works only with Stripe test keys.
+
 ## ✨ Why Zeus stands out
 
 Zeus began as a full-stack learning project and grew into a complete commerce application. The interface is deliberately minimal, responsive, and accessible, while the server handles the less-visible problems that make e-commerce systems interesting: inventory races, trusted pricing, duplicate checkout attempts, payment reconciliation, authorization, storage cleanup, and third-party service failures.
